@@ -1,0 +1,1 @@
+export const pathAdmin = process.env.REACT_APP_API_URL;
