@@ -8,6 +8,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "@tinymce/tinymce-react": "^6.3.0",
+    "filepond": "^4.32.12",
     "filepond-plugin-image-preview": "^4.6.12",
     "just-validate": "^4.3.0",
     "react": "^19.2.4",

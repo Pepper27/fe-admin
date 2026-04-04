@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { pathAdmin } from "../../../config/api";
-import { routes } from "../../../routes";
 const PrivateRoute = ({ children }) => {
-    const [isAuth, setIsAuth] = useState(null);
     useEffect(() => {
         const token = localStorage.getItem("token");
         console.log("token", token)
@@ -11,11 +8,13 @@ const PrivateRoute = ({ children }) => {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true",
             }
         })
-        .then (res=>res.json)
-        .then (data=>(console.log(data.data)))
+        .then((res) => res.json())
+        .then((data) => console.log(data?.data))
+        .catch((err) => console.error("Auth check failed", err));
         // .then(res => {
         //     if (res.status === 200) {
         //         setIsAuth(true);

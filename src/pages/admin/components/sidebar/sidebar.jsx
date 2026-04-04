@@ -24,14 +24,20 @@ const Sidebar = () => {
 
   const logout = async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${pathAdmin}/admin/account/logout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
         credentials: "include",
       });
 
       const data = await res.json();
       if (data.code === "success") {
+        localStorage.removeItem("token");
         navigate("/admin/authen/login");
       }
     } catch (error) {

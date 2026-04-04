@@ -10,4 +10,5 @@ export const routes = {
   categoryCreate: "/admin/category/create",
   categoryUpdate: "/admin/category/update/:id",
   dashboard: "/admin/dashboard",
+  productCreate:"/admin/product/create"
 };

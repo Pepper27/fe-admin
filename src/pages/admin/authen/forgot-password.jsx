@@ -20,7 +20,7 @@ export default function ForgotPassword() {
                     email:e.target.email.value,
                 }
                 localStorage.setItem("forgotEmail", e.target.email.value)
-                fetch(`${pathAdmin}/account/forgot-password`,{
+                fetch(`${pathAdmin}/admin/account/forgot-password`,{
                     method:"POST",
                     headers:{
                         "Content-type":"application/json"

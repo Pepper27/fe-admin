@@ -37,7 +37,7 @@ export default function ResetPassword() {
                       confirmPass:e.target.confirmPass.value
                   }
   
-                  fetch(`${pathAdmin}/account/reset-password`,{
+                  fetch(`${pathAdmin}/admin/account/reset-password`,{
                       method:"POST",
                       headers:{
                           "Content-type":"application/json"

@@ -32,3 +32,24 @@
 html {
   overflow-y: scroll; 
 }
+
+.variant-upload .filepond--root {
+  z-index: 0;
+}
+.variant-upload .filepond--root {
+  height: 230px;
+}
+
+.variant-upload .filepond--panel-root {
+  min-height: 230px;
+}
+
+.variant-upload .filepond--list-scroller {
+   margin-top:-10px; 
+  max-height: 150px;  
+  overflow-y: auto;  
+}
+.filepond--drop-label { 
+  margin-top:-10px; 
+  font-size: 16px; 
+} 

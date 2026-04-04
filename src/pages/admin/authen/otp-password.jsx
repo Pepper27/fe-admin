@@ -20,14 +20,14 @@ export default function OtpPassword() {
                        otp:e.target.otp.value,
                    }
                    
-                   fetch(`${pathAdmin}/account/otp-password`,{
-                       method:"POST",
-                       headers:{
-                           "Content-type":"application/json"
-                       },
-                       body:JSON.stringify(dataFinal),
-                       credentials: "include" 
-                   })
+                    fetch(`${pathAdmin}/admin/account/otp-password`,{
+                        method:"POST",
+                        headers:{
+                            "Content-type":"application/json"
+                        },
+                        body:JSON.stringify(dataFinal),
+                        credentials: "include" 
+                    })
                    .then(res=>res.json())
                    .then(data=>{
                        if(data.code==="error"){
@@ -42,13 +42,13 @@ export default function OtpPassword() {
        const sendAgainOtp =()=>{
           const email = localStorage.getItem("forgotEmail")
           console.log(email)
-           fetch(`${pathAdmin}/account/forgot-password`,{
-               method:"POST",
-               headers:{
-                   "Content-type":"application/json"
-               },
-               body:JSON.stringify({email})
-           })
+            fetch(`${pathAdmin}/admin/account/forgot-password`,{
+                method:"POST",
+                headers:{
+                    "Content-type":"application/json"
+                },
+                body:JSON.stringify({email})
+            })
            .then(res=>res.json())
            .then(data=>{
                if(data.code==="error"){

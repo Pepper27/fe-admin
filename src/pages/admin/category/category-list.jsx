@@ -12,15 +12,30 @@ export default function CategoryList() {
     const [total, setTotal] = useState(0)
     const [key, setKey] = useState("")
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        console.log("API PATH:", pathAdmin);
         fetch(`${pathAdmin}/admin/categories?page=${page}&keyword=${key}`, {
             method: "GET",
-            credentials: "include"
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                // Prevent ngrok free warning page from intercepting API calls
+                "ngrok-skip-browser-warning": "true",
+            },
+            credentials: "include",
         })
             .then(res => res.json())
             .then(data => {
+                if (data?.code === "error") {
+                    throw new Error(data.message || "Unauthorized");
+                }
                 SetCategory(data.data)
                 setTotalPage(data.totalPage)
                 setTotal(data.total)
+            })
+            .catch((err) => {
+                console.error("Fetch categories failed", err);
+                alert(err?.message || "Failed to fetch");
+                SetCategory([]);
             })
     }, [page, key])
     return (
@@ -50,8 +65,8 @@ export default function CategoryList() {
                     </div>
                 </div>
                 <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
-                    <div className="flex items-center bg-[white] rounded-[10px] border border-gray-300">
-                        {/* <div className="py-[20px] px-[20px] border-r border-r-gray-300">
+                    {/* <div className="flex items-center bg-[white] rounded-[10px] border border-gray-300">
+                        <div className="py-[20px] px-[20px] border-r border-r-gray-300">
                             <select className="outline-none text-[14px] ">
                                 <option>-- Hành động --</option>
                                 <option>Xóa</option>
@@ -59,8 +74,8 @@ export default function CategoryList() {
                         </div>
                         <div className="text-[14px] text-[red] px-[20px]">
                             Áp dụng
-                        </div> */}
-                    </div>
+                        </div>
+                    </div> */}
                     <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
                         <CiSearch />
                         <input className="placeholder:text-[14px] text-[14px] outline-none w-[300px]" placeholder="Tìm kiếm"
@@ -93,7 +108,7 @@ export default function CategoryList() {
                                 </thead>
                                 <tbody>
                                     {
-                                        category ? (
+                                        category.length>0 ? (
                                             category.map(item => (
                                                 <tr key={item._id}>
                                                     <td className="p-[15px] text-[14px] w-[40px]">
@@ -123,7 +138,7 @@ export default function CategoryList() {
                                                     </td>
                                                     <td className="p-[15px]">
                                                         <div className="flex">
-                                                            <a href="/admin/blog/edit" className="rounded-l-[10px] text-[14px] p-[15px] bg-[white] border-y border-l border-gray-300">
+                                                            <a href={`/admin/category/update/${item._id}`}  className="rounded-l-[10px] text-[14px] p-[15px] bg-[white] border-y border-l border-gray-300">
                                                                 <FaRegEdit className="text-[16px] font-[700]" />
                                                             </a>
                                                             <div className="rounded-r-[10px] text-[14px] p-[15px] bg-[white] border border-gray-300">
@@ -134,16 +149,16 @@ export default function CategoryList() {
                                                 </tr>
                                             ))
                                         )
-                                            : (
-                                                <tr>
-                                                    <td colSpan="7">
-                                                        <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
-                                                            <CiSearch className="md:text-[20px] text-[18px]" />
-                                                            <span className="md:text-[16px] text-[14px]">Không tìm thấy danh mục</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
+                                        : (
+                                            <tr>
+                                                <td colSpan="7">
+                                                    <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
+                                                        <CiSearch className="md:text-[20px] text-[18px]" />
+                                                        <span className="md:text-[16px] text-[14px]">Không tìm thấy danh mục</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
                                     }
                                 </tbody>
                             </table>
@@ -151,20 +166,29 @@ export default function CategoryList() {
                     </div>
                 </div>
                 <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-                    <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
-                    <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                        <select
-                            className="outline-none border-none bg-transparent focus:ring-0"
-                            value={page}
-                            onChange={(e) => setPage(Number(e.target.value))}
-                        >
-                            {[...Array(totalPage)].map((_, i) => (
-                                <option key={i} value={i + 1}>
-                                    Trang {i + 1}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                {
+                    category.length>0 ? (
+                        <>
+                            <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
+                            <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
+                                <select
+                                    className="outline-none border-none bg-transparent focus:ring-0"
+                                    value={page}
+                                    onChange={(e) => setPage(Number(e.target.value))}
+                                >
+                                    {[...Array(totalPage)].map((_, i) => (
+                                        <option key={i} value={i + 1}>
+                                            Trang {i + 1}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    )
+                    :
+                    <>
+                    </>
+                }
                 </div>
             </div>
         </>

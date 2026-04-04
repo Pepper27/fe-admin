@@ -4,8 +4,13 @@ import { pathAdmin } from "../../../../config/api"
 const Header = ()=>{
     const [user, setUser] = useState({});
     useEffect(() => {
+        const token = localStorage.getItem("token");
         fetch(`${pathAdmin}/admin/account/user`, {
             method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
+            },
             credentials: "include"
         })
         .then(res => res.json())
@@ -28,7 +33,7 @@ const Header = ()=>{
     }
     return(
         <>
-            <div className="z-100 fixed top-0 left-0 right-0 lg:px-[60px] sm:px-[40px] px-[16px] py-[5px] bg-white flex justify-between items-center border-b border-b-gray-300">
+            <div className="z-[9999] fixed top-0 left-0 right-0 lg:px-[60px] sm:px-[40px] px-[16px] py-[5px] bg-white flex justify-between items-center border-b border-b-gray-300">
                 <img className="w-[100px]" src="/client/images/logo.jpg" alt="" />
                 <div className="flex items-center gap-[10px]">
                     <img className="md:w-[50px] md:h-[50px] w-[30px] h-[30px]" src="/image/user.png" alt="" />

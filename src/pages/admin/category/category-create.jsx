@@ -17,8 +17,13 @@ const [categoryId, setCategoryId] = useState("");
 const [arrayCategory, setArrayCategory] = useState([]);  
 const navigate = useNavigate();
 useEffect(()=>{
+    const token = localStorage.getItem("token");
     fetch(`${pathAdmin}/admin/categories/parent`,{
         method:"GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
         credentials:"include"
     })
     .then(res => {
@@ -27,8 +32,16 @@ useEffect(()=>{
         }
     })
     .then(data=>{
-        setArrayCategory(data.data) 
+        if (data?.code === "error") {
+            throw new Error(data.message || "Unauthorized");
+        }
+        setArrayCategory(data?.data || []) 
     })   
+    .catch((err) => {
+        console.error("Fetch parent categories failed", err);
+        alert(err?.message || "Failed to fetch");
+        setArrayCategory([]);
+    })
 },[])
 const renderOptions = (categories, level = 0) => {
   return categories.map(item => (
@@ -64,6 +77,7 @@ const validate = () => {
 const handlerSubmit = (e) => {
     e.preventDefault();
     if(!validate()) return
+    const token = localStorage.getItem("token");
     const dataFinal = new FormData();
     dataFinal.append("name", name);
     dataFinal.append("parent", categoryId);
@@ -74,6 +88,10 @@ const handlerSubmit = (e) => {
     }
     fetch(`${pathAdmin}/admin/categories`, {
         method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
         body: dataFinal,
         credentials: "include"
     })

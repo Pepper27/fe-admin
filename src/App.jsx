@@ -13,6 +13,7 @@ import CategoryUpdate from "./pages/admin/category/category-update";
 import Dashboard from "./pages/admin/dashboard";
 import LayoutAdmin from "./pages/admin/components/layout";
 import PrivateRoute from "./pages/admin/components/private"
+import ProductCreate from "./pages/admin/product/product-create";
 function App() {
   return (
     <BrowserRouter>
@@ -90,6 +91,16 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <CategoryUpdate />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.productCreate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <ProductCreate />
               </LayoutAdmin>
             </PrivateRoute>
           }
