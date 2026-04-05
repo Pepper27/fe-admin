@@ -14,7 +14,6 @@ const Sidebar = () => {
   const arrayLink = [
     { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan" },
     { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục" },
-    { icon: MdOutlinePets, href: "/admin/pet", title: "Quản lý thú cưng" },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },

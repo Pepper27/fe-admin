@@ -14,6 +14,8 @@ import Dashboard from "./pages/admin/dashboard";
 import LayoutAdmin from "./pages/admin/components/layout";
 import PrivateRoute from "./pages/admin/components/private"
 import ProductCreate from "./pages/admin/product/product-create";
+import ProductList from "./pages/admin/product/product-list";
+import ProductUpdate from "./pages/admin/product/product-update";
 function App() {
   return (
     <BrowserRouter>
@@ -22,35 +24,35 @@ function App() {
         <Route path={routes.forgotPassword} element={<ForgotPassword />} />
         <Route path={routes.otpPassword} element={<OtpPassword />} />
         <Route path={routes.resetPassword} element={<ResetPassword />} />
-        <Route 
-          path={routes.dashboard} 
+        <Route
+          path={routes.dashboard}
           element={
             <PrivateRoute>
               <LayoutAdmin>
                 <Dashboard />
               </LayoutAdmin>
             </PrivateRoute>
-          } 
+          }
         />
-        <Route 
-          path={routes.blogList} 
+        <Route
+          path={routes.blogList}
           element={
             <PrivateRoute>
               <LayoutAdmin>
                 <BlogList />
               </LayoutAdmin>
-            </PrivateRoute> 
-          } 
+            </PrivateRoute>
+          }
         />
-        <Route 
-          path={routes.blogCreate} 
+        <Route
+          path={routes.blogCreate}
           element={
             <PrivateRoute>
               <LayoutAdmin>
                 <BlogCreate />
               </LayoutAdmin>
-            </PrivateRoute> 
-          } 
+            </PrivateRoute>
+          }
         />
         <Route
           path={routes.blogUpdate}
@@ -101,6 +103,27 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <ProductCreate />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.productList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <ProductList />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.productUpdate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <ProductUpdate />
               </LayoutAdmin>
             </PrivateRoute>
           }

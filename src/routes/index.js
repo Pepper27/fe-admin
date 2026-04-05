@@ -9,6 +9,8 @@ export const routes = {
   categoryList: "/admin/category",
   categoryCreate: "/admin/category/create",
   categoryUpdate: "/admin/category/update/:id",
-  dashboard: "/admin/dashboard",
-  productCreate:"/admin/product/create"
+  productList: "/admin/product",
+  productCreate:"/admin/product/create",
+  productUpdate: "/admin/product/update/:id",
+  dashboard: "/admin/dashboard"
 };
