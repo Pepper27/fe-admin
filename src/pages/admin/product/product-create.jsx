@@ -16,8 +16,8 @@ const [arrayCategory, setArrayCategory] = useState([]);
 const navigate = useNavigate()
 const materialOptions = [
   { name: "Vàng", color: "#FFD700" },
+    { name: "Vàng hồng", color: "linear-gradient(45deg, #FFD700, #E6B8AF)" },
   { name: "Bạc", color: "#C0C0C0" },
-  { name: "Mạ vàng", color: "linear-gradient(45deg, #FFD700, #C0C0C0)" },
 ]
 
 const [materials, setMaterials] = useState([])

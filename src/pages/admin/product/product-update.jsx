@@ -22,9 +22,9 @@ export default function ProductUpdate() {
   const { id } = useParams();
 
   const materialOptions = [
-    { name: "Vang", color: "#FFD700" },
-    { name: "Bac", color: "#C0C0C0" },
-    { name: "Ma vang", color: "linear-gradient(45deg, #FFD700, #C0C0C0)" },
+    { name: "Vàng", color: "#FFD700" },
+    { name: "Vàng hồng", color: "linear-gradient(45deg, #FFD700, #E6B8AF)" },
+    { name: "Bạc", color: "#C0C0C0" },
   ];
 
   const normalizeText = (value) =>
@@ -39,7 +39,7 @@ export default function ProductUpdate() {
     return acc;
   }, {});
 
-  const normalizeMaterial = (value) => materialMap[normalizeText(value)] || String(value || "").trim();
+  const normalizeMaterial = (value) => materialMap[normalizeText(value)] || "";
 
   const [materials, setMaterials] = useState([]);
   const [openMaterial, setOpenMaterial] = useState(true);
