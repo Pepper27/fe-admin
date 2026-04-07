@@ -16,6 +16,8 @@ import PrivateRoute from "./pages/admin/components/private"
 import ProductCreate from "./pages/admin/product/product-create";
 import ProductList from "./pages/admin/product/product-list";
 import ProductUpdate from "./pages/admin/product/product-update";
+import DesignList from "./pages/admin/design/design-list";
+import ClientList from "./pages/admin/client/client-list";
 function App() {
   return (
     <BrowserRouter>
@@ -124,6 +126,28 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <ProductUpdate />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.designList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <DesignList />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.clientList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <ClientList />
               </LayoutAdmin>
             </PrivateRoute>
           }

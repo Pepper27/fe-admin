@@ -12,5 +12,7 @@ export const routes = {
   productList: "/admin/product",
   productCreate:"/admin/product/create",
   productUpdate: "/admin/product/update/:id",
+  designList: "/admin/design",
+  clientList: "/admin/client",
   dashboard: "/admin/dashboard"
 };

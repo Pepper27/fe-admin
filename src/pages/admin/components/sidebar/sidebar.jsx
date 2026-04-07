@@ -3,6 +3,8 @@ import { IoIosListBox, IoMdSettings } from "react-icons/io";
 import { FaUserCog, FaBlog } from "react-icons/fa";
 import { GrPowerShutdown } from "react-icons/gr";
 import { AiFillProduct } from "react-icons/ai";
+import { FaPalette } from "react-icons/fa";
+import { FaUsers } from "react-icons/fa";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { pathAdmin } from "../../../../config/api";
@@ -14,6 +16,8 @@ const Sidebar = () => {
   const arrayLink = [
     { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan" },
     { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục" },
+    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
+    { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
