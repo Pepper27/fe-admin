@@ -15,7 +15,8 @@ export default function DesignDelete({ design, onDeleted }) {
     try {
       setDeleting(true);
       const token = localStorage.getItem("token");
-      const response = await fetch(`${pathAdmin}/admin/designs/${design._id}`, {
+      // includeBundles=1: allow deleting bundle-backed designs
+      const response = await fetch(`${pathAdmin}/admin/designs/${design._id}?includeBundles=1`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

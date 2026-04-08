@@ -24,7 +24,8 @@ export default function DesignModal({ id, onClose }) {
     setLoading(true);
     setError("");
 
-    fetch(`${pathAdmin}/admin/designs/${id}`, {
+    // includeBundles=1: allow viewing bundle-backed designs
+    fetch(`${pathAdmin}/admin/designs/${id}?includeBundles=1`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -78,6 +79,14 @@ export default function DesignModal({ id, onClose }) {
     if (name && size) return `${name} (${size}cm)`;
     return name || `${size}cm`;
   })();
+
+  const meta = {
+    source: data?.source || "",
+    guestId: data?.guestId || "",
+    userId: data?.user?.id || data?.userId || "",
+    userEmail: data?.user?.email || "",
+    userFullName: data?.user?.fullName || "",
+  };
 
   const pricing = data?.priceSnapshot || {};
 
@@ -170,9 +179,10 @@ export default function DesignModal({ id, onClose }) {
               <div className="mt-[18px] border-t border-gray-200" />
               <div className="mt-[12px] text-[13px] text-gray-700">
                 <div>Created: {formatDate(data.createdAt)}</div>
-                <div>
-                  User: {data?.user?.email || data?.user?.fullName || "(guest)"} / {data?.user?.guestId || data?.guestId}
-                </div>
+                <div>Source: {meta.source || "-"}</div>
+                <div>GuestId: {meta.guestId || "-"}</div>
+                <div>Owner: {meta.userEmail || meta.userFullName || "(guest)"}</div>
+                <div className="break-all">UserId: {meta.userId ? String(meta.userId) : "-"}</div>
               </div>
             </>
           ) : null}

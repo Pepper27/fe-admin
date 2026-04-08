@@ -16,11 +16,11 @@ const Sidebar = () => {
   const arrayLink = [
     { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan" },
     { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục" },
-    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
-    { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
-    { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
+    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
+    { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
+    { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
     { icon: IoMdSettings, href: "/admin/setting", title: "Cài đặt chung" },
     { icon: FaUserCog, href: "/admin/profile", title: "Thông tin cá nhân" },
   ];

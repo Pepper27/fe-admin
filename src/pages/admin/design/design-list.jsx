@@ -17,7 +17,8 @@ export default function DesignList() {
 
   const fetchDesigns = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/designs?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
+    // includeBundles=1: guest MVP stores mix designs as cart bundles (not in designs collection)
+    fetch(`${pathAdmin}/admin/designs?page=${page}&limit=${limit}&includeBundles=1&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -56,6 +57,28 @@ export default function DesignList() {
 
   const formatPrice = (price) => {
     return (Number(price) || 0).toLocaleString("vi-VN") + "₫";
+  };
+
+  const countCharms = (d) => {
+    const items = Array.isArray(d?.items) ? d.items : [];
+    return items.length;
+  };
+
+  const designCode = (d) => {
+    const id = String(d?._id || "");
+    if (!id) return "";
+    // Show a short code for scanning. Keep full id as secondary line.
+    return id.startsWith("bundle:") ? id.slice(-8) : id.slice(-6);
+  };
+
+  const braceletLabel = (d) => {
+    const b = d?.bracelet;
+    if (!b) return "";
+    const parts = [];
+    if (b.typeCode) parts.push(String(b.typeCode));
+    if (b.sizeCm !== undefined && b.sizeCm !== null && b.sizeCm !== "") parts.push(`${b.sizeCm}cm`);
+    if (b.variantCode) parts.push(String(b.variantCode));
+    return parts.join(" / ");
   };
 
   const handleDeleted = (deletedId) => {
@@ -98,7 +121,7 @@ export default function DesignList() {
             <CiSearch />
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
-              placeholder="Tìm theo tên hoặc guestId"
+              placeholder="Tìm theo tên / guestId / email / userId"
               defaultValue={key}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -113,22 +136,22 @@ export default function DesignList() {
         <div className="mt-[20px]">
           <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
             <div className="overflow-x-auto">
-              <table className="xl:w-full w-[1100px]">
-                <thead className="bg-[#e5e1e1] ">
-                  <tr>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
-                      <input type="checkbox" className="w-[20px] h-[20px]" />
-                    </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Tên</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">GuestId</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Khách</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[120px]">Slots</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Tổng tiền</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Tạo lúc</td>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
-                  </tr>
-                </thead>
-                <tbody>
+                  <table className="xl:w-full w-[1200px]">
+                    <thead className="bg-[#e5e1e1] ">
+                      <tr>
+                        <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
+                          <input type="checkbox" className="w-[20px] h-[20px]" />
+                        </td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Mã design</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">Owner</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[280px]">Bracelet</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[110px]">Slots</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Total</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Created</td>
+                        <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
+                      </tr>
+                    </thead>
+                    <tbody>
                   {designs.length > 0 ? (
                     designs.map((d) => (
                       <tr key={d._id}>
@@ -136,15 +159,20 @@ export default function DesignList() {
                           <input type="checkbox" className="w-[20px] h-[20px]" />
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          <div className="font-[600]">{d.name || "(Không tên)"}</div>
-                          <div className="text-[12px] text-gray-500">{d._id}</div>
+                          <div className="font-[800]">{designCode(d) || "-"}</div>
                         </td>
-                        <td className="p-[15px] text-[14px] break-all">{d.guestId}</td>
                         <td className="p-[15px] text-[14px]">
                           <div className="font-[700]">{d?.user?.fullName || "(guest)"}</div>
-                          <div className="text-[12px] text-gray-500">{d?.user?.email || ""}</div>
+                          <div className="text-[12px] text-gray-500 break-all">{d?.user?.email || ""}</div>
                         </td>
-                        <td className="p-[15px] text-[14px]">{d?.rulesSnapshot?.slotCount ?? ""}</td>
+                        <td className="p-[15px] text-[14px]">
+                          <div className="font-[700]">{braceletLabel(d) || "-"}</div>
+                          <div className="text-[12px] text-gray-500 break-all">Mã sản phẩm: {d?.bracelet?.productId || "-"}</div>
+                        </td>
+
+                        <td className="p-[15px] text-[14px]">
+                          {countCharms(d)}/{Number(d?.rulesSnapshot?.slotCount) || 0}
+                        </td>
                         <td className="p-[15px] text-[14px]">{formatPrice(d?.priceSnapshot?.total)}</td>
                         <td className="p-[15px] text-[14px]">{formatDateTime(d?.createdAt)}</td>
                         <td className="p-[15px]">

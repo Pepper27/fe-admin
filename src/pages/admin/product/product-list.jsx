@@ -212,13 +212,13 @@ export default function ProductList() {
                 <option value="out_of_stock">Out of stock</option>
               </select>
             </div>
-            <div className="py-[1{
-                  setPage(1);
-                  setMaterialFilter(e.target.value);
-                }der-r-gray-300">
+            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
               <select
                 value={materialFilter}
-                onChange={(e) => setMaterialFilter(e.target.value)}
+                onChange={(e) => {
+                  setPage(1);
+                  setMaterialFilter(e.target.value);
+                }}
                 className="font-[700] outline-none text-[12px] w-[110px]"
               >
                 <option value="">Tất cả chất liệu</option>
