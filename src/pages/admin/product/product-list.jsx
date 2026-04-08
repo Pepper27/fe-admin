@@ -4,6 +4,7 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { pathAdmin } from "../../../config/api";
 import ProductDelete from "./product-delete";
 
@@ -92,6 +93,17 @@ export default function ProductList() {
     return `${formatPrice(min)} - ${formatPrice(max)}`;
   };
 
+  const getTotalSold = (item) => {
+    const soldFromVariants = (item?.variants || []).reduce(
+      (sum, v) => sum + (Number(v?.sold) || 0),
+      0
+    );
+    if (soldFromVariants > 0) return soldFromVariants;
+    if (Number.isFinite(Number(item?.totalSold))) return Number(item.totalSold);
+    if (Number.isFinite(Number(item?.sold))) return Number(item.sold);
+    return 0;
+  };
+
   const handleResetFilters = () => {
     setStockFilter("");
     setCategoryFilter("");
@@ -105,11 +117,7 @@ export default function ProductList() {
     setPage(1);
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const token = localStorage.getItem("token");
-
-    setLoading(true);
+  const buildProductParams = (withPagination = true, exportLimit = 10000) => {
     const params = new URLSearchParams();
     if (keyword) params.append("keyword", keyword);
     if (creatorFilter) params.append("createdBy", creatorFilter);
@@ -120,8 +128,74 @@ export default function ProductList() {
     if (stockFilter) params.append("stockStatus", stockFilter);
     if (categoryFilter) params.append("categoryId", categoryFilter);
     if (materialFilter) params.append("material", materialFilter);
-    params.append("page", String(page));
-    params.append("limit", String(limit));
+
+    if (withPagination) {
+      params.append("page", String(page));
+      params.append("limit", String(limit));
+    } else {
+      params.append("page", "1");
+      params.append("limit", String(exportLimit));
+    }
+    return params;
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const params = buildProductParams(false);
+      const res = await fetch(`${pathAdmin}/admin/products?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include",
+      });
+      const data = await res.json();
+      const exportProducts = data?.data || [];
+
+      if (!exportProducts.length) {
+        alert("Không có dữ liệu để xuất Excel");
+        return;
+      }
+
+      const rows = exportProducts.map((item, index) => {
+        const totalStock = (item?.variants || []).reduce(
+          (sum, v) => sum + (v?.quantity || 0),
+          0
+        );
+        const totalSold = getTotalSold(item);
+
+        return {
+          STT: index + 1,
+          "Mã sản phẩm": item?._id || "",
+          "Tên sản phẩm": item?.name || "",
+          "Ngày tạo": item?.createdAt ? new Date(item.createdAt).toLocaleDateString("vi-VN") : "",
+          "Người tạo": item?.createdBy?.fullName || item?.createdBy?.email || "",
+          "Tồn kho": totalStock,
+          "Đã bán": totalSold,
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+      const now = new Date();
+      const fileName = `danh-sach-san-pham-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (error) {
+      console.error("Export excel failed", error);
+      alert("Xuất Excel thất bại");
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const token = localStorage.getItem("token");
+
+    setLoading(true);
+    const params = buildProductParams(true);
 
     fetch(`${pathAdmin}/admin/products?${params.toString()}`, {
       method: "GET",
@@ -305,6 +379,14 @@ export default function ProductList() {
           >
             + Tạo mới
           </Link>
+
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="text-[white] text-[14px] bg-[#0f766e] hover:bg-[#115e59] py-[20px] px-[25px] rounded-[10px] border border-gray-300"
+          >
+            Xuất Excel
+          </button>
         </div>
 
         <div className="mt-[20px]">
@@ -321,6 +403,7 @@ export default function ProductList() {
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Tên danh mục</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Giá</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Tồn kho</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Đã bán</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Ngày tạo</td>
                     <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
                   </tr>
@@ -367,6 +450,7 @@ export default function ProductList() {
                             })()}
                           </span>
                         </td>
+                        <td className="p-[15px] text-[14px]">{getTotalSold(item)}</td>
                         <td className="p-[15px] text-[14px]">{formatDate(item.createdAt)}</td>
 
                         <td className="p-[15px]">
@@ -384,7 +468,7 @@ export default function ProductList() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8">
+                      <td colSpan="9">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
                           <span className="md:text-[16px] text-[14px]">Không tìm thấy sản phẩm</span>

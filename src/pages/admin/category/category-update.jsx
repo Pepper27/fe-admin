@@ -131,7 +131,7 @@ export default function CategoryUpdate() {
 
     return(
         <>
-            <form onSubmit={handlerSubmit} className="xl:w-[calc(100%-240px)] lg:w-[calc(100%-220px)] w-full mt-[100px] lg:ml-[240px] l-0 flex flex-col mx-[16px] sm:px-[30px] px-[10px] sm:pr-[55px] pr-[30px]">
+            <form onSubmit={handlerSubmit} className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
                 <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Tạo danh mục</div>
                 <div className="mb-[30px] grid sm:grid-cols-2 grid-cols-1 gap-y-[20px] gap-x-[30px] bg-[white] sm:py-[30px] py-[20px] sm:px-[40px] px-[20px] border border-gray-300 rounded-[15px]">
                     <div className="flex flex-col">

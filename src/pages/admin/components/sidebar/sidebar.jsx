@@ -50,7 +50,7 @@ const Sidebar = () => {
 
  return(
     <>
-      <div menu-view="true" className="lg:z-[9999] z-[99999] lg:flex  transform lg:-translate-x-0 -translate-x-full transition-transform duration-600 ease-in-out  fixed top-0 left-0 custom-scroll overflow-y-auto sm:pl-[20px] pl-[10px] pt-[20px] bg-[white] sm:w-[250px] w-[230px] h-full border-r border-r-gray-200">
+      <div menu-view="true" className="lg:z-[9999] z-[99999] lg:flex  transform lg:-translate-x-0 -translate-x-full transition-transform duration-600 ease-in-out  fixed top-0 left-0 custom-scroll overflow-y-auto sm:pl-[20px] pl-[10px] pt-[20px] bg-[white] sm:w-[270px] w-[240px] h-full border-r border-r-gray-200">
         <div className="flex flex-col ">
           {
             arrayLink.map((item,index)=>{
