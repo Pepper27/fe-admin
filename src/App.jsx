@@ -18,6 +18,7 @@ import ProductList from "./pages/admin/product/product-list";
 import ProductUpdate from "./pages/admin/product/product-update";
 import DesignList from "./pages/admin/design/design-list";
 import ClientList from "./pages/admin/client/client-list";
+import OrderList from "./pages/admin/order/order-list";
 function App() {
   return (
     <BrowserRouter>
@@ -148,6 +149,17 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <ClientList />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.orderList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <OrderList />
               </LayoutAdmin>
             </PrivateRoute>
           }

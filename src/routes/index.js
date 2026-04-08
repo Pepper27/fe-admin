@@ -14,5 +14,6 @@ export const routes = {
   productUpdate: "/admin/product/update/:id",
   designList: "/admin/design",
   clientList: "/admin/client",
+  orderList: "/admin/order",
   dashboard: "/admin/dashboard"
 };
