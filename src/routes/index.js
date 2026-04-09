@@ -12,8 +12,12 @@ export const routes = {
   productList: "/admin/product",
   productCreate:"/admin/product/create",
   productUpdate: "/admin/product/update/:id",
+  collectionList: "/admin/collection",
+  collectionCreate: "/admin/collection/create",
+  collectionUpdate: "/admin/collection/update/:id",
   designList: "/admin/design",
   clientList: "/admin/client",
   orderList: "/admin/order",
+  wishlistList: "/admin/wishlist",
   dashboard: "/admin/dashboard"
 };

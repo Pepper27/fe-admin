@@ -21,10 +21,12 @@ export default function ProductList() {
   const [products, setProducts] = useState([]);
   const [creators, setCreators] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [stockFilter, setStockFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [collectionFilter, setCollectionFilter] = useState([]);
   const [materialFilter, setMaterialFilter] = useState("");
   const [creatorFilter, setCreatorFilter] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -76,6 +78,20 @@ export default function ProductList() {
         setCategories(data?.data || []);
       })
       .catch(() => setCategories([]));
+
+    // Fetch collections
+    fetch(`${pathAdmin}/admin/collections`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setCollections(data?.data || []);
+      })
+      .catch(() => setCollections([]));
   }, []);
 
   const getDisplayPrice = (product) => {
@@ -107,6 +123,7 @@ export default function ProductList() {
   const handleResetFilters = () => {
     setStockFilter("");
     setCategoryFilter("");
+    setCollectionFilter([]);
     setMaterialFilter("");
     setCreatorFilter("");
     setStartDate("");
@@ -127,6 +144,7 @@ export default function ProductList() {
     if (maxPrice) params.append("maxPrice", maxPrice);
     if (stockFilter) params.append("stockStatus", stockFilter);
     if (categoryFilter) params.append("categoryId", categoryFilter);
+    if (collectionFilter.length) params.append("collectionId", collectionFilter.join(","));
     if (materialFilter) params.append("material", materialFilter);
 
     if (withPagination) {
@@ -224,7 +242,7 @@ export default function ProductList() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [keyword, creatorFilter, startDate, endDate, minPrice, maxPrice, stockFilter, categoryFilter, materialFilter, page, limit]);
+  }, [keyword, creatorFilter, startDate, endDate, minPrice, maxPrice, stockFilter, categoryFilter, collectionFilter, materialFilter, page, limit]);
 
   return (
     <>
@@ -267,6 +285,25 @@ export default function ProductList() {
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
+              <select
+                multiple
+                value={collectionFilter}
+                onChange={(e) => {
+                  setPage(1);
+                  const values = Array.from(e.target.selectedOptions).map((o) => o.value);
+                  setCollectionFilter(values);
+                }}
+                className="font-[700] outline-none text-[12px] w-[140px]"
+              >
+                {collections.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -401,6 +438,7 @@ export default function ProductList() {
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">Ảnh</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[360px]">Tên sản phẩm</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Tên danh mục</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Bộ sưu tập</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Giá</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Tồn kho</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Đã bán</td>
@@ -411,7 +449,7 @@ export default function ProductList() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="8" className="p-[15px] text-[14px] text-gray-500">
+                      <td colSpan="9" className="p-[15px] text-[14px] text-gray-500">
                         Đang tải...
                       </td>
                     </tr>
@@ -434,6 +472,9 @@ export default function ProductList() {
                         </td>
                         <td className="p-[15px] text-[14px]">{item.name}</td>
                         <td className="p-[15px] text-[14px]">{item.category.name}</td>
+                        <td className="p-[15px] text-[14px]">
+                          {(item.collections || []).map((c) => c?.name).filter(Boolean).join(", ") || ""}
+                        </td>
                         <td className="p-[15px] text-[14px]">{getDisplayPrice(item)}</td>
                         <td className="p-[15px] text-[14px]">
                           <span

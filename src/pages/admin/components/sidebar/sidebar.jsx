@@ -5,6 +5,7 @@ import { GrPowerShutdown } from "react-icons/gr";
 import { AiFillProduct } from "react-icons/ai";
 import { FaPalette } from "react-icons/fa";
 import { FaUsers } from "react-icons/fa";
+import { FaRegHeart } from "react-icons/fa";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { pathAdmin } from "../../../../config/api";
@@ -16,11 +17,13 @@ const Sidebar = () => {
   const arrayLink = [
     { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan" },
     { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục" },
+    { icon: MdOutlinePets, href: "/admin/collection", title: "Quản lý bộ sưu tập" },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
     { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
     { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
+    { icon: FaRegHeart, href: "/admin/wishlist", title: "Thống kê Wishlist" },
     { icon: IoMdSettings, href: "/admin/setting", title: "Cài đặt chung" },
     { icon: FaUserCog, href: "/admin/profile", title: "Thông tin cá nhân" },
   ];

@@ -13,6 +13,8 @@ const [name,setName] = useState("")
 const [desc,setDesc] = useState("")
 const [categoryId, setCategoryId] = useState(""); 
 const [arrayCategory, setArrayCategory] = useState([]);  
+const [collections, setCollections] = useState([]);
+const [selectedCollections, setSelectedCollections] = useState([]);
 const navigate = useNavigate()
 const materialOptions = [
   { name: "Vàng", color: "#FFD700" },
@@ -159,6 +161,29 @@ useEffect(()=>{
         setArrayCategory([]);
     })
 },[])
+
+useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(`${pathAdmin}/admin/collections`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include",
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data?.code === "error") {
+            throw new Error(data.message || "Unauthorized");
+        }
+        setCollections(data?.data || [])
+    })
+    .catch((err) => {
+        console.error("Fetch collections failed", err);
+        setCollections([]);
+    })
+},[])
 const renderOptions = (categories, level = 0) => {
   return categories.map(item => (
     <React.Fragment key={item.id}>
@@ -203,6 +228,7 @@ const handlerSubmit = (e) => {
     formData.append("name", name);
     formData.append("description", desc);
     formData.append("category", categoryId);
+    formData.append("collections", JSON.stringify(selectedCollections));
     formData.append("options", JSON.stringify({
         materials,
         colors,
@@ -284,6 +310,26 @@ return(
                         <option value=""> -- Chọn danh mục -- </option>
                         {renderOptions(arrayCategory)}
                     </select>
+                </div>
+
+                <div className="flex flex-col">
+                    <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
+                    <select
+                        multiple
+                        value={selectedCollections}
+                        onChange={(e) => {
+                            const values = Array.from(e.target.selectedOptions).map((o) => o.value);
+                            setSelectedCollections(values);
+                        }}
+                        className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
+                    >
+                        {collections.map((c) => (
+                            <option key={c._id} value={c._id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
                 </div>
                 {categoryType!=="" &&(
                     <>

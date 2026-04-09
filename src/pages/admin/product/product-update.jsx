@@ -15,6 +15,8 @@ export default function ProductUpdate() {
   const [desc, setDesc] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [arrayCategory, setArrayCategory] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollections, setSelectedCollections] = useState([]);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -223,6 +225,33 @@ export default function ProductUpdate() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const controller = new AbortController();
+
+    fetch(`${pathAdmin}/admin/collections`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      credentials: "include",
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+        setCollections(data?.data || []);
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        console.error("Fetch collections failed", err);
+        setCollections([]);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
 
     const token = localStorage.getItem("token");
@@ -252,6 +281,11 @@ export default function ProductUpdate() {
 
         const catId = product?.category?._id || product?.category?.id || product?.category || "";
         setCategoryId(catId);
+
+        const selected = (product?.collections || [])
+          .map((c) => c?._id || c?.id || c)
+          .filter(Boolean);
+        setSelectedCollections(selected);
 
         const normalized = (product?.variants || []).map(normalizeVariant);
         setVariants(normalized);
@@ -347,6 +381,7 @@ export default function ProductUpdate() {
       formData.append("name", name);
       formData.append("description", desc);
       formData.append("category", categoryId);
+      formData.append("collections", JSON.stringify(selectedCollections));
       formData.append(
         "options",
         JSON.stringify({
@@ -460,6 +495,26 @@ export default function ProductUpdate() {
               <option value=""> -- Chon danh muc -- </option>
               {renderOptions(arrayCategory)}
             </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
+            <select
+              multiple
+              value={selectedCollections}
+              onChange={(e) => {
+                const values = Array.from(e.target.selectedOptions).map((o) => o.value);
+                setSelectedCollections(values);
+              }}
+              className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
+            >
+              {collections.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
           </div>
 
           {categoryType !== "" && (

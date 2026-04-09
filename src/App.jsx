@@ -16,8 +16,12 @@ import PrivateRoute from "./pages/admin/components/private"
 import ProductCreate from "./pages/admin/product/product-create";
 import ProductList from "./pages/admin/product/product-list";
 import ProductUpdate from "./pages/admin/product/product-update";
+import CollectionList from "./pages/admin/collection/collection-list";
+import CollectionCreate from "./pages/admin/collection/collection-create";
+import CollectionUpdate from "./pages/admin/collection/collection-update";
 import DesignList from "./pages/admin/design/design-list";
 import ClientList from "./pages/admin/client/client-list";
+import WishlistList from "./pages/admin/wishlist/wishlist-list";
 import OrderList from "./pages/admin/order/order-list";
 function App() {
   return (
@@ -133,6 +137,39 @@ function App() {
         />
 
         <Route
+          path={routes.collectionList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <CollectionList />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.collectionCreate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <CollectionCreate />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.collectionUpdate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <CollectionUpdate />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path={routes.designList}
           element={
             <PrivateRoute>
@@ -160,6 +197,17 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <OrderList />
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path={routes.wishlistList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <WishlistList />
               </LayoutAdmin>
             </PrivateRoute>
           }
