@@ -36,11 +36,11 @@ const Header = ()=>{
             <div className="z-[9999] fixed top-0 left-0 right-0 lg:px-[60px] sm:px-[40px] px-[16px] py-[5px] bg-white flex justify-between items-center border-b border-b-gray-300">
                 <img className="w-[100px]" src="/client/images/logo.jpg" alt="" />
                 <div className="flex items-center gap-[10px]">
-                    <img className="md:w-[50px] md:h-[50px] w-[30px] h-[30px]" src="/image/user.png" alt="" />
+                    <img className="md:w-[50px] md:h-[50px] w-[30px] h-[30px]" src={user?.avatar || ""} alt="" />
                     <div className="flex flex-col">
                         <span className="sm:text-[14px] text-[10px] font-[700]">{user?.fullName}</span>
-                        <span className="sm:text-[14px] text-[10px]">None</span>
-                    </div>
+                        <span className="sm:text-[14px] text-[10px]">{user?.positionCompany}</span>     
+                    </div>         
                     <IoMdMenu onClick={openMenu} className="lg:hidden block md:ml-[20px] ml-[5px] md:text-[36px] text-[30px]"/>
                 </div>
             </div>

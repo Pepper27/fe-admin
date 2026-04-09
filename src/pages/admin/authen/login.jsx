@@ -40,6 +40,7 @@ export default function Login() {
                             alert(data.message)
                         }
                         else {
+                            sessionStorage.removeItem("admin_profile_cache");
                             localStorage.setItem("token", data.token);
                             navigate("/admin/dashboard")
                         }

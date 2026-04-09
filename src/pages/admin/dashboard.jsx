@@ -13,8 +13,10 @@ export default function DashboardNew() {
     orderNew: [],
   });
   const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
 
   const [chartLoaded, setChartLoaded] = useState(false);
+  const canViewStatistics = permissions.includes("statistics-view");
 
   const [revenueMonth, setRevenueMonth] = useState(() => {
     const now = new Date();
@@ -42,6 +44,42 @@ export default function DashboardNew() {
     return { label: "Đã hủy", cls: "bg-[#FEE2E2] text-[#EF4444]" };
   };
   useEffect(() => {
+    const cacheRaw = sessionStorage.getItem("admin_profile_cache");
+    if (cacheRaw) {
+      try {
+        const parsed = JSON.parse(cacheRaw);
+        if (Array.isArray(parsed?.permissions)) {
+          setPermissions(parsed.permissions);
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    const token = localStorage.getItem("token");
+    fetch(`${pathAdmin}/admin/account/user`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const nextPermissions = Array.isArray(data?.data?.permissions)
+          ? data.data.permissions
+          : [];
+        setPermissions(nextPermissions);
+        sessionStorage.setItem(
+          "admin_profile_cache",
+          JSON.stringify({ permissions: nextPermissions })
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
     fetch(`${pathAdmin}/admin/dashboard`, {
@@ -66,6 +104,7 @@ export default function DashboardNew() {
   }, []);
 
   useEffect(() => {
+    if (!canViewStatistics) return;
     const ensureChartJs = async () => {
       if (window.Chart) return;
 
@@ -86,7 +125,7 @@ export default function DashboardNew() {
     ensureChartJs()
       .then(() => setChartLoaded(true))
       .catch(() => setChartLoaded(false));
-  }, []);
+  }, [canViewStatistics]);
 
   useEffect(() => {
     if (!inventoryCategory && (dashboard?.categoryList || []).length) {
@@ -96,6 +135,7 @@ export default function DashboardNew() {
 
   // Biểu đồ doanh thu
   useEffect(() => {
+    if (!canViewStatistics) return;
     if (!chartLoaded) return;
     const revenueCanvas = document.getElementById("revenue-chart");
     if (!revenueCanvas) return;
@@ -180,10 +220,11 @@ export default function DashboardNew() {
         });
       })
       .catch(() => {});
-  }, [chartLoaded, revenueMonth]);
+  }, [chartLoaded, revenueMonth, canViewStatistics]);
 
     // Biểu đồ tồn kho
     useEffect(() => {
+        if (!canViewStatistics) return;
         if (!chartLoaded) return;
         const inventoryCanvas = document.getElementById("inventoryChart");
         if (!inventoryCanvas) return;
@@ -258,7 +299,7 @@ export default function DashboardNew() {
             });
         })
         .catch(() => {});
-    }, [chartLoaded, inventoryCategory]);
+    }, [chartLoaded, inventoryCategory, canViewStatistics]);
 
   return (
     <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
@@ -301,95 +342,99 @@ export default function DashboardNew() {
         </div>
       </div>
 
-      {/* Section 2: Biểu đồ doanh thu */}
-      <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
-        <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-          <div className="flex items-center justify-between mb-[20px]">
-            <div className="text-[23px] font-[700]">Biểu đồ doanh thu</div>
-            <input
-              type="month"
-              name=""
-              chart="true"
-              value={revenueMonth}
-              onChange={(e) => setRevenueMonth(e.target.value)}
-              className="bg-[#F3F4F6] px-[12px] py-[8px] rounded-[10px] text-[14px]"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <canvas id="revenue-chart" style={{ height: "250px" }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Thống kê tồn kho */}
-      <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
-        <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-          <div className="text-[23px] font-[700] mb-[15px]">Thống kê tồn kho</div>
-
-          <div className="flex flex-wrap gap-[10px] mb-[15px]">
-            {(dashboard.categoryList || []).map((item) => (
-              <span
-                key={item.id}
-                inventory-id={item.id}
-                className={`cursor-pointer text-[14px] font-[600] px-[10px] py-[6px] rounded-[999px] ${inventoryCategory === item.id ? "bg-pri text-white" : "bg-[#F3F4F6]"}`}
-                onClick={() => {
-                  const url = new URL(window.location.href);
-                  if (item.id) url.searchParams.set("category", item.id);
-                  window.history.replaceState({}, "", url);
-                  setInventoryCategory(item.id);
-                }}
-              >
-                {item.name}
-              </span>
-            ))}
+      {canViewStatistics ? (
+        <>
+          {/* Section 2: Biểu đồ doanh thu */}
+          <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
+            <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
+              <div className="flex items-center justify-between mb-[20px]">
+                <div className="text-[23px] font-[700]">Biểu đồ doanh thu</div>
+                <input
+                  type="month"
+                  name=""
+                  chart="true"
+                  value={revenueMonth}
+                  onChange={(e) => setRevenueMonth(e.target.value)}
+                  className="bg-[#F3F4F6] px-[12px] py-[8px] rounded-[10px] text-[14px]"
+                />
+              </div>
+              <div className="overflow-x-auto">
+                <canvas id="revenue-chart" style={{ height: "250px" }} />
+              </div>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <canvas id="inventoryChart" style={{ height: "300px",width:"auto"}} />
+          {/* Section 2: Thống kê tồn kho */}
+          <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
+            <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
+              <div className="text-[23px] font-[700] mb-[15px]">Thống kê tồn kho</div>
+
+              <div className="flex flex-wrap gap-[10px] mb-[15px]">
+                {(dashboard.categoryList || []).map((item) => (
+                  <span
+                    key={item.id}
+                    inventory-id={item.id}
+                    className={`cursor-pointer text-[14px] font-[600] px-[10px] py-[6px] rounded-[999px] ${inventoryCategory === item.id ? "bg-pri text-white" : "bg-[#F3F4F6]"}`}
+                    onClick={() => {
+                      const url = new URL(window.location.href);
+                      if (item.id) url.searchParams.set("category", item.id);
+                      window.history.replaceState({}, "", url);
+                      setInventoryCategory(item.id);
+                    }}
+                  >
+                    {item.name}
+                  </span>
+                ))}
+              </div>
+
+              <div className="overflow-x-auto">
+                <canvas id="inventoryChart" style={{ height: "300px", width: "auto" }} />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Section 2:  Top sp */}
-      <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
-        <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-        <div className="text-[23px] font-[700] mb-[15px]">Top sản phẩm bán chạy</div>
+          {/* Section 2:  Top sp */}
+          <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
+            <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
+            <div className="text-[23px] font-[700] mb-[15px]">Top sản phẩm bán chạy</div>
 
-        <div className="overflow-x-auto">
-            <table className="w-full">
-            <thead className="bg-[#e5e1e1]">
-                <tr>
-                <td className="p-[15px] text-[14px] font-[600] w-[60px] rounded-l-[10px]">STT</td>
-                <td className="p-[15px] text-[14px] font-[600] w-[170px]">Tên sản phẩm</td>
-                <td className="p-[15px] text-[14px] font-[600] w-[100px]">Đã bán</td>
-                <td className="p-[15px] text-[14px] font-[600] w-[170px] rounded-r-[10px]">Doanh thu</td>
-                </tr>
-            </thead>
-            <tbody>
-                {(dashboard.topProduct || []).length ? (
-                    dashboard.topProduct.map((item, index) => (
-                        <tr key={index} className="border-b border-gray-300">
-                        <td className="p-[15px] text-[14px] font-[700] text-[var(--pri)]">
-                            {index + 1}
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                <thead className="bg-[#e5e1e1]">
+                    <tr>
+                    <td className="p-[15px] text-[14px] font-[600] w-[60px] rounded-l-[10px]">STT</td>
+                    <td className="p-[15px] text-[14px] font-[600] w-[170px]">Tên sản phẩm</td>
+                    <td className="p-[15px] text-[14px] font-[600] w-[100px]">Đã bán</td>
+                    <td className="p-[15px] text-[14px] font-[600] w-[170px] rounded-r-[10px]">Doanh thu</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {(dashboard.topProduct || []).length ? (
+                        dashboard.topProduct.map((item, index) => (
+                            <tr key={index} className="border-b border-gray-300">
+                            <td className="p-[15px] text-[14px] font-[700] text-[var(--pri)]">
+                                {index + 1}
+                            </td>
+                            <td className="p-[15px] text-[14px]">{item.name}</td>
+                            <td className="p-[15px] text-[14px] ">{item.sold}</td>
+                            <td className="p-[15px] text-[14px]">{formatPrice(item.profit)}</td>
+                            </tr>
+                        ))
+                    ) : (
+                    <tr>
+                        <td colSpan={4} className="p-[15px] text-[14px] ">
+                        Chưa có dữ liệu
                         </td>
-                        <td className="p-[15px] text-[14px]">{item.name}</td>
-                        <td className="p-[15px] text-[14px] ">{item.sold}</td>
-                        <td className="p-[15px] text-[14px]">{formatPrice(item.profit)}</td>
-                        </tr>
-                    ))
-                ) : (
-                <tr>
-                    <td colSpan={4} className="p-[15px] text-[14px] ">
-                    Chưa có dữ liệu
-                    </td>
-                </tr>
-                )}
-            </tbody>
-            </table>
-        </div>
-        </div>
+                    </tr>
+                    )}
+                </tbody>
+                </table>
+            </div>
+            </div>
 
-      </div>
+          </div>
+        </>
+      ) : null}
 
       {/* Section 3: Đơn hàng mới */}
       <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">

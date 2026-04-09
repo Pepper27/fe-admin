@@ -13,6 +13,7 @@ import CategoryUpdate from "./pages/admin/category/category-update";
 import Dashboard from "./pages/admin/dashboard";
 import LayoutAdmin from "./pages/admin/components/layout";
 import PrivateRoute from "./pages/admin/components/private"
+import PermissionGuard from "./pages/admin/components/permission-guard";
 import ProductCreate from "./pages/admin/product/product-create";
 import ProductList from "./pages/admin/product/product-list";
 import ProductUpdate from "./pages/admin/product/product-update";
@@ -23,6 +24,14 @@ import DesignList from "./pages/admin/design/design-list";
 import ClientList from "./pages/admin/client/client-list";
 import WishlistList from "./pages/admin/wishlist/wishlist-list";
 import OrderList from "./pages/admin/order/order-list";
+import RoleList from "./pages/admin/setting/role/role-list";
+import RoleCreate from "./pages/admin/setting/role/role-ceate";
+import RoleUpdate from "./pages/admin/setting/role/role-update";
+import SettingList from "./pages/admin/setting/setting-list";
+import SettingAccountList from "./pages/admin/setting/account/setting-account-list";
+import SettingAccountCreate from "./pages/admin/setting/account/setting-account-create";
+import SettingAccountUpdate from "./pages/admin/setting/account/setting-account-update";
+import SettingInfoWebsite from "./pages/admin/setting/setting-info-website";
 function App() {
   return (
     <BrowserRouter>
@@ -36,7 +45,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <Dashboard />
+                <PermissionGuard permission="dashboard-view">
+                  <Dashboard />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -46,7 +57,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <BlogList />
+                <PermissionGuard permission="new-view">
+                  <BlogList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -56,7 +69,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <BlogCreate />
+                <PermissionGuard permission="new-create">
+                  <BlogCreate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -66,7 +81,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <BlogUpdate />
+                <PermissionGuard permission="new-edit">
+                  <BlogUpdate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -77,7 +94,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CategoryList />
+                <PermissionGuard permission="category-view">
+                  <CategoryList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -88,7 +107,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CategoryCreate />
+                <PermissionGuard permission="category-create">
+                  <CategoryCreate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -99,7 +120,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CategoryUpdate />
+                <PermissionGuard permission="category-edit">
+                  <CategoryUpdate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -109,7 +132,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <ProductCreate />
+                <PermissionGuard permission="product-create">
+                  <ProductCreate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -120,7 +145,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <ProductList />
+                <PermissionGuard permission="product-view">
+                  <ProductList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -130,7 +157,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <ProductUpdate />
+                <PermissionGuard permission="product-edit">
+                  <ProductUpdate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -141,7 +170,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CollectionList />
+                <PermissionGuard permission="collection-view">
+                  <CollectionList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -152,7 +183,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CollectionCreate />
+                <PermissionGuard permission="collection-create">
+                  <CollectionCreate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -163,7 +196,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <CollectionUpdate />
+                <PermissionGuard permission="collection-edit">
+                  <CollectionUpdate />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -174,7 +209,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <DesignList />
+                <PermissionGuard permission="my-designs-view">
+                  <DesignList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -185,7 +222,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <ClientList />
+                <PermissionGuard permission="user-view">
+                  <ClientList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -196,7 +235,9 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <OrderList />
+                <PermissionGuard permission="order-view">
+                  <OrderList />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }
@@ -207,7 +248,105 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <WishlistList />
+                <PermissionGuard permission="wishlist-view">
+                  <WishlistList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.roleList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="role-view">
+                  <RoleList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.roleCreate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="role-create">
+                  <RoleCreate />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.roleUpdate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="role-edit">
+                  <RoleUpdate />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="setting-view">
+                  <SettingList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingAccountList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="account-view">
+                  <SettingAccountList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingAccountCreate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="account-create">
+                  <SettingAccountCreate />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingAccountUpdate}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="account-edit">
+                  <SettingAccountUpdate />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingWebsiteInfo}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="info-view">
+                  <SettingInfoWebsite />
+                </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
           }

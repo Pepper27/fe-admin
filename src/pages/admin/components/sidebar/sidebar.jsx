@@ -7,26 +7,80 @@ import { FaPalette } from "react-icons/fa";
 import { FaUsers } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
 
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { pathAdmin } from "../../../../config/api";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [permissions, setPermissions] = useState([]);
 
   const arrayLink = [
-    { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan" },
-    { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục" },
-    { icon: MdOutlinePets, href: "/admin/collection", title: "Quản lý bộ sưu tập" },
-    { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
-    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
-    { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
-    { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
-    { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
-    { icon: FaRegHeart, href: "/admin/wishlist", title: "Thống kê Wishlist" },
-    { icon: IoMdSettings, href: "/admin/setting", title: "Cài đặt chung" },
+    { icon: MdSpaceDashboard, href: "/admin/dashboard", title: "Tổng quan", permission: "dashboard-view" },
+    { icon: MdCategory, href: "/admin/category", title: "Quản lý danh mục", permission: "category-view" },
+    { icon: MdOutlinePets, href: "/admin/collection", title: "Quản lý bộ sưu tập",permission: "collection-view"  },
+    { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm", permission: "product-view" },
+    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs",permission: "my-designs-view" },
+    { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng", permission: "order-view" },
+    { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết", permission: "new-view" },
+    { icon: FaUsers, href: "/admin/client", title: "Quản lý account", permission: "user-view" },
+    { icon: FaRegHeart, href: "/admin/wishlist", title: "Thống kê Wishlist",permission: "wishlist-view" },
+    {
+      icon: IoMdSettings,
+      href: "/admin/setting",
+      title: "Cài đặt chung",
+      anyPermissions: ["setting-view", "role-view", "account-view", "info-view"],
+    },
     { icon: FaUserCog, href: "/admin/profile", title: "Thông tin cá nhân" },
   ];
+
+  useEffect(() => {
+    const cacheRaw = sessionStorage.getItem("admin_profile_cache");
+    if (cacheRaw) {
+      try {
+        const parsed = JSON.parse(cacheRaw);
+        if (Array.isArray(parsed?.permissions)) {
+          setPermissions(parsed.permissions);
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    const token = localStorage.getItem("token");
+    fetch(`${pathAdmin}/admin/account/user`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
+      },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const nextPermissions = Array.isArray(data?.data?.permissions)
+          ? data.data.permissions
+          : [];
+        setPermissions(nextPermissions);
+        sessionStorage.setItem(
+          "admin_profile_cache",
+          JSON.stringify({ permissions: nextPermissions })
+        );
+      })
+      .catch(() => setPermissions([]));
+  }, []);
+
+  const visibleLinks = useMemo(() => {
+    return arrayLink.filter((item) => {
+      if (item.permission) return permissions.includes(item.permission);
+      if (item.anyPermissions) {
+        return item.anyPermissions.some((p) => permissions.includes(p));
+      }
+      return true;
+    });
+  }, [arrayLink, permissions]);
 
   const logout = async () => {
     try {
@@ -43,6 +97,7 @@ const Sidebar = () => {
 
       const data = await res.json();
       if (data.code === "success") {
+        sessionStorage.removeItem("admin_profile_cache");
         localStorage.removeItem("token");
         navigate("/admin/authen/login");
       }
@@ -56,7 +111,7 @@ const Sidebar = () => {
       <div menu-view="true" className="lg:z-[9999] z-[99999] lg:flex  transform lg:-translate-x-0 -translate-x-full transition-transform duration-600 ease-in-out  fixed top-0 left-0 custom-scroll overflow-y-auto sm:pl-[20px] pl-[10px] pt-[20px] bg-[white] sm:w-[270px] w-[240px] h-full border-r border-r-gray-200">
         <div className="flex flex-col ">
           {
-            arrayLink.map((item,index)=>{
+            visibleLinks.map((item,index)=>{
               const Icon= item.icon
               const isActive = location.pathname.includes(item.href);
               return(        

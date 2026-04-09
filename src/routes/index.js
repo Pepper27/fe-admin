@@ -19,5 +19,13 @@ export const routes = {
   clientList: "/admin/client",
   orderList: "/admin/order",
   wishlistList: "/admin/wishlist",
+  roleList: "/admin/role",
+  roleCreate: "/admin/role/create",
+  roleUpdate: "/admin/role/update/:id",
+  settingList: "/admin/setting",
+  settingAccountList: "/admin/setting/account",
+  settingAccountCreate: "/admin/setting/account/create",
+  settingAccountUpdate: "/admin/setting/account/update/:id",
+  settingWebsiteInfo: "/admin/setting/website-info",
   dashboard: "/admin/dashboard"
 };
