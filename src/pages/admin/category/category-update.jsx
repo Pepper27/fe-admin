@@ -15,6 +15,7 @@ export default function CategoryUpdate() {
     const [position,setPosition] = useState("")
     const [desc,setDesc] = useState("")
     const [categoryId, setCategoryId] = useState(""); 
+      const [existingAvatar, setExistingAvatar] = useState("");
     const [arrayCategory, setArrayCategory] = useState([]);  
     const navigate = useNavigate();
     useEffect(()=>{
@@ -65,6 +66,7 @@ export default function CategoryUpdate() {
             setPosition(cate.position)
             setDesc(cate.description)
             setCategoryId(cate.parent || "")
+            setExistingAvatar(cate.avatar || "");
         });
     }, [id]);
     const renderOptions = (categories, level = 0) => {
@@ -89,11 +91,6 @@ export default function CategoryUpdate() {
         if (!desc.trim()) {
             newErrors.desc = "Mô tả không được để trống";
         }
-
-        if (files.length === 0) {
-            newErrors.avatar = "Vui lòng chọn ảnh đại diện";
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -132,7 +129,7 @@ export default function CategoryUpdate() {
     return(
         <>
             <form onSubmit={handlerSubmit} className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-                <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Tạo danh mục</div>
+                <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Cập nhật danh mục</div>
                 <div className="mb-[30px] grid sm:grid-cols-2 grid-cols-1 gap-y-[20px] gap-x-[30px] bg-[white] sm:py-[30px] py-[20px] sm:px-[40px] px-[20px] border border-gray-300 rounded-[15px]">
                     <div className="flex flex-col">
                         <label className="text-[13px] mb-[5px]">Tên danh mục</label>
@@ -165,24 +162,23 @@ export default function CategoryUpdate() {
                             {renderOptions(arrayCategory)}
                         </select>
                     </div>
-                    <div className="flex flex-col sm:col-span-2 col-span-1">
+                   <div className="flex flex-col sm:col-span-2 col-span-1">
                         <label className="text-[13px] mb-[5px]">Ảnh đại diện</label>
+                        {existingAvatar && files.length === 0 ? (
+                        <img className="rounded-[10px] w-[120px] mb-[10px]" src={existingAvatar} alt={name} />
+                        ) : null}
                         <FilePond
-                            files={files}
-                            onupdatefiles={(fileItems) => {
-                                setFiles(fileItems.map(item => item.file));
-                                setErrors((prev) => ({ ...prev, avatar: "" }));
-                            }}
-                            allowMultiple={false}
-                            maxFiles={1}
-                            name="avatar"
-                            labelIdle="Chọn ảnh hoặc kéo thả vào đây"
+                        files={files}
+                        onupdatefiles={(fileItems) => {
+                            setFiles(fileItems.map((item) => item.file));
+                            setErrors((prev) => ({ ...prev, avatar: "" }));
+                        }}
+                        allowMultiple={false}
+                        maxFiles={1}
+                        name="avatar"
+                        labelIdle="Chọn ảnh hoặc kéo thả vào đây"
                         />
-                        {errors.avatar && (
-                            <span className="text-red-500 text-[11px] mt-[-12px]">
-                            {errors.avatar}
-                            </span>
-                        )}
+                        {errors.avatar && <span className="text-red-500 text-[11px] mt-[-12px]">{errors.avatar}</span>}
                     </div>
                     <div className="flex flex-col sm:col-span-2 col-span-1">
                         <label className="text-[13px] mb-[5px]">Vị trí</label>
