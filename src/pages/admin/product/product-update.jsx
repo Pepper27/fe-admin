@@ -11,6 +11,7 @@ import { pathAdmin } from "../../../config/api";
 registerPlugin(FilePondPluginImagePreview);
 
 export default function ProductUpdate() {
+  
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -45,11 +46,18 @@ export default function ProductUpdate() {
 
   const [materials, setMaterials] = useState([]);
   const [openMaterial, setOpenMaterial] = useState(true);
+
   const toggleMaterial = (value) => {
-    setMaterials((prev) =>
-      prev.includes(value) ? prev.filter((m) => m !== value) : [...prev, value]
-    );
-  };
+  setMaterials((prev) => {
+    const newMaterials = prev.includes(value) 
+      ? prev.filter((m) => m !== value) 
+      : [...prev, value];
+    
+  
+    rebuildVariantsManual(newMaterials, colors, sizes);
+    return newMaterials;
+  });
+};
 
   const colorOptions = [
     { name: "Den", code: "#000000" },
@@ -73,14 +81,16 @@ export default function ProductUpdate() {
   const normalizeColor = (value) => colorMap[normalizeText(value)] || String(value || "").trim();
 
   const [colors, setColors] = useState([]);
-  const toggleColor = (colorName) => {
-    setColors((prev) =>
-      prev.includes(colorName)
-        ? prev.filter((c) => c !== colorName)
-        : [...prev, colorName]
-    );
-  };
 
+  const toggleColor = (colorName) => {
+    setColors((prev) => {
+      const newColors = prev.includes(colorName)
+        ? prev.filter((c) => c !== colorName)
+        : [...prev, colorName];
+      rebuildVariantsManual(materials, newColors, sizes);
+      return newColors;
+    });
+  };
   const [openColor, setOpenColor] = useState(true);
   const sizeOptions = [16, 17, 18, 19, 20, 21, 22];
   const normalizeSize = (value) => {
@@ -90,12 +100,16 @@ export default function ProductUpdate() {
   const [sizes, setSizes] = useState([]);
   const [openSize, setOpenSize] = useState(true);
 
-  const toggleSize = (size) => {
-    setSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
-  };
 
+  const toggleSize = (size) => {
+    setSizes((prev) => {
+      const newSizes = prev.includes(size)
+        ? prev.filter((s) => s !== size)
+        : [...prev, size];
+      rebuildVariantsManual(materials, colors, newSizes);
+      return newSizes;
+    });
+  };
   const [categoryType, setCategoryType] = useState("");
   const [variants, setVariants] = useState([]);
   const [errors, setErrors] = useState({});
@@ -130,7 +144,7 @@ export default function ProductUpdate() {
     return `${materialKey}__${colorKey}__${sizeKey}`;
   };
 
-  const buildVariants = (baseVariants) => {
+  const buildVariantsWithParams = (baseVariants, currentMaterials, currentColors, currentSizes) => {
     const result = [];
 
     const variantMap = new Map(
@@ -144,8 +158,8 @@ export default function ProductUpdate() {
       variantMap.get(getVariantKey(m, categoryType === "charm" ? c : "", categoryType === "charm" ? "" : s));
 
     if (categoryType === "charm") {
-      materials.forEach((m) => {
-        colors.forEach((c) => {
+      currentMaterials.forEach((m) => {
+        currentColors.forEach((c) => {
           const old = pickOldVariant(m, c, "");
           result.push({
             material: m,
@@ -176,24 +190,23 @@ export default function ProductUpdate() {
     return result;
   };
 
-  useEffect(() => {
-    if (!categoryType) return;
-
-    const hasRequiredOptions =
-      materials.length > 0 && (categoryType === "charm" ? colors.length > 0 : sizes.length > 0);
-
-    if (!hasRequiredOptions) {
-      setVariants([]);
-      return;
-    }
-
-    setVariants((prev) => buildVariants(prev));
-  }, [categoryType, materials, colors, sizes]);
-
   const updateVariant = (index, field, value) => {
     const newVariants = [...variants];
     newVariants[index][field] = value;
     setVariants(newVariants);
+  };
+  const rebuildVariantsManual = (currentMaterials, currentColors, currentSizes) => {
+  
+    const hasRequired = currentMaterials.length > 0 && 
+      (categoryType === "charm" ? currentColors.length > 0 : currentSizes.length > 0);
+
+    if (!hasRequired) {
+      setVariants([]);
+      return;
+    }
+
+    const updatedVariants = buildVariantsWithParams(variants, currentMaterials, currentColors, currentSizes);
+    setVariants(updatedVariants);
   };
 
   useEffect(() => {
@@ -250,7 +263,7 @@ export default function ProductUpdate() {
 
     return () => controller.abort();
   }, []);
-
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   useEffect(() => {
     if (!id) return;
 
@@ -288,6 +301,7 @@ export default function ProductUpdate() {
         setSelectedCollections(selected);
 
         const normalized = (product?.variants || []).map(normalizeVariant);
+        setIsInitialLoad(true);
         setVariants(normalized);
 
         setMaterials([...new Set(normalized.map((v) => v.material).filter(Boolean))]);
@@ -296,6 +310,7 @@ export default function ProductUpdate() {
 
         const hasColor = normalized.some((v) => v.color);
         setCategoryType(hasColor ? "charm" : "normal");
+        setTimeout(() => setIsInitialLoad(false), 200);
       })
       .catch((err) => {
         if (err?.name === "AbortError") return;
@@ -366,7 +381,7 @@ export default function ProductUpdate() {
       return;
     }
 
-    const variantsForSubmit = buildVariants(variants);
+    const variantsForSubmit = variants;
     if (!variantsForSubmit.length) {
       alert("Chua co bien the nao de cap nhat");
       return;

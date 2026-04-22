@@ -225,14 +225,18 @@ const handlerSubmit = (e) => {
     if (!validate()) return;
     const token = localStorage.getItem("token");
     const formData = new FormData();
+    // Lọc lại các thuộc tính thực sự còn tồn tại sau khi user đã xóa bớt variant
+    const actualMaterials = [...new Set(variants.map(v => v.material).filter(Boolean))];
+    const actualColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+    const actualSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
     formData.append("name", name);
     formData.append("description", desc);
     formData.append("category", categoryId);
     formData.append("collections", JSON.stringify(selectedCollections));
-    formData.append("options", JSON.stringify({
-        materials,
-        colors,
-        sizes
+   formData.append("options", JSON.stringify({
+        materials: actualMaterials,
+        colors: actualColors,
+        sizes: actualSizes
     }));
     formData.append("variants", JSON.stringify(
         variants.map(v => ({
