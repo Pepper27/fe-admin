@@ -191,9 +191,16 @@ export default function ProductUpdate() {
   };
 
   const updateVariant = (index, field, value) => {
-    const newVariants = [...variants];
-    newVariants[index][field] = value;
-    setVariants(newVariants);
+      setVariants(prevVariants => {
+          const newVariants = [...prevVariants];
+          if (newVariants[index]) {
+              newVariants[index] = {
+                  ...newVariants[index],
+                  [field]: value
+              };
+          }
+          return newVariants;
+      });
   };
   const rebuildVariantsManual = (currentMaterials, currentColors, currentSizes) => {
   

@@ -112,6 +112,7 @@ const generateVariants = () => {
             colors.forEach(c => {
                 const old = findOldVariant(m, c, null);
                 result.push({
+                    id: crypto.randomUUID(), 
                     material: m,
                     color: c,
                     price: old?.price || 0,
@@ -155,10 +156,17 @@ const generateVariants = () => {
     setVariants(result);
 };
 const updateVariant = (index, field, value) => {
-    const newVariants = [...variants]
-    newVariants[index][field] = value
-    setVariants(newVariants)
-}
+    setVariants(prevVariants => {
+        const newVariants = [...prevVariants];
+        if (newVariants[index]) {
+            newVariants[index] = {
+                ...newVariants[index],
+                [field]: value
+            };
+        }
+        return newVariants;
+    });
+};
 
 const [variants,setVariants] = useState([])
 useEffect(()=>{
@@ -252,7 +260,7 @@ const handlerSubmit = (e) => {
     if (!validate()) return;
     const token = localStorage.getItem("token");
     const formData = new FormData();
-    // Lọc lại các thuộc tính thực sự còn tồn tại sau khi user đã xóa bớt variant
+   
     const actualMaterials = [...new Set(variants.map(v => v.material).filter(Boolean))];
     const actualColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
     const actualSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
@@ -260,27 +268,30 @@ const handlerSubmit = (e) => {
     formData.append("description", desc);
     formData.append("category", categoryId);
     formData.append("collections", JSON.stringify(selectedCollections));
-   formData.append("options", JSON.stringify({
+    formData.append("options", JSON.stringify({
         materials: actualMaterials,
         colors: actualColors,
         sizes: actualSizes
     }));
-    formData.append("variants", JSON.stringify(
-        variants.map(v => ({
+    const variantsData = variants.map((v, index) => {
+        // Đính kèm ảnh vào FormData với index MỚI NHẤT của mảng hiện tại
+        if (v.image && v.image.length > 0) {
+            v.image.forEach(file => {
+                // file ở đây phải là đối tượng File/Blob từ FilePond
+                formData.append(`images-${index}`, file); 
+            });
+        }
+        
+        return {
             material: v.material,
             color: v.color,
             size: v.size,
             price: v.price,
             quantity: v.quantity
-        }))
-    ));
-    variants.forEach((v, i) => {
-        if (v.image && v.image.length > 0) {
-            v.image.forEach(file => {
-                formData.append(`images-${i}`, file)
-            });
-        }
+        };
     });
+
+    formData.append("variants", JSON.stringify(variantsData));
     console.log(variants)
     fetch(`${pathAdmin}/admin/products`, {
         method: "POST",
@@ -294,6 +305,7 @@ const handlerSubmit = (e) => {
         navigate("/admin/product");
     });
 };
+
 return(
     <>
         <form onSubmit={handlerSubmit} className="xl:w-[calc(100%-240px)] lg:w-[calc(100%-220px)] w-full pt-[100px] lg:ml-[240px] l-0 flex flex-col mx-[16px] sm:px-[30px] px-[10px] sm:pr-[55px] pr-[30px]">
@@ -493,68 +505,63 @@ return(
                             </tr>
                         </thead>
                         <tbody>
-{variants.map((v,i)=>(
-                                <tr key={i} className='text-center'>
-                                    <td>{v.material}</td>
-                                    {(categoryType === "charm" || categoryType === "ring") &&(
-                                        <td>{v.color}</td>
-                                    )}
-                                    {categoryType !== "charm" && (
-                                        <td>{v.size}</td>
-                                    )}
-                                    <td>
-                                        <input 
-                                            type='number'
-                                            className='text-center focus:outline-none'
-                                            value={v.price}
-                                            onChange={e=>updateVariant(i,"price",e.target.value)}
-                                        />
-                                    </td>
-                                    <td>
-                                        <input 
-                                            type='number'
-                                            className='text-center focus:outline-none'
-                                            value={v.quantity}
-                                            onChange={e=>updateVariant(i,"quantity",e.target.value)}
-                                        />
-                                    </td>
-                                    <td>
-                                        <div className="variant-upload">
-                                           <FilePond
-                                                files={
-                                                    v.image
-                                                        ? v.image.map(file => ({
-                                                            source: file,
-                                                            options: { type: "local" }
-                                                        }))
-                                                        : []
-                                                }
-                                                onupdatefiles={(fileItems) => {
-                                                    const files = fileItems.map(f => f.file) // 👈 lấy ALL file
-                                                    updateVariant(i, "image", files)
-                                                }}
-                                                allowMultiple={true}
-                                                maxFiles={5}
-                                                name={`images-${i}`}
-                                                labelIdle="Kéo thả hoặc chọn ảnh"
-                                            />
-                     
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            onClick={()=>{
-                                                const newVariants = variants.filter((_,index)=> index !== i)
-                                                setVariants(newVariants)
+                        {variants.map((v,i)=>(
+                            <tr key={i} className='text-center'>
+                                <td>{v.material}</td>
+                                {(categoryType === "charm" || categoryType === "ring") &&(
+                                    <td>{v.color}</td>
+                                )}
+                                {categoryType !== "charm" && (
+                                    <td>{v.size}</td>
+                                )}
+                                <td>
+                                    <input 
+                                        type='number'
+                                        className='text-center focus:outline-none'
+                                        value={v.price}
+                                        onChange={e=>updateVariant(i,"price",e.target.value)}
+                                    />
+                                </td>
+                                <td>
+                                    <input 
+                                        type='number'
+                                        className='text-center focus:outline-none'
+                                        value={v.quantity}
+                                        onChange={e=>updateVariant(i,"quantity",e.target.value)}
+                                    />
+                                </td>
+                                <td>
+                                    <div className="variant-upload">
+                                        <FilePond
+                                            key={`filepond-${v.id}`} 
+                                            files={v.image ? v.image.map(file => ({
+                                                source: file,
+                                                options: { type: "local" }
+                                            })) : []}
+                                            onupdatefiles={(fileItems) => {
+                                                const files = fileItems.map(f => f.file);
+                    
+                                                setVariants(prev => prev.map(item => item.id === v.id ? {...item, image: files} : item));
                                             }}
-                                            className="text-red-500"
-                                        >
-                                            Xoá
-                                        </button>
-                                    </td>
-                                </tr>
-                             ))}
+                                            allowMultiple={true}
+                                            name="filepond" 
+                                            labelIdle="Kéo thả hoặc chọn ảnh"
+                                        />
+                                    </div>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setVariants(prev => prev.filter(item => item.id !== v.id)); // Xóa theo ID
+                                        }}
+                                        className="text-red-500"
+                                    >
+                                        Xoá
+                                    </button>
+                                </td>
+                            </tr>
+                            ))}
                         </tbody>
                     </table>
                 )}
