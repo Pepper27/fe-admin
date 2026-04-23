@@ -146,38 +146,28 @@ export default function ProductUpdate() {
 
   const buildVariantsWithParams = (baseVariants, currentMaterials, currentColors, currentSizes) => {
     const result = [];
-
     const variantMap = new Map(
       (baseVariants || []).map((v) => [
-        getVariantKey(v.material, categoryType === "charm" ? v.color : "", categoryType === "charm" ? "" : v.size),
+        getVariantKey(v.material, v.color, v.size),
         v,
       ])
     );
 
-    const pickOldVariant = (m, c, s) =>
-      variantMap.get(getVariantKey(m, categoryType === "charm" ? c : "", categoryType === "charm" ? "" : s));
+    currentMaterials.forEach((m) => {
 
-    if (categoryType === "charm") {
-      currentMaterials.forEach((m) => {
-        currentColors.forEach((c) => {
-          const old = pickOldVariant(m, c, "");
+      const colorsToLoop = (categoryType === "charm" || categoryType === "ring") ? currentColors : [""];
+      const sizesToLoop = (categoryType === "ring" || categoryType === "normal") ? currentSizes : [""];
+
+
+      const finalColors = colorsToLoop.length > 0 ? colorsToLoop : [""];
+      const finalSizes = sizesToLoop.length > 0 ? sizesToLoop : [""];
+
+      finalColors.forEach((c) => {
+        finalSizes.forEach((s) => {
+          const old = variantMap.get(getVariantKey(m, c, s));
           result.push({
             material: m,
             color: c,
-            size: "",
-            price: old?.price || 0,
-            quantity: old?.quantity || 0,
-            image: old?.image || [],
-          });
-        });
-      });
-    } else {
-      materials.forEach((m) => {
-        sizes.forEach((s) => {
-          const old = pickOldVariant(m, "", s);
-          result.push({
-            material: m,
-            color: "",
             size: s,
             price: old?.price || 0,
             quantity: old?.quantity || 0,
@@ -185,27 +175,33 @@ export default function ProductUpdate() {
           });
         });
       });
-    }
+    });
 
     return result;
   };
 
   const updateVariant = (index, field, value) => {
-      setVariants(prevVariants => {
-          const newVariants = [...prevVariants];
-          if (newVariants[index]) {
-              newVariants[index] = {
-                  ...newVariants[index],
-                  [field]: value
-              };
-          }
-          return newVariants;
-      });
+    setVariants(prevVariants => {
+      const newVariants = [...prevVariants];
+      newVariants[index] = {
+        ...newVariants[index],
+        [field]: value // 'value' ở đây sẽ là mảng [url1, url2, File1, File2]
+      };
+      return newVariants;
+    });
   };
   const rebuildVariantsManual = (currentMaterials, currentColors, currentSizes) => {
-  
-    const hasRequired = currentMaterials.length > 0 && 
-      (categoryType === "charm" ? currentColors.length > 0 : currentSizes.length > 0);
+    if (isInitialLoad) return;
+
+    let hasRequired = currentMaterials.length > 0;
+    
+    if (categoryType === "charm") {
+      hasRequired = hasRequired && currentColors.length > 0;
+    } else if (categoryType === "ring") {
+      hasRequired = hasRequired && currentColors.length > 0 && currentSizes.length > 0;
+    } else if (categoryType === "normal") {
+      hasRequired = hasRequired && currentSizes.length > 0;
+    }
 
     if (!hasRequired) {
       setVariants([]);
@@ -496,22 +492,24 @@ export default function ProductUpdate() {
             <label className="text-[13px] mb-[5px]">Danh muc</label>
             <select
               value={categoryId}
-              onChange={(e) => {
-                const value = e.target.value;
-                setCategoryId(value);
+             onChange={(e) => {
+              const value = e.target.value;
+              setCategoryId(value);
+              const selected = findCategoryById(arrayCategory, value);
+              const name = selected?.name?.toLowerCase() || "";
 
-                const selected = findCategoryById(arrayCategory, value);
-
-                if (selected?.name?.toLowerCase().includes("charm")) {
-                  setCategoryType("charm");
-                } else {
-                  setCategoryType("normal");
-                }
-                setVariants([]);
-                setMaterials([]);
-                setSizes([]);
-                setColors([]);
-              }}
+              if (name.includes("charm")) {
+                setCategoryType("charm");
+              } else if (name.includes("nhẫn") || name.includes("ring")) {
+                setCategoryType("ring"); 
+              } else {
+                setCategoryType("normal");
+              }
+              setVariants([]);
+              setMaterials([]);
+              setSizes([]);
+              setColors([]);
+            }}
               className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
             >
               <option value=""> -- Chon danh muc -- </option>
@@ -566,7 +564,7 @@ export default function ProductUpdate() {
                 )}
               </div>
 
-              {categoryType === "charm" && (
+              {(categoryType === "charm" || categoryType === "ring") && (
                 <div className="flex flex-col sm:col-span-2 col-span-1">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setOpenColor(!openColor)}>
                     <label className="text-[13px]">Mau sac</label>
@@ -598,7 +596,7 @@ export default function ProductUpdate() {
                 </div>
               )}
 
-              {categoryType !== "charm" && (
+              {(categoryType === "normal" || categoryType === "ring") && (
                 <div className="flex flex-col sm:col-span-2 col-span-1">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setOpenSize(!openSize)}>
                     <label className="text-[13px]">Size</label>
@@ -630,9 +628,9 @@ export default function ProductUpdate() {
             <table className="w-full mt-5 border sm:col-span-2 col-span-1">
               <thead>
                 <tr>
-                  <th className="w-[100px]">Chat lieu</th>
-                  {categoryType === "charm" && <th className="w-[100px]">Mau sac</th>}
-                  {categoryType !== "charm" && <th className="w-[100px]">Size</th>}
+                  <th className="w-[100px]">Chất liệu</th>
+                  {(categoryType === "charm" || categoryType === "ring") && <th className="w-[100px]">Màu sắc</th>}
+                  {(categoryType === "normal" || categoryType === "ring") && <th className="w-[100px]">Size</th>}
                   <th className="w-[100px]">Gia</th>
                   <th className="w-[100px]">So luong</th>
                   <th className="w-[200px]">Anh</th>
@@ -643,8 +641,8 @@ export default function ProductUpdate() {
                 {variants.map((v, i) => (
                   <tr key={`${getVariantKey(v.material, v.color, v.size)}-${i}`} className="text-center">
                     <td>{v.material}</td>
-                    {categoryType === "charm" && <td>{v.color}</td>}
-                    {categoryType !== "charm" && <td>{v.size}</td>}
+                    {(categoryType === "charm" || categoryType === "ring") && <td>{v.color}</td>}
+                    {(categoryType === "normal" || categoryType === "ring") && <td>{v.size}</td>}
                     <td>
                       <input
                         type="number"
@@ -697,7 +695,7 @@ export default function ProductUpdate() {
                         )}
 
                         <FilePond
-                          key={`${getVariantKey(v.material, v.color, v.size)}-pond`}
+                          key={`${getVariantKey(v.material, v.color, v.size)}-${v.image?.length}`}
                           files={
                             v.image
                               ? v.image.filter((file) => file instanceof File).map((file) => ({
@@ -706,14 +704,16 @@ export default function ProductUpdate() {
                               }))
                               : []
                           }
-                          onupdatefiles={(fileItems) => {
-                            const existingUrls = (v.image || []).filter(
+                           onupdatefiles={(fileItems) => {
+                           
+                            const currentUrls = (v.image || []).filter(
                               (item) => typeof item === "string" && item.trim()
                             );
                             const newFiles = fileItems
                               .map((f) => f.file)
                               .filter((file) => file instanceof File);
-                            updateVariant(i, "image", [...existingUrls, ...newFiles]);
+
+                            updateVariant(i, "image", [...currentUrls, ...newFiles]);
                           }}
                           allowMultiple={true}
                           maxFiles={5}

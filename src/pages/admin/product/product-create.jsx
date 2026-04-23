@@ -107,7 +107,7 @@ const generateVariants = () => {
         );
     };
 
-    if (categoryType === "charm") {
+    if (categoryType === "charm"||categoryType === "ring") {
         materials.forEach(m => {
             colors.forEach(c => {
                 const old = findOldVariant(m, c, null);
@@ -121,28 +121,13 @@ const generateVariants = () => {
                 });
             });
         });
-    } else if (categoryType === "ring") {
-        materials.forEach(m => {
-            colors.forEach(c => {
-                sizes.forEach(s => {
-                    const old = findOldVariant(m, c, s);
-                    result.push({
-                        material: m,
-                        color: c,
-                        size: s,
-                        price: old?.price || 0,
-                        quantity: old?.quantity || 0,
-                        image: old?.image || []
-                    });
-                });
-            });
-        });
-    } else {
+    }else {
         materials.forEach(m => {
             sizes.forEach(s => {
                 const old = findOldVariant(m, null, s);
 
                 result.push({
+                    id: crypto.randomUUID(), // THÊM DÒNG NÀY
                     material: m,
                     size: s,
                     price: old?.price || 0,
@@ -155,17 +140,10 @@ const generateVariants = () => {
 
     setVariants(result);
 };
-const updateVariant = (index, field, value) => {
-    setVariants(prevVariants => {
-        const newVariants = [...prevVariants];
-        if (newVariants[index]) {
-            newVariants[index] = {
-                ...newVariants[index],
-                [field]: value
-            };
-        }
-        return newVariants;
-    });
+const updateVariant = (id, field, value) => {
+    setVariants(prevVariants => 
+        prevVariants.map(v => v.id === id ? { ...v, [field]: value } : v)
+    );
 };
 
 const [variants,setVariants] = useState([])
@@ -519,7 +497,7 @@ return(
                                         type='number'
                                         className='text-center focus:outline-none'
                                         value={v.price}
-                                        onChange={e=>updateVariant(i,"price",e.target.value)}
+                                        onChange={e => updateVariant(v.id, "price", e.target.value)}
                                     />
                                 </td>
                                 <td>
@@ -527,7 +505,7 @@ return(
                                         type='number'
                                         className='text-center focus:outline-none'
                                         value={v.quantity}
-                                        onChange={e=>updateVariant(i,"quantity",e.target.value)}
+                                        onChange={e => updateVariant(v.id, "quantity", e.target.value)}
                                     />
                                 </td>
                                 <td>
