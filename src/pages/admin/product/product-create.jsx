@@ -55,6 +55,8 @@ const toggleColor = (colorName) => {
 }
 const [openColor, setOpenColor] = useState(true)
 const sizeOptions = [16, 17, 18, 19, 20, 21, 22]
+// RING SIZE OPTIONS - NHẬN SIZE: 48, 50, 52, 54, 56, 58
+const ringSizeOptions = [48, 50, 52, 54, 56, 58]
 
 const [sizes, setSizes] = useState([])
 const [openSize, setOpenSize] = useState(true)
@@ -79,6 +81,15 @@ const generateVariants = () => {
             alert("Charm phải có màu");
             return;
         }
+    } else if (categoryType === "ring") {
+        if (colors.length === 0) {
+            alert("Nhẫn phải có màu");
+            return;
+        }
+        if (sizes.length === 0) {
+            alert("Nhẫn phải có size");
+            return;
+        }
     } else {
         if (sizes.length === 0) {
             alert("Thiếu size");
@@ -92,7 +103,7 @@ const generateVariants = () => {
         return variants.find(v =>
             v.material === m &&
             v.size === s &&
-            (categoryType === "charm" ? v.color === c : true)
+            ((categoryType === "charm" || categoryType === "ring") ? v.color === c : true)
         );
     };
 
@@ -106,6 +117,22 @@ const generateVariants = () => {
                     price: old?.price || 0,
                     quantity: old?.quantity || 0,
                     image: old?.image || []
+                });
+            });
+        });
+    } else if (categoryType === "ring") {
+        materials.forEach(m => {
+            colors.forEach(c => {
+                sizes.forEach(s => {
+                    const old = findOldVariant(m, c, s);
+                    result.push({
+                        material: m,
+                        color: c,
+                        size: s,
+                        price: old?.price || 0,
+                        quantity: old?.quantity || 0,
+                        image: old?.image || []
+                    });
                 });
             });
         });
@@ -302,6 +329,8 @@ return(
 
                         if(selected?.name?.toLowerCase().includes("charm")){
                             setCategoryType("charm")
+                        } else if(selected?.name?.toLowerCase().includes("nhẫn")){
+                            setCategoryType("ring")
                         } else {
                             setCategoryType("normal")
                         }
@@ -372,7 +401,7 @@ return(
                             )}
 
                         </div>
-                        {categoryType === "charm" && (
+                        {(categoryType === "charm" || categoryType === "ring") && (
                             <div className="flex flex-col sm:col-span-2 col-span-1">
 
                             <div className="flex justify-between items-center cursor-pointer"
@@ -408,7 +437,7 @@ return(
 
                             </div>
                         )}
-                        {categoryType != "charm" && (
+                        {categoryType !== "charm" && (
                         <div className="flex flex-col sm:col-span-2 col-span-1">
                                 <div 
                                     className="flex justify-between items-center cursor-pointer"
@@ -421,7 +450,7 @@ return(
                                 {openSize && (
                                     <div className="flex flex-wrap gap-3 mt-3">
 
-                                    {sizeOptions.map((s) => (
+                                    {(categoryType === "ring" ? ringSizeOptions : sizeOptions).map((s) => (
                                         <button
                                         type="button"
                                         key={s}
@@ -451,10 +480,10 @@ return(
                         <thead>
                             <tr>
                                 <th className='w-[100px]'>Chất liệu</th>
-                                {categoryType === "charm" && (
+                                {(categoryType === "charm" || categoryType === "ring") && (
                                     <th className='w-[100px]'> Màu sắc</th>
                                 )}
-                                {categoryType != "charm" && (
+                                {categoryType !== "charm" && (
                                     <th className='w-[100px]'>Size</th>
                                 )}
                                 <th className='w-[100px]'>Giá</th>
@@ -464,13 +493,13 @@ return(
                             </tr>
                         </thead>
                         <tbody>
-                            {variants.map((v,i)=>(
+{variants.map((v,i)=>(
                                 <tr key={i} className='text-center'>
                                     <td>{v.material}</td>
-                                    {categoryType === "charm" &&(
+                                    {(categoryType === "charm" || categoryType === "ring") &&(
                                         <td>{v.color}</td>
                                     )}
-                                    {categoryType != "charm" && (
+                                    {categoryType !== "charm" && (
                                         <td>{v.size}</td>
                                     )}
                                     <td>
@@ -509,7 +538,7 @@ return(
                                                 name={`images-${i}`}
                                                 labelIdle="Kéo thả hoặc chọn ảnh"
                                             />
-                    
+                     
                                         </div>
                                     </td>
                                     <td>
