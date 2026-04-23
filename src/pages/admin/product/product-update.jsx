@@ -7,19 +7,20 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { pathAdmin } from "../../../config/api";
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
 
 registerPlugin(FilePondPluginImagePreview);
 
 export default function ProductUpdate() {
-  
+
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [arrayCategory, setArrayCategory] = useState([]);
-const [collections, setCollections] = useState([]);
-const [selectedCollections, setSelectedCollections] = useState([]);
-const [themes, setThemes] = useState([]);
-const [selectedThemes, setSelectedThemes] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollections, setSelectedCollections] = useState([]);
+  const [themes, setThemes] = useState([]);
+  const [selectedThemes, setSelectedThemes] = useState([]);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -50,16 +51,16 @@ const [selectedThemes, setSelectedThemes] = useState([]);
   const [openMaterial, setOpenMaterial] = useState(true);
 
   const toggleMaterial = (value) => {
-  setMaterials((prev) => {
-    const newMaterials = prev.includes(value) 
-      ? prev.filter((m) => m !== value) 
-      : [...prev, value];
-    
-  
-    rebuildVariantsManual(newMaterials, colors, sizes);
-    return newMaterials;
-  });
-};
+    setMaterials((prev) => {
+      const newMaterials = prev.includes(value)
+        ? prev.filter((m) => m !== value)
+        : [...prev, value];
+
+
+      rebuildVariantsManual(newMaterials, colors, sizes);
+      return newMaterials;
+    });
+  };
 
   const colorOptions = [
     { name: "Den", code: "#000000" },
@@ -95,7 +96,7 @@ const [selectedThemes, setSelectedThemes] = useState([]);
   };
   const [openColor, setOpenColor] = useState(true);
   const sizeOptions = [16, 17, 18, 19, 20, 21, 22];
-const ringSizeOptions = [48, 50, 52, 54, 56, 58];
+  const ringSizeOptions = [48, 50, 52, 54, 56, 58];
   const normalizeSize = (value) => {
     const asNumber = Number(value);
     return Number.isFinite(asNumber) ? asNumber : value;
@@ -197,7 +198,7 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
     if (isInitialLoad) return;
 
     let hasRequired = currentMaterials.length > 0;
-    
+
     if (categoryType === "charm") {
       hasRequired = hasRequired && currentColors.length > 0;
     } else if (categoryType === "ring") {
@@ -332,7 +333,7 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
           .map((c) => c?._id || c?.id || c)
           .filter(Boolean);
         setSelectedCollections(selectedCollections);
-        
+
         const selectedThemes = (product?.themes || [])
           .map((t) => t?._id || t?.id || t)
           .filter(Boolean);
@@ -348,7 +349,7 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
 
         const hasColor = normalized.some((v) => v.color);
         const hasSize = normalized.some((v) => v.size && v.size !== "");
-        
+
         if (hasColor && hasSize) {
           setCategoryType("ring");
         } else if (hasColor) {
@@ -536,13 +537,11 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
             <label className="text-[13px] mb-[5px]">Danh muc</label>
             <select
               value={categoryId}
-             onChange={(e) => {
-              const value = e.target.value;
-              setCategoryId(value);
-              const selected = findCategoryById(arrayCategory, value);
-              const name = selected?.name?.toLowerCase() || "";
-
+              onChange={(e) => {
+                const value = e.target.value;
+                setCategoryId(value);
                 const selected = findCategoryById(arrayCategory, value);
+                const name = selected?.name?.toLowerCase() || "";
 
                 if (selected?.name?.toLowerCase().includes("charm")) {
                   setCategoryType("charm");
@@ -565,42 +564,22 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
 
           <div className="flex flex-col">
             <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
-            <select
-              multiple
-              value={selectedCollections}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                setSelectedCollections(values);
-              }}
-              className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
-            >
-              {collections.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
+            <MultiSelectDropdown
+                options={collections}
+                selected={selectedCollections}
+                onChange={setSelectedCollections}
+                placeholder="Chọn bộ sưu tập"
+            />
           </div>
-          
+
           <div className="flex flex-col">
             <label className="text-[13px] mb-[5px]">Chủ đề</label>
-            <select
-              multiple
-              value={selectedThemes}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                setSelectedThemes(values);
-              }}
-              className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
-            >
-              {themes.map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
+            <MultiSelectDropdown
+                options={themes}
+                selected={selectedThemes}
+                onChange={setSelectedThemes}
+                placeholder="Chọn chủ đề"
+            />
           </div>
 
           {categoryType !== "" && (
@@ -770,8 +749,8 @@ const ringSizeOptions = [48, 50, 52, 54, 56, 58];
                               }))
                               : []
                           }
-                           onupdatefiles={(fileItems) => {
-                           
+                          onupdatefiles={(fileItems) => {
+
                             const currentUrls = (v.image || []).filter(
                               (item) => typeof item === "string" && item.trim()
                             );

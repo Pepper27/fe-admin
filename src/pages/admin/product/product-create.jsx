@@ -7,6 +7,7 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import { pathAdmin } from "../../../config/api"
 import { useNavigate } from "react-router-dom"
 import { Editor } from "@tinymce/tinymce-react"
+import MultiSelectDropdown from "../components/MultiSelectDropdown"
 registerPlugin(FilePondPluginImagePreview)
 export default function ProductCreate() {
 const [name,setName] = useState("")
@@ -363,42 +364,22 @@ return(
 
                 <div className="flex flex-col">
                     <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
-                    <select
-                        multiple
-                        value={selectedCollections}
-                        onChange={(e) => {
-                            const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                            setSelectedCollections(values);
-                        }}
-                        className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
-                    >
-                        {collections.map((c) => (
-                            <option key={c._id} value={c._id}>
-                                {c.name}
-                            </option>
-                        ))}
-                    </select>
-                    <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
+                    <MultiSelectDropdown
+                        options={collections}
+                        selected={selectedCollections}
+                        onChange={setSelectedCollections}
+                        placeholder="Chọn bộ sưu tập"
+                    />
                 </div>
                 
                 <div className="flex flex-col">
                     <label className="text-[13px] mb-[5px]">Chủ đề</label>
-                    <select
-                        multiple
-                        value={selectedThemes}
-                        onChange={(e) => {
-                            const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                            setSelectedThemes(values);
-                        }}
-                        className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
-                    >
-                        {themes.map((t) => (
-                            <option key={t._id} value={t._id}>
-                                {t.name}
-                            </option>
-                        ))}
-                    </select>
-                    <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
+                    <MultiSelectDropdown
+                        options={themes}
+                        selected={selectedThemes}
+                        onChange={setSelectedThemes}
+                        placeholder="Chọn chủ đề"
+                    />
                 </div>
                 {categoryType!=="" &&(
                     <>
