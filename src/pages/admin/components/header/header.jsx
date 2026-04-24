@@ -5,7 +5,7 @@ const Header = ()=>{
     const [user, setUser] = useState({});
     useEffect(() => {
         const token = localStorage.getItem("token");
-        fetch(`${pathAdmin}/admin/account/user`, {
+        fetch(`${pathAdmin}/v1/admin/account/user`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -36,7 +36,15 @@ const Header = ()=>{
             <div className="z-[9999] fixed top-0 left-0 right-0 lg:px-[60px] sm:px-[40px] px-[16px] py-[5px] bg-white flex justify-between items-center border-b border-b-gray-300">
                 <img className="w-[100px]" src="/client/images/logo.jpg" alt="" />
                 <div className="flex items-center gap-[10px]">
-                    <img className="md:w-[50px] md:h-[50px] w-[30px] h-[30px]" src={user?.avatar || ""} alt="" />
+                    {user?.avatar ? (
+                    <img className="md:w-[50px] md:h-[50px] w-[30px] h-[30px]" src={user.avatar} alt="" />
+                  ) : (
+                    <div className="md:w-[50px] md:h-[50px] w-[30px] h-[30px] bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">
+                        {user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    </div>
+                  )}
                     <div className="flex flex-col">
                         <span className="sm:text-[14px] text-[10px] font-[700]">{user?.fullName}</span>
                         <span className="sm:text-[14px] text-[10px]">{user?.positionCompany}</span>     

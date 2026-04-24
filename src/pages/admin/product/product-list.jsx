@@ -52,7 +52,7 @@ export default function ProductList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/account`, {
+    fetch(`${pathAdmin}/v1/admin/account`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
@@ -66,7 +66,7 @@ export default function ProductList() {
       .catch(() => setCreators([]));
 
     // Fetch categories
-    fetch(`${pathAdmin}/admin/categories`, {
+    fetch(`${pathAdmin}/v1/admin/categories`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
@@ -80,7 +80,7 @@ export default function ProductList() {
       .catch(() => setCategories([]));
 
     // Fetch collections
-    fetch(`${pathAdmin}/admin/collections`, {
+    fetch(`${pathAdmin}/v1/admin/collections`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
@@ -161,7 +161,7 @@ export default function ProductList() {
     try {
       const token = localStorage.getItem("token");
       const params = buildProductParams(false);
-      const res = await fetch(`${pathAdmin}/admin/products?${params.toString()}`, {
+      const res = await fetch(`${pathAdmin}/v1/admin/products?${params.toString()}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -215,7 +215,7 @@ export default function ProductList() {
     setLoading(true);
     const params = buildProductParams(true);
 
-    fetch(`${pathAdmin}/admin/products?${params.toString()}`, {
+    fetch(`${pathAdmin}/v1/admin/products?${params.toString()}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

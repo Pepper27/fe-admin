@@ -27,5 +27,14 @@ export const routes = {
   settingAccountCreate: "/admin/setting/account/create",
   settingAccountUpdate: "/admin/setting/account/update/:id",
   settingWebsiteInfo: "/admin/setting/website-info",
+  sizeList: "/admin/size",
+  sizeCreate: "/admin/size/create",
+  sizeUpdate: "/admin/size/update/:id",
+  colorList: "/admin/color",
+  colorCreate: "/admin/color/create",
+  colorUpdate: "/admin/color/update/:id",
+  materialList: "/admin/material",
+  materialCreate: "/admin/material/create",
+  materialUpdate: "/admin/material/update/:id",
   dashboard: "/admin/dashboard"
 };

@@ -6,6 +6,9 @@ import { AiFillProduct } from "react-icons/ai";
 import { FaPalette } from "react-icons/fa";
 import { FaUsers } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
+import { FaRuler } from "react-icons/fa";
+import { IoColorPalette } from "react-icons/io5";
+import { FaGem } from "react-icons/fa";
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,6 +25,9 @@ const Sidebar = () => {
     { icon: MdOutlinePets, href: "/admin/collection", title: "Quản lý bộ sưu tập",permission: "collection-view"  },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm", permission: "product-view" },
     { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs",permission: "my-designs-view" },
+    { icon: FaRuler, href: "/admin/size", title: "Quản lý kích thước", permission: "size-view" },
+    { icon: IoColorPalette, href: "/admin/color", title: "Quản lý màu sắc", permission: "color-view" },
+    { icon: FaGem, href: "/admin/material", title: "Quản lý chất liệu", permission: "material-view" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng", permission: "order-view" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết", permission: "new-view" },
     { icon: FaUsers, href: "/admin/client", title: "Quản lý account", permission: "user-view" },

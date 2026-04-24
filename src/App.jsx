@@ -32,6 +32,12 @@ import SettingAccountList from "./pages/admin/setting/account/setting-account-li
 import SettingAccountCreate from "./pages/admin/setting/account/setting-account-create";
 import SettingAccountUpdate from "./pages/admin/setting/account/setting-account-update";
 import SettingInfoWebsite from "./pages/admin/setting/setting-info-website";
+import SizeList from "./pages/admin/size/size-list";
+import ColorList from "./pages/admin/color/color-list";
+import MaterialList from "./pages/admin/material/material-list";
+import SizeCreate from "./pages/admin/size/size-create";
+import ColorCreate from "./pages/admin/color/color-create";
+import MaterialCreate from "./pages/admin/material/material-create";
 function App() {
   return (
     <BrowserRouter>
@@ -260,35 +266,33 @@ function App() {
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <PermissionGuard permission="role-view">
+                {/* <PermissionGuard permission="role-view"> */}
                   <RoleList />
-                </PermissionGuard>
+                {/* </PermissionGuard> */}
               </LayoutAdmin>
             </PrivateRoute>
           }
         />
         <Route
-          path={routes.roleCreate}
+path={routes.roleCreate}
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <PermissionGuard permission="role-create">
+                {/* <PermissionGuard permission="role-create"> */}
                   <RoleCreate />
-                </PermissionGuard>
+                {/* </PermissionGuard> */}
               </LayoutAdmin>
-            </PrivateRoute>
           }
         />
         <Route
-          path={routes.roleUpdate}
+path={routes.roleUpdate}
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                <PermissionGuard permission="role-edit">
+                {/* <PermissionGuard permission="role-edit"> */}
                   <RoleUpdate />
-                </PermissionGuard>
+                {/* </PermissionGuard> */}
               </LayoutAdmin>
-            </PrivateRoute>
           }
         />
         <Route
@@ -339,18 +343,90 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
-          path={routes.settingWebsiteInfo}
-          element={
-            <PrivateRoute>
-              <LayoutAdmin>
-                <PermissionGuard permission="info-view">
-                  <SettingInfoWebsite />
-                </PermissionGuard>
-              </LayoutAdmin>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path={routes.settingWebsiteInfo}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="info-view">
+                    <SettingInfoWebsite />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.sizeList}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="size-view">
+                    <SizeList />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.colorList}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="color-view">
+                    <ColorList />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.materialList}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="material-view">
+                    <MaterialList />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.sizeCreate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="size-create">
+                    <SizeCreate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.colorCreate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="color-create">
+                    <ColorCreate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.materialCreate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="material-create">
+                    <MaterialCreate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
       </Routes>
     </BrowserRouter>
   );
