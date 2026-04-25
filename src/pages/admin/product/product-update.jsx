@@ -333,7 +333,6 @@ export default function ProductUpdate() {
           .map((c) => c?._id || c?.id || c)
           .filter(Boolean);
         setSelectedCollections(selectedCollections);
-
         const selectedThemes = (product?.themes || [])
           .map((t) => t?._id || t?.id || t)
           .filter(Boolean);
@@ -349,7 +348,6 @@ export default function ProductUpdate() {
 
         const hasColor = normalized.some((v) => v.color);
         const hasSize = normalized.some((v) => v.size && v.size !== "");
-
         if (hasColor && hasSize) {
           setCategoryType("ring");
         } else if (hasColor) {
@@ -571,7 +569,6 @@ export default function ProductUpdate() {
                 placeholder="Chọn bộ sưu tập"
             />
           </div>
-
           <div className="flex flex-col">
             <label className="text-[13px] mb-[5px]">Chủ đề</label>
             <MultiSelectDropdown
