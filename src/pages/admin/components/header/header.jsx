@@ -1,23 +1,17 @@
 import { IoMdMenu } from "react-icons/io";
 import { useEffect, useState } from 'react'
-import { pathAdmin } from "../../../../config/api"
+import { fetchAdminUser } from "../../../../config/api"
 const Header = ()=>{
     const [user, setUser] = useState({});
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        fetch(`${pathAdmin}/admin/account/user`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "ngrok-skip-browser-warning": "true",
-            },
-            credentials: "include"
-        })
-        .then(res => res.json())
-        .then(data => {
-            setUser(data.data)
-        })
-        .catch(err => console.log(err))
+        (async () => {
+            try {
+                const resp = await fetchAdminUser();
+                if (resp?.ok) setUser(resp.data.data)
+            } catch (err) {
+                console.log(err)
+            }
+        })();
     }, [])
     const openMenu =()=>{
         const menuView = document.querySelector("[menu-view]")

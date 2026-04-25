@@ -7,7 +7,6 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import { pathAdmin } from "../../../config/api"
 import { useNavigate } from "react-router-dom"
 import { Editor } from "@tinymce/tinymce-react"
-import MultiSelectDropdown from "../components/MultiSelectedDropdown"
 registerPlugin(FilePondPluginImagePreview)
 export default function ProductCreate() {
 const [name,setName] = useState("")
@@ -16,8 +15,6 @@ const [categoryId, setCategoryId] = useState("");
 const [arrayCategory, setArrayCategory] = useState([]);  
 const [collections, setCollections] = useState([]);
 const [selectedCollections, setSelectedCollections] = useState([]);
-const [themes, setThemes] = useState([]);
-const [selectedThemes, setSelectedThemes] = useState([]);
 const navigate = useNavigate()
 const materialOptions = [
   { name: "Vàng", color: "#FFD700" },
@@ -58,8 +55,6 @@ const toggleColor = (colorName) => {
 }
 const [openColor, setOpenColor] = useState(true)
 const sizeOptions = [16, 17, 18, 19, 20, 21, 22]
-// RING SIZE OPTIONS - NHẬN SIZE: 48, 50, 52, 54, 56, 58
-const ringSizeOptions = [48, 50, 52, 54, 56, 58]
 
 const [sizes, setSizes] = useState([])
 const [openSize, setOpenSize] = useState(true)
@@ -84,15 +79,6 @@ const generateVariants = () => {
             alert("Charm phải có màu");
             return;
         }
-    } else if (categoryType === "ring") {
-        if (colors.length === 0) {
-            alert("Nhẫn phải có màu");
-            return;
-        }
-        if (sizes.length === 0) {
-            alert("Nhẫn phải có size");
-            return;
-        }
     } else {
         if (sizes.length === 0) {
             alert("Thiếu size");
@@ -106,16 +92,15 @@ const generateVariants = () => {
         return variants.find(v =>
             v.material === m &&
             v.size === s &&
-            ((categoryType === "charm" || categoryType === "ring") ? v.color === c : true)
+            (categoryType === "charm" ? v.color === c : true)
         );
     };
 
-    if (categoryType === "charm"||categoryType === "ring") {
+    if (categoryType === "charm") {
         materials.forEach(m => {
             colors.forEach(c => {
                 const old = findOldVariant(m, c, null);
                 result.push({
-                    id: crypto.randomUUID(), 
                     material: m,
                     color: c,
                     price: old?.price || 0,
@@ -124,13 +109,12 @@ const generateVariants = () => {
                 });
             });
         });
-    }else {
+    } else {
         materials.forEach(m => {
             sizes.forEach(s => {
                 const old = findOldVariant(m, null, s);
 
                 result.push({
-                    id: crypto.randomUUID(), // THÊM DÒNG NÀY
                     material: m,
                     size: s,
                     price: old?.price || 0,
@@ -143,11 +127,11 @@ const generateVariants = () => {
 
     setVariants(result);
 };
-const updateVariant = (id, field, value) => {
-    setVariants(prevVariants => 
-        prevVariants.map(v => v.id === id ? { ...v, [field]: value } : v)
-    );
-};
+const updateVariant = (index, field, value) => {
+    const newVariants = [...variants]
+    newVariants[index][field] = value
+    setVariants(newVariants)
+}
 
 const [variants,setVariants] = useState([])
 useEffect(()=>{
@@ -200,29 +184,6 @@ useEffect(() => {
         setCollections([]);
     })
 },[])
-
-useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/themes`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-        },
-        credentials: "include",
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data?.code === "error") {
-            throw new Error(data.message || "Unauthorized");
-        }
-        setThemes(data?.data || [])
-    })
-    .catch((err) => {
-        console.error("Fetch themes failed", err);
-        setThemes([]);
-    })
-},[])
 const renderOptions = (categories, level = 0) => {
   return categories.map(item => (
     <React.Fragment key={item.id}>
@@ -264,39 +225,31 @@ const handlerSubmit = (e) => {
     if (!validate()) return;
     const token = localStorage.getItem("token");
     const formData = new FormData();
-   
-    const actualMaterials = [...new Set(variants.map(v => v.material).filter(Boolean))];
-    const actualColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-    const actualSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
     formData.append("name", name);
     formData.append("description", desc);
     formData.append("category", categoryId);
     formData.append("collections", JSON.stringify(selectedCollections));
-    formData.append("themes", JSON.stringify(selectedThemes));
     formData.append("options", JSON.stringify({
-        materials: actualMaterials,
-        colors: actualColors,
-        sizes: actualSizes
+        materials,
+        colors,
+        sizes
     }));
-    const variantsData = variants.map((v, index) => {
-        // Đính kèm ảnh vào FormData với index MỚI NHẤT của mảng hiện tại
-        if (v.image && v.image.length > 0) {
-            v.image.forEach(file => {
-                // file ở đây phải là đối tượng File/Blob từ FilePond
-                formData.append(`images-${index}`, file); 
-            });
-        }
-        
-        return {
+    formData.append("variants", JSON.stringify(
+        variants.map(v => ({
             material: v.material,
             color: v.color,
             size: v.size,
             price: v.price,
             quantity: v.quantity
-        };
+        }))
+    ));
+    variants.forEach((v, i) => {
+        if (v.image && v.image.length > 0) {
+            v.image.forEach(file => {
+                formData.append(`images-${i}`, file)
+            });
+        }
     });
-
-    formData.append("variants", JSON.stringify(variantsData));
     console.log(variants)
     fetch(`${pathAdmin}/admin/products`, {
         method: "POST",
@@ -310,7 +263,6 @@ const handlerSubmit = (e) => {
         navigate("/admin/product");
     });
 };
-
 return(
     <>
         <form onSubmit={handlerSubmit} className="xl:w-[calc(100%-240px)] lg:w-[calc(100%-220px)] w-full pt-[100px] lg:ml-[240px] l-0 flex flex-col mx-[16px] sm:px-[30px] px-[10px] sm:pr-[55px] pr-[30px]">
@@ -346,8 +298,6 @@ return(
 
                         if(selected?.name?.toLowerCase().includes("charm")){
                             setCategoryType("charm")
-                        } else if(selected?.name?.toLowerCase().includes("nhẫn")){
-                            setCategoryType("ring")
                         } else {
                             setCategoryType("normal")
                         }
@@ -364,22 +314,22 @@ return(
 
                 <div className="flex flex-col">
                     <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
-                    <MultiSelectDropdown
-                        options={collections}
-                        selected={selectedCollections}
-                        onChange={setSelectedCollections}
-                        placeholder="Chọn bộ sưu tập"
-                    />
-                </div>
-                
-                <div className="flex flex-col">
-                    <label className="text-[13px] mb-[5px]">Chủ đề</label>
-                    <MultiSelectDropdown
-                        options={themes}
-                        selected={selectedThemes}
-                        onChange={setSelectedThemes}
-                        placeholder="Chọn chủ đề"
-                    />
+                    <select
+                        multiple
+                        value={selectedCollections}
+                        onChange={(e) => {
+                            const values = Array.from(e.target.selectedOptions).map((o) => o.value);
+                            setSelectedCollections(values);
+                        }}
+                        className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
+                    >
+                        {collections.map((c) => (
+                            <option key={c._id} value={c._id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
                 </div>
                 {categoryType!=="" &&(
                     <>
@@ -418,7 +368,7 @@ return(
                             )}
 
                         </div>
-                        {(categoryType === "charm" || categoryType === "ring") && (
+                        {categoryType === "charm" && (
                             <div className="flex flex-col sm:col-span-2 col-span-1">
 
                             <div className="flex justify-between items-center cursor-pointer"
@@ -454,7 +404,7 @@ return(
 
                             </div>
                         )}
-                        {categoryType !== "charm" && (
+                        {categoryType != "charm" && (
                         <div className="flex flex-col sm:col-span-2 col-span-1">
                                 <div 
                                     className="flex justify-between items-center cursor-pointer"
@@ -467,7 +417,7 @@ return(
                                 {openSize && (
                                     <div className="flex flex-wrap gap-3 mt-3">
 
-                                    {(categoryType === "ring" ? ringSizeOptions : sizeOptions).map((s) => (
+                                    {sizeOptions.map((s) => (
                                         <button
                                         type="button"
                                         key={s}
@@ -497,10 +447,10 @@ return(
                         <thead>
                             <tr>
                                 <th className='w-[100px]'>Chất liệu</th>
-                                {(categoryType === "charm" || categoryType === "ring") && (
+                                {categoryType === "charm" && (
                                     <th className='w-[100px]'> Màu sắc</th>
                                 )}
-                                {categoryType !== "charm" && (
+                                {categoryType != "charm" && (
                                     <th className='w-[100px]'>Size</th>
                                 )}
                                 <th className='w-[100px]'>Giá</th>
@@ -510,63 +460,68 @@ return(
                             </tr>
                         </thead>
                         <tbody>
-                        {variants.map((v,i)=>(
-                            <tr key={i} className='text-center'>
-                                <td>{v.material}</td>
-                                {(categoryType === "charm" || categoryType === "ring") &&(
-                                    <td>{v.color}</td>
-                                )}
-                                {categoryType !== "charm" && (
-                                    <td>{v.size}</td>
-                                )}
-                                <td>
-                                    <input 
-                                        type='number'
-                                        className='text-center focus:outline-none'
-                                        value={v.price}
-                                        onChange={e => updateVariant(v.id, "price", e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <input 
-                                        type='number'
-                                        className='text-center focus:outline-none'
-                                        value={v.quantity}
-                                        onChange={e => updateVariant(v.id, "quantity", e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <div className="variant-upload">
-                                        <FilePond
-                                            key={`filepond-${v.id}`} 
-                                            files={v.image ? v.image.map(file => ({
-                                                source: file,
-                                                options: { type: "local" }
-                                            })) : []}
-                                            onupdatefiles={(fileItems) => {
-                                                const files = fileItems.map(f => f.file);
-                    
-                                                setVariants(prev => prev.map(item => item.id === v.id ? {...item, image: files} : item));
-                                            }}
-                                            allowMultiple={true}
-                                            name="filepond" 
-                                            labelIdle="Kéo thả hoặc chọn ảnh"
+                            {variants.map((v,i)=>(
+                                <tr key={i} className='text-center'>
+                                    <td>{v.material}</td>
+                                    {categoryType === "charm" &&(
+                                        <td>{v.color}</td>
+                                    )}
+                                    {categoryType != "charm" && (
+                                        <td>{v.size}</td>
+                                    )}
+                                    <td>
+                                        <input 
+                                            type='number'
+                                            className='text-center focus:outline-none'
+                                            value={v.price}
+                                            onChange={e=>updateVariant(i,"price",e.target.value)}
                                         />
-                                    </div>
-                                </td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setVariants(prev => prev.filter(item => item.id !== v.id)); // Xóa theo ID
-                                        }}
-                                        className="text-red-500"
-                                    >
-                                        Xoá
-                                    </button>
-                                </td>
-                            </tr>
-                            ))}
+                                    </td>
+                                    <td>
+                                        <input 
+                                            type='number'
+                                            className='text-center focus:outline-none'
+                                            value={v.quantity}
+                                            onChange={e=>updateVariant(i,"quantity",e.target.value)}
+                                        />
+                                    </td>
+                                    <td>
+                                        <div className="variant-upload">
+                                           <FilePond
+                                                files={
+                                                    v.image
+                                                        ? v.image.map(file => ({
+                                                            source: file,
+                                                            options: { type: "local" }
+                                                        }))
+                                                        : []
+                                                }
+                                                onupdatefiles={(fileItems) => {
+                                                    const files = fileItems.map(f => f.file) // 👈 lấy ALL file
+                                                    updateVariant(i, "image", files)
+                                                }}
+                                                allowMultiple={true}
+                                                maxFiles={5}
+                                                name={`images-${i}`}
+                                                labelIdle="Kéo thả hoặc chọn ảnh"
+                                            />
+                    
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            onClick={()=>{
+                                                const newVariants = variants.filter((_,index)=> index !== i)
+                                                setVariants(newVariants)
+                                            }}
+                                            className="text-red-500"
+                                        >
+                                            Xoá
+                                        </button>
+                                    </td>
+                                </tr>
+                             ))}
                         </tbody>
                     </table>
                 )}

@@ -7,7 +7,7 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { pathAdmin } from "../../../config/api";
-import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import MultiSelectDropdown from "../components/MultiSelectedDropdown";
 
 registerPlugin(FilePondPluginImagePreview);
 

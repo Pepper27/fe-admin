@@ -32,6 +32,9 @@ import SettingAccountList from "./pages/admin/setting/account/setting-account-li
 import SettingAccountCreate from "./pages/admin/setting/account/setting-account-create";
 import SettingAccountUpdate from "./pages/admin/setting/account/setting-account-update";
 import SettingInfoWebsite from "./pages/admin/setting/setting-info-website";
+import SizeList from "./pages/admin/sizes/size-list";
+import ColorList from "./pages/admin/colors/color-list";
+import MaterialList from "./pages/admin/materials/material-list";
 function App() {
   return (
     <BrowserRouter>
@@ -297,6 +300,70 @@ function App() {
             <PrivateRoute>
               <LayoutAdmin>
                 <PermissionGuard permission="setting-view">
+                  <SettingList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path={routes.sizeList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="size-management">
+                  <SizeList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path={routes.colorList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="color-management">
+                  <ColorList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path={routes.materialList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="material-management">
+                  <MaterialList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path={routes.designList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="my-designs-view">
+                  <DesignList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.settingList}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="account-view">
                   <SettingList />
                 </PermissionGuard>
               </LayoutAdmin>

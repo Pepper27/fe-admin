@@ -1,20 +1,15 @@
 import { useEffect } from "react";
-import { pathAdmin } from "../../../config/api";
+import { fetchAdminUser } from "../../../config/api";
 const PrivateRoute = ({ children }) => {
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        console.log("token", token)
-        fetch(`${pathAdmin}/admin/account/user`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
+        (async () => {
+            try {
+                const resp = await fetchAdminUser();
+                console.log(resp?.data?.data)
+            } catch (err) {
+                console.error('Auth check failed', err)
             }
-        })
-        .then((res) => res.json())
-        .then((data) => console.log(data?.data))
-        .catch((err) => console.error("Auth check failed", err));
+        })();
         // .then(res => {
         //     if (res.status === 200) {
         //         setIsAuth(true);
