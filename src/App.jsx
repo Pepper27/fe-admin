@@ -274,25 +274,27 @@ function App() {
           }
         />
         <Route
-path={routes.roleCreate}
+          path={routes.roleCreate}
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                {/* <PermissionGuard permission="role-create"> */}
+                <PermissionGuard permission="role-create">
                   <RoleCreate />
-                {/* </PermissionGuard> */}
+                </PermissionGuard>
               </LayoutAdmin>
+            </PrivateRoute> 
           }
         />
         <Route
-path={routes.roleUpdate}
+            path={routes.roleUpdate}
           element={
             <PrivateRoute>
               <LayoutAdmin>
-                {/* <PermissionGuard permission="role-edit"> */}
+                <PermissionGuard permission="role-edit">
                   <RoleUpdate />
-                {/* </PermissionGuard> */}
+                </PermissionGuard>
               </LayoutAdmin>
+            </PrivateRoute>
           }
         />
         <Route

@@ -56,7 +56,7 @@ const PERMISSION_LIST = [
   { lable: "Tạo màu sắc", value: "color-create" },
   { lable: "Sửa màu sắc", value: "color-edit" },
   { lable: "Xóa màu sắc", value: "color-delete" },
-  { lable: "Xem chất liệu", value: "material-view" },
+  { lable: "Xem chất liệu", value: "material-view" }, 
   { lable: "Tạo chất liệu", value: "material-create" },
   { lable: "Sửa chất liệu", value: "material-edit" },
   { lable: "Xóa chất liệu", value: "material-delete" },

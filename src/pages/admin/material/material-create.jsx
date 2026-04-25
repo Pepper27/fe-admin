@@ -27,7 +27,6 @@ export default function MaterialCreate() {
     setError('');
 
     const token = localStorage.getItem("token");
-    const token = localStorage.getItem("token");
     
     try {
       const response = await fetch(`${pathAdmin}/admin/materials`, {
