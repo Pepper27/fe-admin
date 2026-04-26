@@ -48,18 +48,9 @@ const PERMISSION_LIST = [
   { lable: "Tạo sự kiện", value: "event-create" },
   { lable: "Sửa sự kiện", value: "event-edit" },
   { lable: "Xóa sự kiện", value: "event-delete" },
-  { lable: "Xem kích thước", value: "size-view" },
-  { lable: "Tạo kích thước", value: "size-create" },
-  { lable: "Sửa kích thước", value: "size-edit" },
-  { lable: "Xóa kích thước", value: "size-delete" },
-  { lable: "Xem màu sắc", value: "color-view" },
-  { lable: "Tạo màu sắc", value: "color-create" },
-  { lable: "Sửa màu sắc", value: "color-edit" },
-  { lable: "Xóa màu sắc", value: "color-delete" },
-  { lable: "Xem chất liệu", value: "material-view" },
-  { lable: "Tạo chất liệu", value: "material-create" },
-  { lable: "Sửa chất liệu", value: "material-edit" },
-  { lable: "Xóa chất liệu", value: "material-delete" },
+  { lable: "Quản lý Kích thước", value: "size-management" },
+  { lable: "Quản lý Màu sắc", value: "color-management" },
+  { lable: "Quản lý Chất liệu", value: "material-management" },
 ];
 
 export default function RoleUpdate() {

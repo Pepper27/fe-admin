@@ -13,7 +13,6 @@ export default function SizeList() {
   const [key, setKey] = useState("")
   const fetchSizes = () => {
     const token = localStorage.getItem("token");
-    
     fetch(`${pathAdmin}/admin/sizes?page=${page}&keyword=${key}`, {
       method: "GET",
       headers: {

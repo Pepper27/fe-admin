@@ -1,6 +1,6 @@
 import Header from "./header/header";
 import Sidebar from "./sidebar/sidebar";
-import "../../../"
+// import "../../../"
 const Layout = ({ children }) => {
     return (
         <div className="bg-[#F5F6FA]">

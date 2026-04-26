@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { pathAdmin } from "../../config/api";
+import { fetchAdminUser, pathAdmin } from "../../config/api";
 export default function DashboardNew() {
   const [dashboard, setDashboard] = useState({
     totalClient: 0,
@@ -56,27 +56,18 @@ export default function DashboardNew() {
       }
     }
 
-    const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/account/user`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const nextPermissions = Array.isArray(data?.data?.permissions)
-          ? data.data.permissions
+    ;(async () => {
+      try {
+        const resp = await fetchAdminUser();
+        const nextPermissions = Array.isArray(resp?.data?.data?.permissions)
+          ? resp.data.data.permissions
           : [];
         setPermissions(nextPermissions);
-        sessionStorage.setItem(
-          "admin_profile_cache",
-          JSON.stringify({ permissions: nextPermissions })
-        );
-      })
-      .catch(() => {});
+        sessionStorage.setItem("admin_profile_cache", JSON.stringify({ permissions: nextPermissions }));
+      } catch (err) {
+        // noop
+      }
+    })();
   }, []);
 
   useEffect(() => {

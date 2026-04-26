@@ -7,17 +7,20 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { pathAdmin } from "../../../config/api";
+import MultiSelectDropdown from "../components/MultiSelectedDropdown";
 
 registerPlugin(FilePondPluginImagePreview);
 
 export default function ProductUpdate() {
-  
+
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [arrayCategory, setArrayCategory] = useState([]);
   const [collections, setCollections] = useState([]);
   const [selectedCollections, setSelectedCollections] = useState([]);
+  const [themes, setThemes] = useState([]);
+  const [selectedThemes, setSelectedThemes] = useState([]);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -48,16 +51,16 @@ export default function ProductUpdate() {
   const [openMaterial, setOpenMaterial] = useState(true);
 
   const toggleMaterial = (value) => {
-  setMaterials((prev) => {
-    const newMaterials = prev.includes(value) 
-      ? prev.filter((m) => m !== value) 
-      : [...prev, value];
-    
-  
-    rebuildVariantsManual(newMaterials, colors, sizes);
-    return newMaterials;
-  });
-};
+    setMaterials((prev) => {
+      const newMaterials = prev.includes(value)
+        ? prev.filter((m) => m !== value)
+        : [...prev, value];
+
+
+      rebuildVariantsManual(newMaterials, colors, sizes);
+      return newMaterials;
+    });
+  };
 
   const colorOptions = [
     { name: "Den", code: "#000000" },
@@ -93,6 +96,7 @@ export default function ProductUpdate() {
   };
   const [openColor, setOpenColor] = useState(true);
   const sizeOptions = [16, 17, 18, 19, 20, 21, 22];
+  const ringSizeOptions = [48, 50, 52, 54, 56, 58];
   const normalizeSize = (value) => {
     const asNumber = Number(value);
     return Number.isFinite(asNumber) ? asNumber : value;
@@ -194,7 +198,7 @@ export default function ProductUpdate() {
     if (isInitialLoad) return;
 
     let hasRequired = currentMaterials.length > 0;
-    
+
     if (categoryType === "charm") {
       hasRequired = hasRequired && currentColors.length > 0;
     } else if (categoryType === "ring") {
@@ -266,6 +270,33 @@ export default function ProductUpdate() {
 
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const controller = new AbortController();
+
+    fetch(`${pathAdmin}/admin/themes`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      credentials: "include",
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+        setThemes(data?.data || []);
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        console.error("Fetch themes failed", err);
+        setThemes([]);
+      });
+
+    return () => controller.abort();
+  }, []);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   useEffect(() => {
     if (!id) return;
@@ -298,10 +329,14 @@ export default function ProductUpdate() {
         const catId = product?.category?._id || product?.category?.id || product?.category || "";
         setCategoryId(catId);
 
-        const selected = (product?.collections || [])
+        const selectedCollections = (product?.collections || [])
           .map((c) => c?._id || c?.id || c)
           .filter(Boolean);
-        setSelectedCollections(selected);
+        setSelectedCollections(selectedCollections);
+        const selectedThemes = (product?.themes || [])
+          .map((t) => t?._id || t?.id || t)
+          .filter(Boolean);
+        setSelectedThemes(selectedThemes);
 
         const normalized = (product?.variants || []).map(normalizeVariant);
         setIsInitialLoad(true);
@@ -312,7 +347,14 @@ export default function ProductUpdate() {
         setSizes([...new Set(normalized.map((v) => v.size).filter((value) => value !== "" && value !== null && value !== undefined))]);
 
         const hasColor = normalized.some((v) => v.color);
-        setCategoryType(hasColor ? "charm" : "normal");
+        const hasSize = normalized.some((v) => v.size && v.size !== "");
+        if (hasColor && hasSize) {
+          setCategoryType("ring");
+        } else if (hasColor) {
+          setCategoryType("charm");
+        } else {
+          setCategoryType("normal");
+        }
         setTimeout(() => setIsInitialLoad(false), 200);
       })
       .catch((err) => {
@@ -400,6 +442,7 @@ export default function ProductUpdate() {
       formData.append("description", desc);
       formData.append("category", categoryId);
       formData.append("collections", JSON.stringify(selectedCollections));
+      formData.append("themes", JSON.stringify(selectedThemes));
       formData.append(
         "options",
         JSON.stringify({
@@ -492,24 +535,24 @@ export default function ProductUpdate() {
             <label className="text-[13px] mb-[5px]">Danh muc</label>
             <select
               value={categoryId}
-             onChange={(e) => {
-              const value = e.target.value;
-              setCategoryId(value);
-              const selected = findCategoryById(arrayCategory, value);
-              const name = selected?.name?.toLowerCase() || "";
+              onChange={(e) => {
+                const value = e.target.value;
+                setCategoryId(value);
+                const selected = findCategoryById(arrayCategory, value);
+                const name = selected?.name?.toLowerCase() || "";
 
-              if (name.includes("charm")) {
-                setCategoryType("charm");
-              } else if (name.includes("nhẫn") || name.includes("ring")) {
-                setCategoryType("ring"); 
-              } else {
-                setCategoryType("normal");
-              }
-              setVariants([]);
-              setMaterials([]);
-              setSizes([]);
-              setColors([]);
-            }}
+                if (selected?.name?.toLowerCase().includes("charm")) {
+                  setCategoryType("charm");
+                } else if (selected?.name?.toLowerCase().includes("nhẫn")) {
+                  setCategoryType("ring");
+                } else {
+                  setCategoryType("normal");
+                }
+                setVariants([]);
+                setMaterials([]);
+                setSizes([]);
+                setColors([]);
+              }}
               className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
             >
               <option value=""> -- Chon danh muc -- </option>
@@ -519,22 +562,21 @@ export default function ProductUpdate() {
 
           <div className="flex flex-col">
             <label className="text-[13px] mb-[5px]">Bộ sưu tập</label>
-            <select
-              multiple
-              value={selectedCollections}
-              onChange={(e) => {
-                const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                setSelectedCollections(values);
-              }}
-              className="sm:text-[14px] text-[12px] px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
-            >
-              {collections.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <div className="text-[11px] text-gray-500 mt-[6px]">Giữ Ctrl/Cmd để chọn nhiều</div>
+            <MultiSelectDropdown
+                options={collections}
+                selected={selectedCollections}
+                onChange={setSelectedCollections}
+                placeholder="Chọn bộ sưu tập"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-[13px] mb-[5px]">Chủ đề</label>
+            <MultiSelectDropdown
+                options={themes}
+                selected={selectedThemes}
+                onChange={setSelectedThemes}
+                placeholder="Chọn chủ đề"
+            />
           </div>
 
           {categoryType !== "" && (
@@ -605,7 +647,7 @@ export default function ProductUpdate() {
 
                   {openSize && (
                     <div className="flex flex-wrap gap-3 mt-3">
-                      {sizeOptions.map((s) => (
+                      {(categoryType === "ring" ? ringSizeOptions : sizeOptions).map((s) => (
                         <button
                           type="button"
                           key={s}
@@ -628,9 +670,9 @@ export default function ProductUpdate() {
             <table className="w-full mt-5 border sm:col-span-2 col-span-1">
               <thead>
                 <tr>
-                  <th className="w-[100px]">Chất liệu</th>
-                  {(categoryType === "charm" || categoryType === "ring") && <th className="w-[100px]">Màu sắc</th>}
-                  {(categoryType === "normal" || categoryType === "ring") && <th className="w-[100px]">Size</th>}
+                  <th className="w-[100px]">Chat lieu</th>
+                  {(categoryType === "charm" || categoryType === "ring") && <th className="w-[100px]">Mau sac</th>}
+                  {categoryType !== "charm" && <th className="w-[100px]">Size</th>}
                   <th className="w-[100px]">Gia</th>
                   <th className="w-[100px]">So luong</th>
                   <th className="w-[200px]">Anh</th>
@@ -642,7 +684,7 @@ export default function ProductUpdate() {
                   <tr key={`${getVariantKey(v.material, v.color, v.size)}-${i}`} className="text-center">
                     <td>{v.material}</td>
                     {(categoryType === "charm" || categoryType === "ring") && <td>{v.color}</td>}
-                    {(categoryType === "normal" || categoryType === "ring") && <td>{v.size}</td>}
+                    {categoryType !== "charm" && <td>{v.size}</td>}
                     <td>
                       <input
                         type="number"
@@ -704,8 +746,8 @@ export default function ProductUpdate() {
                               }))
                               : []
                           }
-                           onupdatefiles={(fileItems) => {
-                           
+                          onupdatefiles={(fileItems) => {
+
                             const currentUrls = (v.image || []).filter(
                               (item) => typeof item === "string" && item.trim()
                             );
