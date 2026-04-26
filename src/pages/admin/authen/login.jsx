@@ -20,13 +20,15 @@ export default function Login() {
 
             ])
             .onSuccess((e) => {
+                console.log('login form onSuccess triggered')
                 e.preventDefault();
                 const dataFinal = {
                     email: e.target.email.value,
                     password: e.target.password.value
                 }
                 console.log("API PATH:", pathAdmin);
-                fetch(`${pathAdmin}/admin/account/login`, {
+                // Use v1 login endpoint which returns an accessToken containing role claim
+                fetch(`${pathAdmin}/v1/admin/auth/login`, {
                     method: "POST",
                     headers: {
                         "Content-type": "application/json"
@@ -36,14 +38,37 @@ export default function Login() {
                 })
                     .then(res => res.json())
                     .then(data => {
-                        if (data.code === "error") {
-                            alert(data.message)
+                        // v1 uses v1-response shape, prefer accessToken
+                        console.log('login response', data)
+                        if (data?.status === 'error' || data?.code === 'error') {
+                            alert(data.message || data.error || 'Đăng nhập thất bại')
+                            return
                         }
-                        else {
-                            sessionStorage.removeItem("admin_profile_cache");
-                            localStorage.setItem("token", data.token);
-                            navigate("/admin/dashboard")
+                        // robust token extraction to handle v1 response wrapper
+                        const tokenValue =
+                            data?.accessToken ||
+                            data?.token ||
+                            data?.data?.accessToken ||
+                            data?.data?.token ||
+                            (data?.data && data.data.data && (data.data.data.accessToken || data.data.data.token)) ||
+                            ''
+
+                        console.log('storing token preview', tokenValue ? (tokenValue.slice ? tokenValue.slice(0, 10) + '...' : tokenValue) : 'none')
+
+                        if (!tokenValue) {
+                            console.error('No access token found in login response', data)
+                            alert('Không nhận được token từ server')
+                            return
                         }
+
+                        // clear permission cache so PermissionGuard will refetch with new token
+                        sessionStorage.removeItem("admin_profile_cache");
+                        localStorage.setItem("token", tokenValue);
+                        navigate("/admin/dashboard")
+                    })
+                    .catch(err => {
+                        console.error('Login fetch error', err)
+                        alert('Lỗi khi gọi API đăng nhập')
                     })
             });
     }, []);

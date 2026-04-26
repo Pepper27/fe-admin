@@ -4,7 +4,7 @@ import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { pathAdmin } from "../../../config/api"
+import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
 export default function SizeList() {
   const [sizes, setSizes] = useState([])
   const [page, setPage] = useState(1)
@@ -130,7 +130,7 @@ export default function SizeList() {
                               <a href={`/admin/size/update/${item._id}`} className="rounded-l-[10px] text-[14px] p-[15px] bg-[white] border-y border-l border-gray-300">
                                 <FaRegEdit className="text-[16px] font-[700]" />
                               </a>
-                              <button className="rounded-r-[10px] text-[14px] p-[15px] bg-[white] border-y border-r border-gray-300">
+                              <button onClick={() => handleDelete(item._id)} className="rounded-r-[10px] text-[14px] p-[15px] bg-[white] border-y border-r border-gray-300">
                                 <FaRegTrashCan className="text-[16px] font-[700]" />
                               </button>
                             </div>
@@ -182,4 +182,16 @@ export default function SizeList() {
       </div>
     </>
   )
+}
+
+async function handleDelete(id) {
+  if (!window.confirm('Bạn có chắc chắn muốn xóa kích thước này?')) return
+  try {
+    await apiCall(adminEndpoints.sizes.delete(id), { method: 'DELETE' })
+    // remove from current DOM state by reloading page to keep changes minimal
+    window.location.reload()
+  } catch (err) {
+    console.error('Error deleting size:', err)
+    alert(err.message || 'Không thể xóa kích thước')
+  }
 }

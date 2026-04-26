@@ -4,7 +4,7 @@ import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { pathAdmin } from "../../../config/api"
+import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
 export default function MaterialList() {
   const [materials, setMaterials] = useState([])
   const [page, setPage] = useState(1)
@@ -131,7 +131,7 @@ export default function MaterialList() {
                               <a href={`/admin/material/update/${item._id}`} className="rounded-l-[10px] text-[14px] p-[15px] bg-[white] border-y border-l border-gray-300">
                                 <FaRegEdit className="text-[16px] font-[700]" />
                               </a>
-                              <button className="rounded-r-[10px] text-[14px] p-[15px] bg-[white] border-y border-r border-gray-300">
+                              <button onClick={() => handleDelete(item._id)} className="rounded-r-[10px] text-[14px] p-[15px] bg-[white] border-y border-r border-gray-300">
                                 <FaRegTrashCan className="text-[16px] font-[700]" />
                               </button>
                             </div>
@@ -183,4 +183,15 @@ export default function MaterialList() {
       </div>
     </>
   )
+}
+
+async function handleDelete(id) {
+  if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return
+  try {
+    await apiCall(adminEndpoints.materials.delete(id), { method: 'DELETE' })
+    window.location.reload()
+  } catch (err) {
+    console.error('Delete error', err)
+    alert(err.message || 'Không thể xóa')
+  }
 }

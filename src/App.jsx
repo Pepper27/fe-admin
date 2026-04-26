@@ -39,6 +39,9 @@ import MaterialList from "./pages/admin/material/material-list";
 import SizeCreate from "./pages/admin/size/size-create";
 import ColorCreate from "./pages/admin/color/color-create";
 import MaterialCreate from "./pages/admin/material/material-create";
+import SizeUpdate from "./pages/admin/size/size-update";
+import ColorUpdate from "./pages/admin/color/color-update";
+import MaterialUpdate from "./pages/admin/material/material-update";
 
 function App() {
   return (
@@ -472,6 +475,18 @@ function App() {
             }
           />
           <Route
+            path={routes.sizeUpdate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="size-edit">
+                    <SizeUpdate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path={routes.colorCreate}
             element={
               <PrivateRoute>
@@ -484,12 +499,36 @@ function App() {
             }
           />
           <Route
+            path={routes.colorUpdate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="color-edit">
+                    <ColorUpdate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
             path={routes.materialCreate}
             element={
               <PrivateRoute>
                 <LayoutAdmin>
                   <PermissionGuard permission="material-create">
                     <MaterialCreate />
+                  </PermissionGuard>
+                </LayoutAdmin>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path={routes.materialUpdate}
+            element={
+              <PrivateRoute>
+                <LayoutAdmin>
+                  <PermissionGuard permission="material-edit">
+                    <MaterialUpdate />
                   </PermissionGuard>
                 </LayoutAdmin>
               </PrivateRoute>
