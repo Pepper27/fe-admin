@@ -36,6 +36,7 @@ export default function ProductList() {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
+  // admin UI: no facets here (client-facing filters live in frontend2)
   const limit = 10;
 
   const formatPrice = (price) => {
@@ -136,6 +137,7 @@ export default function ProductList() {
 
   const buildProductParams = (withPagination = true, exportLimit = 10000) => {
     const params = new URLSearchParams();
+    // admin endpoints keep legacy behavior; do not request client-facing facets here
     if (keyword) params.append("keyword", keyword);
     if (creatorFilter) params.append("createdBy", creatorFilter);
     if (startDate) params.append("startDate", startDate);
@@ -230,6 +232,7 @@ export default function ProductList() {
         setProducts(data?.data || []);
         setTotal(data?.total || 0);
         setTotalPage(data?.totalPage || 1);
+        // legacy admin response handling
       })
       .catch((err) => {
         if (err?.name === "AbortError") return;
@@ -243,6 +246,8 @@ export default function ProductList() {
 
     return () => controller.abort();
   }, [keyword, creatorFilter, startDate, endDate, minPrice, maxPrice, stockFilter, categoryFilter, collectionFilter, materialFilter, page, limit]);
+
+  // no client-facing facet selections in admin UI
 
   return (
     <>
@@ -394,6 +399,9 @@ export default function ProductList() {
             </button>
           </div>
         </div>
+
+        {/* Smart facet panel returned from backend */}
+        {/* No client-facing facet panel in admin UI */}
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
