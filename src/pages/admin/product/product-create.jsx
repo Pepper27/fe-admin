@@ -19,11 +19,40 @@ const [selectedCollections, setSelectedCollections] = useState([]);
 const [themes, setThemes] = useState([]);
 const [selectedThemes, setSelectedThemes] = useState([]);
 const navigate = useNavigate()
-const materialOptions = [
-  { name: "Vàng", color: "#FFD700" },
-    { name: "Vàng hồng", color: "linear-gradient(45deg, #FFD700, #E6B8AF)" },
-  { name: "Bạc", color: "#C0C0C0" },
-]
+//Set marterial
+const [materialOptions,setMaterialOptions ] = useState([])
+useEffect(()=>{
+    const token = localStorage.getItem("token");
+    fetch(`${pathAdmin}/admin/materials`,{
+        method:"GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
+        credentials:"include"
+    })
+    .then(res => {
+        if (res.status === 200) {
+            return res.json();
+        }
+    })
+    .then(data=>{
+        if (data?.code === "error") {
+            throw new Error(data.message || "Unauthorized");
+        }
+        const color = data.data.map(item => ({
+            name: item.name,
+            // color: item.codeHex 
+        }));
+        setMaterialOptions(color);
+
+    })   
+    .catch((err) => {
+        console.error("Fetch parent categories failed", err);
+        alert(err?.message || "Failed to fetch");
+        setMaterialOptions([]);
+    })
+},[])
 
 const [materials, setMaterials] = useState([])
 const [openMaterial, setOpenMaterial] = useState(true)
@@ -34,19 +63,41 @@ const toggleMaterial = (name) => {
         setMaterials([...materials, name])
     }
 }
-const colorOptions = [
-  { name: "Đen", code: "#000000" },
-  { name: "Không màu", code: "#FFFFFF", border: true },
-  { name: "Vàng", code: "#FFFF00" },
-  { name: "Hồng", code: "#FF007F" },
-  { name: "Nâu", code: "#A52A2A" },
-  { name: "Tím", code: "#800080" },
-  { name: "Xanh", code: "#007BFF" },
-  { name: "Bạc", code: "#C0C0C0" },
-  { name: "Xanh lá cây", code: "#008000" },
-  { name: "Đỏ", code: "#B22222" },
-  { name: "Nhiều màu", gradient: "linear-gradient(45deg, black, yellow, green, purple)" },
-];
+//Set collor
+const [colorOptions,setColorOptions] = useState([])
+useEffect(()=>{
+    const token = localStorage.getItem("token");
+    fetch(`${pathAdmin}/admin/colors`,{
+        method:"GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
+        credentials:"include"
+    })
+    .then(res => {
+        if (res.status === 200) {
+            return res.json();
+        }
+    })
+    .then(data=>{
+        if (data?.code === "error") {
+            throw new Error(data.message || "Unauthorized");
+        }
+        const color = data.data.map(item => ({
+            name: item.name,
+            code: item.codeHex 
+        }));
+        setColorOptions(color);
+
+    })   
+    .catch((err) => {
+        console.error("Fetch parent categories failed", err);
+        alert(err?.message || "Failed to fetch");
+        setColorOptions([]);
+    })
+},[])
+
 
 const [colors, setColors] = useState([])
 const toggleColor = (colorName) => {
@@ -57,9 +108,8 @@ const toggleColor = (colorName) => {
     }
 }
 const [openColor, setOpenColor] = useState(true)
-const sizeOptions = [16, 17, 18, 19, 20, 21, 22]
-// RING SIZE OPTIONS - NHẬN SIZE: 48, 50, 52, 54, 56, 58
-const ringSizeOptions = [48, 50, 52, 54, 56, 58]
+
+
 
 const [sizes, setSizes] = useState([])
 const [openSize, setOpenSize] = useState(true)
@@ -71,6 +121,47 @@ const toggleSize = (size) => {
     }
 }
 const [categoryType, setCategoryType] = useState("")
+//Set size
+const [loadingSize, setLoadingSize] = useState(false);
+const [sizeOptions,setSizeOptions ] = useState([])
+useEffect(() => {
+    if (!categoryType) return; // Không gọi nếu chưa chọn loại danh mục
+
+    setLoadingSize(true); // Bắt đầu loading
+    const token = localStorage.getItem("token");
+    
+    fetch(`${pathAdmin}/admin/sizes`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include"
+    })
+    .then(res => res.status === 200 ? res.json() : null)
+    .then(data => {
+        if (data?.code === "error") throw new Error(data.message);
+        
+        const size = data.data.map(item => ({ name: item.name }));
+        let result = size.map(item => Number(item.name));
+        let sizeCate = [];
+
+        if (categoryType === "ring") {
+            sizeCate = result.filter(item => item > 47);
+        } else if (categoryType === "normal") {
+            sizeCate = result.filter(item => item < 47);
+        }
+        
+        setSizeOptions(sizeCate);
+    })
+    .catch((err) => {
+        console.error("Fetch sizes failed", err);
+        setSizeOptions([]);
+    })
+    .finally(() => {
+        setLoadingSize(false); // Kết thúc loading
+    });
+}, [categoryType]);
 
 const generateVariants = () => {
 
@@ -110,28 +201,49 @@ const generateVariants = () => {
         );
     };
 
-    if (categoryType === "charm"||categoryType === "ring") {
+    if (categoryType === "ring") {
+
+        materials.forEach(m => {
+            colors.forEach(c => {
+                sizes.forEach(s => {
+                    const old = findOldVariant(m, c, s);
+                    result.push({
+                        id: crypto.randomUUID(),
+                        material: m,
+                        color: c,
+                        size: s,
+                        price: old?.price || 0,
+                        quantity: old?.quantity || 0,
+                        image: old?.image || []
+                    });
+                });
+            });
+        });
+    } else if (categoryType === "charm") {
+      
         materials.forEach(m => {
             colors.forEach(c => {
                 const old = findOldVariant(m, c, null);
                 result.push({
-                    id: crypto.randomUUID(), 
+                    id: crypto.randomUUID(),
                     material: m,
                     color: c,
+                    size: null,
                     price: old?.price || 0,
                     quantity: old?.quantity || 0,
                     image: old?.image || []
                 });
             });
         });
-    }else {
+    } else {
+
         materials.forEach(m => {
             sizes.forEach(s => {
                 const old = findOldVariant(m, null, s);
-
                 result.push({
-                    id: crypto.randomUUID(), // THÊM DÒNG NÀY
+                    id: crypto.randomUUID(),
                     material: m,
+                    color: null,
                     size: s,
                     price: old?.price || 0,
                     quantity: old?.quantity || 0,
@@ -403,12 +515,12 @@ return(
                                         className={`flex items-center gap-2 px-3 py-2 rounded border
                                         ${materials.includes(m.name) ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
                                     >
-                                    <span
+                                    {/* <span
                                         className="w-4 h-4 rounded-full"
                                         style={{
                                         background: m.color
                                         }}
-                                    />
+                                    /> */}
 
                                     <span className="text-sm">{m.name}</span>
                                     </button>
@@ -454,8 +566,8 @@ return(
 
                             </div>
                         )}
-                        {categoryType !== "charm" && (
-                        <div className="flex flex-col sm:col-span-2 col-span-1">
+                       {categoryType !== "charm" && (
+                            <div className="flex flex-col sm:col-span-2 col-span-1">
                                 <div 
                                     className="flex justify-between items-center cursor-pointer"
                                     onClick={() => setOpenSize(!openSize)}
@@ -466,25 +578,34 @@ return(
 
                                 {openSize && (
                                     <div className="flex flex-wrap gap-3 mt-3">
-
-                                    {(categoryType === "ring" ? ringSizeOptions : sizeOptions).map((s) => (
-                                        <button
-                                        type="button"
-                                        key={s}
-                                        onClick={() => toggleSize(s)}
-                                        className={`px-4 py-2 rounded border text-sm
-                                        ${sizes.includes(s)
-                                            ? "border-blue-500 bg-blue-50"
-                                            : "border-gray-300"}`}
-                                        >
-                                        {s}
-                                        </button>
-                                    ))}
-
+                                        {loadingSize ? (
+                                            <div className="flex items-center gap-2 text-gray-500 italic text-sm">
+                                                <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Đang tải kích thước...
+                                            </div>
+                                        ) : (
+                                            sizeOptions.map((s) => (
+                                                <button
+                                                    type="button"
+                                                    key={s}
+                                                    onClick={() => toggleSize(s)}
+                                                    className={`px-4 py-2 rounded border text-sm
+                                                    ${sizes.includes(s) ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))
+                                        )}
+                                        
+                                        {!loadingSize && sizeOptions.length === 0 && (
+                                            <span className="text-sm text-gray-400">Không có kích thước phù hợp.</span>
+                                        )}
                                     </div>
                                 )}
-
-                                </div>
+                            </div>
                         )}
                         <button type="button" onClick={generateVariants}  className="bg-blue-500 text-white px-4 py-2 sm:col-span-2 col-span-1 w-[200px]">
                             Tạo biến thể

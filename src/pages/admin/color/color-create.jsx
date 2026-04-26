@@ -6,9 +6,8 @@ export default function ColorCreate() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
-    hex: '',
-    sortOrder: 0,
+    codeColor: '',
+    codeHex: '',
     isActive: true
   });
   const [loading, setLoading] = useState(false);
@@ -85,8 +84,8 @@ export default function ColorCreate() {
               <label className="block text-[14px] font-[600] mb-[5px]">Mã màu *</label>
               <input
                 type="text"
-                name="code"
-                value={formData.code}
+                name="codeColor"
+                value={formData.codeColor}
                 onChange={handleChange}
                 required
                 className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
@@ -99,33 +98,21 @@ export default function ColorCreate() {
               <div className="flex items-center gap-[10px]">
                 <input
                   type="color"
-                  value={formData.hex}
-                  onChange={(e) => setFormData(prev => ({...prev, hex: e.target.value, code: e.target.value.replace('#', '')}))}
+                  value={formData.codeHex}
+                  onChange={(e) => setFormData(prev => ({...prev, codeHex: e.target.value, codeColor: e.target.value.replace('#', '')}))}
                   className="w-[50px] h-[50px] border border-gray-300 rounded-[8px]"
                 />
                 <input
                   type="text"
-                  name="hex"
-                  value={formData.hex}
+                  name="codeHex"
+                  value={formData.codeHex}
                   onChange={handleChange}
                   className="flex-1 p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
                   placeholder="#FF0000"
                 />
               </div>
             </div>
-            
-            <div>
-              <label className="block text-[14px] font-[600] mb-[5px]">Thứ tự sắp xếp</label>
-              <input
-                type="number"
-                name="sortOrder"
-                value={formData.sortOrder}
-                onChange={handleChange}
-                className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
-                min="0"
-              />
-            </div>
-            
+                    
             <div>
               <label className="flex items-center">
                 <input

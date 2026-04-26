@@ -5,7 +5,7 @@ import { adminEndpoints, apiCall } from '../../../config/api'
 export default function ColorUpdate() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', code: '', hex: '', sortOrder: 0, isActive: true })
+  const [form, setForm] = useState({ name: '', codeColor: '', codeHex: '', sortOrder: 0, isActive: true })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function ColorUpdate() {
               <input
                 type="text"
                 name="code"
-                value={form.code || ''}
+                value={form.codeColor || ''}
                 onChange={handleChange}
                 required
                 className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
@@ -83,33 +83,20 @@ export default function ColorUpdate() {
               <div className="flex items-center gap-[10px]">
                 <input
                   type="color"
-                  value={form.hex || '#000000'}
-                  onChange={(e) => setForm(prev => ({ ...prev, hex: e.target.value, code: e.target.value.replace('#', '') }))}
+                  value={form.codeHex || '#000000'}
+                  onChange={(e) => setForm(prev => ({ ...prev, codeHex: e.target.value, codeColor: e.target.value.replace('#', '') }))}
                   className="w-[50px] h-[50px] border border-gray-300 rounded-[8px]"
                 />
                 <input
                   type="text"
                   name="hex"
-                  value={form.hex || ''}
+                  value={form.codeHex || ''}
                   onChange={handleChange}
                   className="flex-1 p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
                   placeholder="#FF0000"
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-[14px] font-[600] mb-[5px]">Thứ tự sắp xếp</label>
-              <input
-                type="number"
-                name="sortOrder"
-                value={form.sortOrder || 0}
-                onChange={handleChange}
-                className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
-                min="0"
-              />
-            </div>
-
             <div>
               <label className="flex items-center">
                 <input

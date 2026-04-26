@@ -27,11 +27,41 @@ export default function ProductUpdate() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const materialOptions = [
-    { name: "Vàng", color: "#FFD700" },
-    { name: "Vàng hồng", color: "linear-gradient(45deg, #FFD700, #E6B8AF)" },
-    { name: "Bạc", color: "#C0C0C0" },
-  ];
+ //Set marterial
+ const [materialOptions,setMaterialOptions ] = useState([])
+ useEffect(()=>{
+     const token = localStorage.getItem("token");
+     fetch(`${pathAdmin}/admin/materials`,{
+         method:"GET",
+         headers: {
+             "Authorization": `Bearer ${token}`,
+             "ngrok-skip-browser-warning": "true",
+         },
+         credentials:"include"
+     })
+     .then(res => {
+         if (res.status === 200) {
+             return res.json();
+         }
+     })
+     .then(data=>{
+         if (data?.code === "error") {
+             throw new Error(data.message || "Unauthorized");
+         }
+         const color = data.data.map(item => ({
+             name: item.name,
+             // color: item.codeHex 
+         }));
+         setMaterialOptions(color);
+ 
+     })   
+     .catch((err) => {
+         console.error("Fetch parent categories failed", err);
+         alert(err?.message || "Failed to fetch");
+         setMaterialOptions([]);
+     })
+ },[])
+ 
 
   const normalizeText = (value) =>
     String(value || "")
@@ -62,20 +92,41 @@ export default function ProductUpdate() {
     });
   };
 
-  const colorOptions = [
-    { name: "Den", code: "#000000" },
-    { name: "Khong mau", code: "#FFFFFF", border: true },
-    { name: "Vang", code: "#FFFF00" },
-    { name: "Hong", code: "#FF007F" },
-    { name: "Nau", code: "#A52A2A" },
-    { name: "Tim", code: "#800080" },
-    { name: "Xanh", code: "#007BFF" },
-    { name: "Bac", code: "#C0C0C0" },
-    { name: "Xanh la cay", code: "#008000" },
-    { name: "Do", code: "#B22222" },
-    { name: "Nhieu mau", gradient: "linear-gradient(45deg, black, yellow, green, purple)" },
-  ];
-
+  //Set collor
+  const [colorOptions,setColorOptions] = useState([])
+  useEffect(()=>{
+      const token = localStorage.getItem("token");
+      fetch(`${pathAdmin}/admin/colors`,{
+          method:"GET",
+          headers: {
+              "Authorization": `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+          },
+          credentials:"include"
+      })
+      .then(res => {
+          if (res.status === 200) {
+              return res.json();
+          }
+      })
+      .then(data=>{
+          if (data?.code === "error") {
+              throw new Error(data.message || "Unauthorized");
+          }
+          const color = data.data.map(item => ({
+              name: item.name,
+              code: item.codeHex 
+          }));
+          setColorOptions(color);
+  
+      })   
+      .catch((err) => {
+          console.error("Fetch parent categories failed", err);
+          alert(err?.message || "Failed to fetch");
+          setColorOptions([]);
+      })
+  },[])
+  
   const colorMap = colorOptions.reduce((acc, option) => {
     acc[normalizeText(option.name)] = option.name;
     return acc;
@@ -95,8 +146,7 @@ export default function ProductUpdate() {
     });
   };
   const [openColor, setOpenColor] = useState(true);
-  const sizeOptions = [16, 17, 18, 19, 20, 21, 22];
-  const ringSizeOptions = [48, 50, 52, 54, 56, 58];
+  
   const normalizeSize = (value) => {
     const asNumber = Number(value);
     return Number.isFinite(asNumber) ? asNumber : value;
@@ -115,6 +165,47 @@ export default function ProductUpdate() {
     });
   };
   const [categoryType, setCategoryType] = useState("");
+  //Set size
+  const [loadingSize, setLoadingSize] = useState(false);
+  const [sizeOptions,setSizeOptions ] = useState([])
+  useEffect(() => {
+    if (!categoryType) return; 
+
+    setLoadingSize(true); // Bắt đầu loading
+    const token = localStorage.getItem("token");
+    
+    fetch(`${pathAdmin}/admin/sizes`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include"
+    })
+    .then(res => res.status === 200 ? res.json() : null)
+    .then(data => {
+        if (data?.code === "error") throw new Error(data.message);
+        
+        const size = data.data.map(item => ({ name: item.name }));
+        let result = size.map(item => Number(item.name));
+        let sizeCate = [];
+
+        if (categoryType === "ring") {
+            sizeCate = result.filter(item => item > 47);
+        } else if (categoryType === "normal") {
+            sizeCate = result.filter(item => item < 47);
+        }
+        
+        setSizeOptions(sizeCate);
+    })
+    .catch((err) => {
+        console.error("Fetch sizes failed", err);
+        setSizeOptions([]);
+    })
+    .finally(() => {
+        setLoadingSize(false); 
+    });
+  }, [categoryType]);
   const [variants, setVariants] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -597,7 +688,7 @@ export default function ProductUpdate() {
                         className={`flex items-center gap-2 px-3 py-2 rounded border ${materials.includes(m.name) ? "border-blue-500 bg-blue-50" : "border-gray-300"
                           }`}
                       >
-                        <span className="w-4 h-4 rounded-full" style={{ background: m.color }} />
+                        {/* <span className="w-4 h-4 rounded-full" style={{ background: m.color }} /> */}
 
                         <span className="text-sm">{m.name}</span>
                       </button>
@@ -647,7 +738,7 @@ export default function ProductUpdate() {
 
                   {openSize && (
                     <div className="flex flex-wrap gap-3 mt-3">
-                      {(categoryType === "ring" ? ringSizeOptions : sizeOptions).map((s) => (
+                      {sizeOptions.map((s) => (
                         <button
                           type="button"
                           key={s}

@@ -91,7 +91,6 @@ export default function MaterialList() {
                     </td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Tên chất liệu</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[190px]">Mô tả</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] ">Vị trí</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Tạo bởi</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Cập nhật bởi</td>
                     <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px]">Hành động</td>
@@ -111,9 +110,7 @@ export default function MaterialList() {
                           <td className="p-[15px] ">
                             <div>{item.description}</div>
                           </td>
-                          <td className="p-[15px] text-[14px]">
-                            <div className="text-[14px] ml-[10px]">{item.position}</div>
-                          </td>
+                
                           <td className="p-[15px]  pr-[25px]">
                             <div className="flex flex-col gap-y-[1px]">
                               <div className="text-[14px]">{item.createdByName}</div>

@@ -7,7 +7,6 @@ export default function MaterialCreate() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    sortOrder: 0,
     isActive: true
   });
   const [loading, setLoading] = useState(false);
@@ -79,19 +78,6 @@ export default function MaterialCreate() {
                 placeholder="Ví dụ: Vàng"
               />
             </div>
-            
-            <div>
-              <label className="block text-[14px] font-[600] mb-[5px]">Thứ tự sắp xếp</label>
-              <input
-                type="number"
-                name="sortOrder"
-                value={formData.sortOrder}
-                onChange={handleChange}
-                className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
-                min="0"
-              />
-            </div>
-            
             <div className="md:col-span-2">
               <label className="block text-[14px] font-[600] mb-[5px]">Mô tả</label>
               <textarea

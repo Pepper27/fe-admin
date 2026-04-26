@@ -5,7 +5,7 @@ import { adminEndpoints, apiCall } from '../../../config/api'
 export default function MaterialUpdate() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', description: '', sortOrder: 0, isActive: true })
+  const [form, setForm] = useState({ name: '', description: '', isActive: true })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -74,18 +74,6 @@ export default function MaterialUpdate() {
                 onChange={handleChange}
                 className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
                 placeholder="Mô tả ngắn"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[14px] font-[600] mb-[5px]">Thứ tự sắp xếp</label>
-              <input
-                type="number"
-                name="sortOrder"
-                value={form.sortOrder || 0}
-                onChange={handleChange}
-                className="w-full p-[12px] border border-gray-300 rounded-[8px] text-[14px]"
-                min="0"
               />
             </div>
 
