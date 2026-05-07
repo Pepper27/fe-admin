@@ -3,7 +3,7 @@ import { pathAdmin } from "../../../config/api";
 
 const STATUS_LABELS = {
   pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
+  confirmed: "Đang chuẩn bị",
   shipping: "Đang giao",
   delivered: "Đã giao",
   cancelled: "Đã hủy",
@@ -141,12 +141,21 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full border border-gray-300 rounded-[10px] px-[10px] py-[10px] outline-none text-[14px]"
+                    // If order already cancelled, do not allow changing status away from cancelled
+                    disabled={order?.status === "cancelled"}
                   >
-                    {Object.keys(STATUS_LABELS).map((k) => (
-                      <option key={k} value={k}>
-                        {STATUS_LABELS[k]}
-                      </option>
-                    ))}
+                    {Object.keys(STATUS_LABELS)
+                      .filter((k) => {
+                        // If the current order is cancelled, only allow the cancelled option
+                        if (order?.status === "cancelled") return k === "cancelled";
+                        // Otherwise allow normal lifecycle options (exclude cancelled only if you want)
+                        return k !== "cancelled";
+                      })
+                      .map((k) => (
+                        <option key={k} value={k}>
+                          {STATUS_LABELS[k]}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="rounded-[12px] border border-gray-200 p-[12px]">
@@ -183,6 +192,19 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         const price = Number(it?.price) || 0;
                         const qty = Number(it?.quantity) || 0;
                         const line = price * qty;
+
+                        // Build a friendly classification string instead of exposing internal ids/codes
+                        const classificationParts = [];
+                        // common variant attributes (may vary by backend shape)
+                        if (it?.size) classificationParts.push(it.size);
+                        if (it?.material) classificationParts.push(it.material);
+                        if (it?.color) classificationParts.push(it.color);
+                        // variant/display name fallbacks
+                        if (it?.variantName) classificationParts.push(it.variantName);
+                        if (it?.variant?.name) classificationParts.push(it.variant.name);
+                        // final fallback: don't show raw mongo id unless nothing else
+                        const classification = classificationParts.filter(Boolean).join(" · ") || (it?.variantCode || it?.variantId || "");
+
                         return (
                           <tr key={idx}>
                             <td className="p-[12px]">
@@ -194,7 +216,9 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                             </td>
                             <td className="p-[12px] text-[14px]">
                               <div className="font-[700]">{it?.name || "(Không có tên)"}</div>
-                              <div className="text-[12px] text-gray-500">variant: {it?.variantId || ""}</div>
+                              {classification ? (
+                                <div className="text-[12px] text-gray-500">{classification}</div>
+                              ) : null}
                             </td>
                             <td className="p-[12px] text-[14px]">{formatMoney(price)}</td>
                             <td className="p-[12px] text-[14px]">{qty}</td>
