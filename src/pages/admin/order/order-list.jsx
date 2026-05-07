@@ -288,9 +288,19 @@ export default function OrderList() {
                           </span>
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("pay", o.payStatus)}`}>
-                            {PAY_LABELS[o.payStatus] || o.payStatus}
-                          </span>
+                          {(() => {
+                            const explicit = o?.payStatus;
+                            const inferred = explicit
+                              ? explicit
+                            : (String(o?.method || "").trim().toLowerCase().includes("zalopay") || String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay") || Number(o?.payment?.capturedAmount) > 0)
+                              ? "paid"
+                              : "unpaid";
+                            return (
+                              <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("pay", inferred)}`}>
+                                {PAY_LABELS[inferred] || inferred}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="p-[15px] text-[14px]">{formatDateTime(o.createdAt)}</td>
                         <td className="p-[15px]">
