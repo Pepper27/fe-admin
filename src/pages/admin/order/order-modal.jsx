@@ -51,7 +51,19 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
         const o = data?.data;
         setOrder(o || null);
         setStatus(o?.status || "pending");
-        setPayStatus(o?.payStatus || "unpaid");
+        // Infer payStatus for display:
+        // - if backend provided payStatus use it
+        // - otherwise, consider the order.method or payment.provider or capturedAmount
+        let inferredPayStatus = "unpaid";
+        try {
+          if (o?.payStatus) inferredPayStatus = o.payStatus;
+          else if (String(o?.method || "").trim().toLowerCase().includes("zalopay")) inferredPayStatus = "paid";
+          else if (String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay")) inferredPayStatus = "paid";
+          else if (Number(o?.payment?.capturedAmount) > 0) inferredPayStatus = "paid";
+        } catch (e) {
+          inferredPayStatus = o?.payStatus || "unpaid";
+        }
+        setPayStatus(inferredPayStatus);
       })
       .catch((err) => {
         if (err?.name === "AbortError") return;
