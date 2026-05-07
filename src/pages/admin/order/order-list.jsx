@@ -7,7 +7,7 @@ import OrderModal from "./order-modal";
 
 const STATUS_LABELS = {
   pending: "Chờ xác nhận",
-  confirmed: "Đã xác nhận",
+  confirmed: "Đang chuẩn bị",
   shipping: "Đang giao",
   delivered: "Đã giao",
   cancelled: "Đã hủy",

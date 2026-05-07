@@ -18,6 +18,7 @@ export const routes = {
   designList: "/admin/design",
   clientList: "/admin/client",
   orderList: "/admin/order",
+  refundJobs: "/admin/refunds",
   wishlistList: "/admin/wishlist",
   roleList: "/admin/role",
   roleCreate: "/admin/role/create",

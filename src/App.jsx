@@ -24,6 +24,7 @@ import DesignList from "./pages/admin/design/design-list";
 import ClientList from "./pages/admin/client/client-list";
 import WishlistList from "./pages/admin/wishlist/wishlist-list";
 import OrderList from "./pages/admin/order/order-list";
+import RefundsPage from "./pages/admin/refunds";
 import RoleList from "./pages/admin/setting/role/role-list";
 import RoleCreate from "./pages/admin/setting/role/role-ceate";
 import RoleUpdate from "./pages/admin/setting/role/role-update";
@@ -248,6 +249,18 @@ function App() {
               <LayoutAdmin>
                 <PermissionGuard permission="order-view">
                   <OrderList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.refundJobs}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="order-view">
+                  <RefundsPage />
                 </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
