@@ -19,17 +19,21 @@ export default function CollectionList() {
   const fetchCollections = () => {
     const token = localStorage.getItem("token");
     setLoading(true);
-    fetch(`${pathAdmin}/admin/collections?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
+    fetch(
+      `${pathAdmin}/admin/collections?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        credentials: "include",
       },
-      credentials: "include",
-    })
+    )
       .then((res) => res.json())
       .then((data) => {
-        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+        if (data?.code === "error")
+          throw new Error(data.message || "Unauthorized");
         setCollections(data?.data || []);
         setTotalPage(data?.totalPage || 1);
         setTotal(data?.total || 0);
@@ -51,13 +55,17 @@ export default function CollectionList() {
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý bộ sưu tập</div>
+        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">
+          Quản lý bộ sưu tập
+        </div>
 
         <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
           <div className="flex items-center gap-0 min-w-max">
             <div className="py-[15px] px-[20px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
               <FaFilter className="text-[16px]" />
-              <span className="font-[700] text-[13px] whitespace-nowrap">Bộ lọc</span>
+              <span className="font-[700] text-[13px] whitespace-nowrap">
+                Bộ lọc
+              </span>
             </div>
             <button
               type="button"
@@ -106,18 +114,36 @@ export default function CollectionList() {
                     <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
                       <input type="checkbox" className="w-[20px] h-[20px]" />
                     </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Tên bộ sưu tập</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[190px]">Ảnh đại diện</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[250px]">Mô tả</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Tạo bởi</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Cập nhật bởi</td>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px]">Hành động</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">
+                      Tên bộ sưu tập
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[190px]">
+                      Ảnh/Poster
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">
+                      Video
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[250px]">
+                      Mô tả
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">
+                      Tạo bởi
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">
+                      Cập nhật bởi
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px]">
+                      Hành động
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="p-[15px] text-[14px] text-gray-500">
+                      <td
+                        colSpan="7"
+                        className="p-[15px] text-[14px] text-gray-500"
+                      >
                         Đang tải...
                       </td>
                     </tr>
@@ -125,29 +151,69 @@ export default function CollectionList() {
                     collections.map((item) => (
                       <tr key={item._id}>
                         <td className="p-[15px] text-[14px] w-[40px]">
-                          <input type="checkbox" className="w-[20px] h-[20px]" />
+                          <input
+                            type="checkbox"
+                            className="w-[20px] h-[20px]"
+                          />
                         </td>
                         <td className="p-[15px] text-[14px] ">{item.name}</td>
                         <td className="p-[15px] ">
-                          {item.avatar ? (
-                            <img className="rounded-[10px] w-[120px]" src={item.avatar} alt={item.name} />
+                          {item.avatar || item.poster ? (
+                            <img
+                              className="rounded-[10px] w-[120px]"
+                              src={item.avatar || item.poster}
+                              alt={item.name}
+                            />
                           ) : (
-                            <div className="text-[12px] text-gray-400">(Chưa có)</div>
+                            <div className="text-[12px] text-gray-400">
+                              (Chưa có)
+                            </div>
                           )}
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          <div className="line-clamp-2">{item.description || ""}</div>
+                          {item.video ? (
+                            <div className="flex flex-col gap-y-[6px]">
+                              <span className="inline-flex w-fit items-center rounded-full bg-emerald-100 px-[10px] py-[4px] text-[11px] font-[700] text-emerald-700">
+                                Có video
+                              </span>
+                              <a
+                                className="text-pri underline"
+                                href={item.video}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Xem video
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-[12px] text-gray-400">
+                              (Không)
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-[15px] text-[14px]">
+                          <div className="line-clamp-2">
+                            {item.description || ""}
+                          </div>
                         </td>
                         <td className="p-[15px] pr-[25px]">
                           <div className="flex flex-col gap-y-[1px]">
-                            <div className="text-[14px]">{item.createdByName || ""}</div>
-                            <div className="text-[12px]">{item.createdAtFormat || ""}</div>
+                            <div className="text-[14px]">
+                              {item.createdByName || ""}
+                            </div>
+                            <div className="text-[12px]">
+                              {item.createdAtFormat || ""}
+                            </div>
                           </div>
                         </td>
                         <td className="p-[15px] w-[160px] pr-[25px]">
                           <div className="flex flex-col gap-y-[1px]">
-                            <div className="text-[14px]">{item.updatedByName || ""}</div>
-                            <div className="text-[12px]">{item.updatedAtFormat || ""}</div>
+                            <div className="text-[14px]">
+                              {item.updatedByName || ""}
+                            </div>
+                            <div className="text-[12px]">
+                              {item.updatedAtFormat || ""}
+                            </div>
                           </div>
                         </td>
                         <td className="p-[15px]">
@@ -159,7 +225,10 @@ export default function CollectionList() {
                             >
                               <FaRegEdit className="text-[16px] font-[700]" />
                             </Link>
-                            <CollectionDelete collection={item} onDeleted={fetchCollections} />
+                            <CollectionDelete
+                              collection={item}
+                              onDeleted={fetchCollections}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -169,7 +238,9 @@ export default function CollectionList() {
                       <td colSpan="7">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
-                          <span className="md:text-[16px] text-[14px]">Không tìm thấy bộ sưu tập</span>
+                          <span className="md:text-[16px] text-[14px]">
+                            Không tìm thấy bộ sưu tập
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -184,7 +255,8 @@ export default function CollectionList() {
           {total > 0 ? (
             <>
               <span>
-                Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}
+                Hiển thị {(page - 1) * limit + 1} -{" "}
+                {Math.min(page * limit, total)} của {total}
               </span>
               <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
                 <select
