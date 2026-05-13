@@ -17,7 +17,11 @@ export default function CollectionUpdate() {
   const navigate = useNavigate();
 
   const [files, setFiles] = useState([]);
+  const [posterFiles, setPosterFiles] = useState([]);
+  const [videoFiles, setVideoFiles] = useState([]);
   const [existingAvatar, setExistingAvatar] = useState("");
+  const [existingPoster, setExistingPoster] = useState("");
+  const [existingVideo, setExistingVideo] = useState("");
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [errors, setErrors] = useState({});
@@ -38,6 +42,8 @@ export default function CollectionUpdate() {
         setName(current?.name || "");
         setDesc(current?.description || "");
         setExistingAvatar(current?.avatar || "");
+        setExistingPoster(current?.poster || "");
+        setExistingVideo(current?.video || "");
       })
       .catch((err) => {
         console.error("Fetch collection failed", err);
@@ -50,7 +56,15 @@ export default function CollectionUpdate() {
     const newErrors = {};
     if (!name.trim()) newErrors.name = "Tên bộ sưu tập không được để trống";
     if (!desc.trim()) newErrors.desc = "Mô tả không được để trống";
-    if (files.length === 0 && !existingAvatar) newErrors.avatar = "Vui lòng chọn ảnh đại diện";
+    if (files.length === 0 && !existingAvatar)
+      newErrors.avatar = "Vui lòng chọn ảnh đại diện";
+    if (
+      (videoFiles.length > 0 || existingVideo) &&
+      posterFiles.length === 0 &&
+      !existingPoster
+    ) {
+      newErrors.poster = "Nếu có video, vui lòng chọn poster (ảnh)";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,6 +78,8 @@ export default function CollectionUpdate() {
     dataFinal.append("name", name);
     dataFinal.append("description", desc);
     if (files.length > 0) dataFinal.append("avatar", files[0]);
+    if (posterFiles.length > 0) dataFinal.append("poster", posterFiles[0]);
+    if (videoFiles.length > 0) dataFinal.append("video", videoFiles[0]);
 
     fetch(`${pathAdmin}/admin/collections/${id}`, {
       method: "PATCH",
@@ -93,7 +109,9 @@ export default function CollectionUpdate() {
         onSubmit={handlerSubmit}
         className="xl:w-[calc(100%-240px)] lg:w-[calc(100%-220px)] w-full mt-[100px] lg:ml-[240px] l-0 flex flex-col mx-[16px] sm:px-[30px] px-[10px] sm:pr-[55px] pr-[30px]"
       >
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Cập nhật bộ sưu tập</div>
+        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">
+          Cập nhật bộ sưu tập
+        </div>
         <div className="mb-[30px] grid sm:grid-cols-2 grid-cols-1 gap-y-[20px] gap-x-[30px] bg-[white] sm:py-[30px] py-[20px] sm:px-[40px] px-[20px] border border-gray-300 rounded-[15px]">
           <div className="flex flex-col sm:col-span-2 col-span-1">
             <label className="text-[13px] mb-[5px]">Tên bộ sưu tập</label>
@@ -105,13 +123,21 @@ export default function CollectionUpdate() {
               }}
               className={`px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border ${errors.name ? "border-red-500" : "border-gray-300"}`}
             />
-            {errors.name && <span className="text-red-500 text-[11px] mt-[4px]">{errors.name}</span>}
+            {errors.name && (
+              <span className="text-red-500 text-[11px] mt-[4px]">
+                {errors.name}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col sm:col-span-2 col-span-1">
             <label className="text-[13px] mb-[5px]">Ảnh đại diện</label>
             {existingAvatar && files.length === 0 ? (
-              <img className="rounded-[10px] w-[120px] mb-[10px]" src={existingAvatar} alt={name} />
+              <img
+                className="rounded-[10px] w-[120px] mb-[10px]"
+                src={existingAvatar}
+                alt={name}
+              />
             ) : null}
             <FilePond
               files={files}
@@ -124,12 +150,79 @@ export default function CollectionUpdate() {
               name="avatar"
               labelIdle="Chọn ảnh hoặc kéo thả vào đây"
             />
-            {errors.avatar && <span className="text-red-500 text-[11px] mt-[-12px]">{errors.avatar}</span>}
+            {errors.avatar && (
+              <span className="text-red-500 text-[11px] mt-[-12px]">
+                {errors.avatar}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col sm:col-span-2 col-span-1">
-            <label htmlFor="description" className="text-[13px] mb-[5px]">Mô tả</label>
-            <div className={`${errors.desc ? "border border-red-500 rounded-[5px]" : ""}`}>
+            <label className="text-[13px] mb-[5px]">Video (tuỳ chọn)</label>
+            {existingVideo && videoFiles.length === 0 ? (
+              <a
+                className="text-[12px] text-pri underline mb-[6px]"
+                href={existingVideo}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Xem video hiện tại
+              </a>
+            ) : null}
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              onChange={(e) => {
+                const f =
+                  e.target.files && e.target.files[0]
+                    ? [e.target.files[0]]
+                    : [];
+                setVideoFiles(f);
+                setErrors((prev) => ({ ...prev, poster: "" }));
+              }}
+              className="px-[20px] py-[12px] bg-[#F5F6FA] rounded-[5px] outline-none border border-gray-300"
+            />
+            <span className="text-[11px] text-gray-500 mt-[4px]">
+              Hỗ trợ mp4/webm/mov
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:col-span-2 col-span-1">
+            <label className="text-[13px] mb-[5px]">
+              Poster cho video (ảnh, tuỳ chọn)
+            </label>
+            {existingPoster && posterFiles.length === 0 ? (
+              <img
+                className="rounded-[10px] w-[120px] mb-[10px]"
+                src={existingPoster}
+                alt={`${name} poster`}
+              />
+            ) : null}
+            <FilePond
+              files={posterFiles}
+              onupdatefiles={(fileItems) => {
+                setPosterFiles(fileItems.map((item) => item.file));
+                setErrors((prev) => ({ ...prev, poster: "" }));
+              }}
+              allowMultiple={false}
+              maxFiles={1}
+              name="poster"
+              labelIdle="Chọn poster (ảnh) hoặc kéo thả vào đây"
+            />
+            {errors.poster && (
+              <span className="text-red-500 text-[11px] mt-[-12px]">
+                {errors.poster}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:col-span-2 col-span-1">
+            <label htmlFor="description" className="text-[13px] mb-[5px]">
+              Mô tả
+            </label>
+            <div
+              className={`${errors.desc ? "border border-red-500 rounded-[5px]" : ""}`}
+            >
               <Editor
                 apiKey="4za2bx0zr5zze6b3ux1l4un4bnkypmn6nr1vlsmnhpy3iqrm"
                 init={{
@@ -160,7 +253,11 @@ export default function CollectionUpdate() {
                 value={desc}
                 id="desc"
               />
-              {errors.desc && <span className="text-red-500 text-[11px] mt-[4px]">{errors.desc}</span>}
+              {errors.desc && (
+                <span className="text-red-500 text-[11px] mt-[4px]">
+                  {errors.desc}
+                </span>
+              )}
             </div>
 
             <div className="mt-[30px] flex flex-col items-center gap-y-[20px]">
