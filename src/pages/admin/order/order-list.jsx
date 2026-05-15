@@ -276,9 +276,9 @@ export default function OrderList() {
                           <div className="text-[12px] text-gray-500 break-all">{o._id}</div>
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          <div className="font-[700]">{o?.userId?.fullName || "(Chưa có)"}</div>
-                          <div className="text-[12px] text-gray-500">{o?.userId?.email || ""}</div>
-                          <div className="text-[12px] text-gray-500">{o?.userId?.phone || o.phone || ""}</div>
+                          <div className="font-[700]">{o?.userId?.fullName || o?.fullName || "(Chưa có)"}</div>
+                          <div className="text-[12px] text-gray-500">{o?.userId?.email || o?.email || ""}</div>
+                          <div className="text-[12px] text-gray-500">{o?.userId?.phone || o?.phone || ""}</div>
                         </td>
                         <td className="p-[15px] text-[14px]">{o.itemsCount ?? (o.cart || []).length}</td>
                         <td className="p-[15px] text-[14px] font-[800]">{formatMoney(o.totalPrice)}</td>
