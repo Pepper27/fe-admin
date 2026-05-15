@@ -9,6 +9,9 @@ const STATUS_LABELS = {
   cancelled: "Đã hủy",
 };
 
+// Only allow moving forward in the normal order lifecycle.
+const STATUS_FLOW = ["pending", "confirmed", "shipping", "delivered"];
+
 const PAY_LABELS = {
   unpaid: "Chưa thanh toán",
   paid: "Đã thanh toán",
@@ -131,9 +134,9 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                   <div className="text-[12px] text-gray-500">Mã đơn</div>
                   <div className="font-[800]">{order.orderCode || order._id}</div>
                   <div className="mt-[8px] text-[12px] text-gray-500">Khách hàng</div>
-                  <div className="text-[14px]">{order?.userId?.fullName || "(Chưa có)"}</div>
-                  <div className="text-[13px] text-gray-600 break-all">{order?.userId?.email || ""}</div>
-                  <div className="text-[13px] text-gray-600">{order?.userId?.phone || order.phone || ""}</div>
+                  <div className="text-[14px]">{order?.userId?.fullName || order?.fullName || "(Chưa có)"}</div>
+                  <div className="text-[13px] text-gray-600 break-all">{order?.userId?.email || order?.email || ""}</div>
+                  <div className="text-[13px] text-gray-600">{order?.userId?.phone || order?.phone || ""}</div>
                 </div>
 
                 <div className="rounded-[12px] border border-gray-200 p-[12px]">
@@ -156,18 +159,27 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                     // If order already cancelled, do not allow changing status away from cancelled
                     disabled={order?.status === "cancelled"}
                   >
-                    {Object.keys(STATUS_LABELS)
-                      .filter((k) => {
-                        // If the current order is cancelled, only allow the cancelled option
-                        if (order?.status === "cancelled") return k === "cancelled";
-                        // Otherwise allow normal lifecycle options (exclude cancelled only if you want)
-                        return k !== "cancelled";
-                      })
-                      .map((k) => (
-                        <option key={k} value={k}>
+                    {(() => {
+                      if (order?.status === "cancelled") {
+                        return (
+                          <option value="cancelled">{STATUS_LABELS.cancelled}</option>
+                        );
+                      }
+
+                      const current = String(order?.status || "pending");
+                      const currentIdx = STATUS_FLOW.indexOf(current);
+
+                      return STATUS_FLOW.map((k, idx) => (
+                        <option
+                          key={k}
+                          value={k}
+                          // If already at a later state, disable going back.
+                          disabled={currentIdx >= 0 && idx < currentIdx}
+                        >
                           {STATUS_LABELS[k]}
                         </option>
-                      ))}
+                      ));
+                    })()}
                   </select>
                 </div>
                 <div className="rounded-[12px] border border-gray-200 p-[12px]">
