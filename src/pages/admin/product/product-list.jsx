@@ -2,14 +2,14 @@ import { FaFilter } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { pathAdmin } from "../../../config/api";
 import ProductDelete from "./product-delete";
 
 export default function ProductList() {
-  const MATERIAL_OPTIONS = ["Vàng", "Vàng hồng", "Bạc"];
+  const [materials, setMaterials] = useState([]);
 
   const normalizeText = (value) =>
     String(value || "")
@@ -53,46 +53,63 @@ export default function ProductList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/v1/admin/account`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setCreators(data?.data || []);
-      })
-      .catch(() => setCreators([]));
 
-    // Fetch categories
-    fetch(`${pathAdmin}/v1/admin/categories`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setCategories(data?.data || []);
-      })
-      .catch(() => setCategories([]));
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
+    };
 
-    // Fetch collections
-    fetch(`${pathAdmin}/v1/admin/collections`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setCollections(data?.data || []);
-      })
-      .catch(() => setCollections([]));
+    const fetchFirstOk = async (urls) => {
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { method: "GET", headers, credentials: "include" });
+          if (res.status === 404) continue;
+          const data = await res.json();
+          if (data?.code === "error") continue;
+          return data;
+        } catch {
+          // try next
+        }
+      }
+      return null;
+    };
+
+    (async () => {
+      // Creators (accounts list)
+      const creatorsRes = await fetchFirstOk([
+        `${pathAdmin}/v1/admin/account`,
+        `${pathAdmin}/admin/account`,
+        `${pathAdmin}/v1/admin/accounts`,
+        `${pathAdmin}/admin/accounts`,
+      ]);
+      setCreators(creatorsRes?.data || []);
+
+      // Categories: prefer hierarchical parent tree for readable dropdown
+      const categoriesRes = await fetchFirstOk([
+        `${pathAdmin}/admin/categories/parent`,
+        `${pathAdmin}/v1/admin/categories/parent`,
+        `${pathAdmin}/v1/admin/categories`,
+        `${pathAdmin}/admin/categories`,
+      ]);
+      setCategories(categoriesRes?.data || []);
+
+      // Collections
+      const collectionsRes = await fetchFirstOk([
+        `${pathAdmin}/v1/admin/collections`,
+        `${pathAdmin}/admin/collections`,
+      ]);
+      setCollections(collectionsRes?.data || []);
+
+      // Materials
+      const materialsRes = await fetchFirstOk([
+        `${pathAdmin}/v1/admin/materials`,
+        `${pathAdmin}/admin/materials?limit=1000`,
+        `${pathAdmin}/admin/materials`,
+      ]);
+      const mats = materialsRes?.data || [];
+      // normalize to array of { _id?, name }
+      setMaterials(Array.isArray(mats) ? mats : []);
+    })();
   }, []);
 
   const getDisplayPrice = (product) => {
@@ -124,7 +141,7 @@ export default function ProductList() {
   const handleResetFilters = () => {
     setStockFilter("");
     setCategoryFilter("");
-    setCollectionFilter([]);
+    setCollectionFilter("");
     setMaterialFilter("");
     setCreatorFilter("");
     setStartDate("");
@@ -133,6 +150,87 @@ export default function ProductList() {
     setMaxPrice("");
     setKeyword("");
     setPage(1);
+  };
+
+  // normalizeText is kept for future keyword/search helpers
+  void normalizeText;
+
+  const renderCategoryOptions = (cats, level = 0) => {
+    if (!Array.isArray(cats)) return null;
+    return cats
+      .slice()
+      .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")))
+      .map((c) => {
+        const id = c?._id || c?.id;
+        const name = c?.name || "";
+        const children = c?.children;
+        return (
+          <React.Fragment key={String(id)}>
+            <option value={String(id)}>
+              {"--".repeat(level)} {name}
+            </option>
+            {Array.isArray(children) && children.length
+              ? renderCategoryOptions(children, level + 1)
+              : null}
+          </React.Fragment>
+        );
+      });
+  };
+
+  const getCategoryDescendantIds = (cats, rootId) => {
+    const want = String(rootId || "");
+    if (!want) return [];
+
+    // Case 1: tree shape: [{ _id/id, children: [...] }]
+    const findNodeInTree = (nodes) => {
+      if (!Array.isArray(nodes)) return null;
+      for (const n of nodes) {
+        const id = n?._id || n?.id;
+        if (String(id) === want) return n;
+        const hit = findNodeInTree(n?.children);
+        if (hit) return hit;
+      }
+      return null;
+    };
+
+    const node = findNodeInTree(cats);
+    if (node) {
+      const out = new Set();
+      const walk = (n) => {
+        if (!n) return;
+        const id = n?._id || n?.id;
+        if (id != null) out.add(String(id));
+        const children = Array.isArray(n?.children) ? n.children : [];
+        for (const ch of children) walk(ch);
+      };
+      walk(node);
+      return Array.from(out);
+    }
+
+    // Case 2: flat shape: [{ _id, parent/parentId }, ...]
+    const list = Array.isArray(cats) ? cats : [];
+    const childrenByParent = new Map();
+    for (const c of list) {
+      const pid = c?.parent?._id || c?.parentId || c?.parent || null;
+      const parentKey = pid == null ? "" : String(pid);
+      const id = c?._id || c?.id;
+      if (id == null) continue;
+      if (!childrenByParent.has(parentKey)) childrenByParent.set(parentKey, []);
+      childrenByParent.get(parentKey).push(String(id));
+    }
+
+    const out = new Set([want]);
+    const queue = [want];
+    while (queue.length) {
+      const cur = queue.shift();
+      const kids = childrenByParent.get(String(cur)) || [];
+      for (const k of kids) {
+        if (out.has(k)) continue;
+        out.add(k);
+        queue.push(k);
+      }
+    }
+    return Array.from(out);
   };
 
   const buildProductParams = (withPagination = true, exportLimit = 10000) => {
@@ -145,7 +243,14 @@ export default function ProductList() {
     if (minPrice) params.append("minPrice", minPrice);
     if (maxPrice) params.append("maxPrice", maxPrice);
     if (stockFilter) params.append("stockStatus", stockFilter);
-    if (categoryFilter) params.append("categoryId", categoryFilter);
+    if (categoryFilter) {
+      const ids = getCategoryDescendantIds(categories, categoryFilter);
+      const list = ids && ids.length ? ids : [String(categoryFilter)];
+      // Some backends parse repeated query keys into an array (categoryId=..&categoryId=..)
+      // while others only support a single categoryId. Using repeated keys keeps leaf behavior
+      // and enables parent->descendants filtering on array-aware servers.
+      for (const id of list) params.append("categoryId", String(id));
+    }
     if (collectionFilter) params.append("collectionId", String(collectionFilter));
     if (materialFilter) params.append("material", materialFilter);
 
@@ -270,11 +375,23 @@ export default function ProductList() {
                 className="font-[700] text-black outline-none text-[12px] w-[140px]"
               >
                 <option value="">Người tạo</option>
-                {creators.map((creator) => (
-                  <option key={creator._id} value={creator._id}>
-                    {creator.fullName}
-                  </option>
-                ))}
+                {creators
+                  .slice()
+                  .sort((a, b) =>
+                    String(a?.fullName || a?.email || "").localeCompare(
+                      String(b?.fullName || b?.email || ""),
+                    ),
+                  )
+                  .map((creator) => {
+                    const id = creator?._id || creator?.id;
+                    const label =
+                      creator?.fullName || creator?.email || String(id || "");
+                    return (
+                      <option key={String(id)} value={String(id)}>
+                        {label}
+                      </option>
+                    );
+                  })}
               </select>
             </div>
             <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
@@ -287,11 +404,21 @@ export default function ProductList() {
                 className="font-[700] outline-none text-[12px] w-[120px]"
               >
                 <option value="">Tất cả danh mục</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {Array.isArray(categories) && categories.some((c) => Array.isArray(c?.children) && c.children.length)
+                  ? renderCategoryOptions(categories)
+                  : categories
+                      .slice()
+                      .sort((a, b) =>
+                        String(a?.name || "").localeCompare(String(b?.name || "")),
+                      )
+                      .map((cat) => (
+                        <option
+                          key={String(cat?._id || cat?.id)}
+                          value={String(cat?._id || cat?.id)}
+                        >
+                          {cat?.name}
+                        </option>
+                      ))}
               </select>
             </div>
 
@@ -337,11 +464,27 @@ export default function ProductList() {
                 className="font-[700] outline-none text-[12px] w-[110px]"
               >
                 <option value="">Tất cả chất liệu</option>
-                {MATERIAL_OPTIONS.map((material) => (
-                  <option key={material} value={material}>
-                    {material}
-                  </option>
-                ))}
+                {(materials && materials.length
+                  ? materials
+                  : [
+                      { name: "Vàng" },
+                      { name: "Vàng hồng" },
+                      { name: "Bạc" },
+                    ]
+                )
+                  .slice()
+                  .sort((a, b) =>
+                    String(a?.name || "").localeCompare(String(b?.name || "")),
+                  )
+                  .map((m) => {
+                    const name = m?.name || "";
+                    const id = m?._id || name;
+                    return (
+                      <option key={String(id)} value={name}>
+                        {name}
+                      </option>
+                    );
+                  })}
               </select>
             </div>
             <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300 flex items-center gap-[5px]">
