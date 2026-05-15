@@ -26,7 +26,7 @@ export default function ProductList() {
   const [loading, setLoading] = useState(false);
   const [stockFilter, setStockFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [collectionFilter, setCollectionFilter] = useState([]);
+  const [collectionFilter, setCollectionFilter] = useState("");
   const [materialFilter, setMaterialFilter] = useState("");
   const [creatorFilter, setCreatorFilter] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -146,7 +146,7 @@ export default function ProductList() {
     if (maxPrice) params.append("maxPrice", maxPrice);
     if (stockFilter) params.append("stockStatus", stockFilter);
     if (categoryFilter) params.append("categoryId", categoryFilter);
-    if (collectionFilter.length) params.append("collectionId", collectionFilter.join(","));
+    if (collectionFilter) params.append("collectionId", String(collectionFilter));
     if (materialFilter) params.append("material", materialFilter);
 
     if (withPagination) {
@@ -297,15 +297,14 @@ export default function ProductList() {
 
             <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
               <select
-                multiple
                 value={collectionFilter}
                 onChange={(e) => {
                   setPage(1);
-                  const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-                  setCollectionFilter(values);
+                  setCollectionFilter(e.target.value);
                 }}
                 className="font-[700] outline-none text-[12px] w-[140px]"
               >
+                <option value="">Tất cả bộ sưu tập</option>
                 {collections.map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.name}
