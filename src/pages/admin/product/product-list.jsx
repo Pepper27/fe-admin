@@ -18,11 +18,17 @@ export default function ProductList() {
       .toLowerCase()
       .trim();
 
+  const normalizeForSearch = (value) =>
+    normalizeText(value)
+      .replace(/\s+/g, " ") // collapse internal whitespace
+      .trim();
+
   const [products, setProducts] = useState([]);
   const [creators, setCreators] = useState([]);
   const [categories, setCategories] = useState([]);
   const [collections, setCollections] = useState([]);
   const [keyword, setKeyword] = useState("");
+  const [keywordInput, setKeywordInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [stockFilter, setStockFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -149,6 +155,7 @@ export default function ProductList() {
     setMinPrice("");
     setMaxPrice("");
     setKeyword("");
+    setKeywordInput("");
     setPage(1);
   };
 
@@ -236,7 +243,8 @@ export default function ProductList() {
   const buildProductParams = (withPagination = true, exportLimit = 10000) => {
     const params = new URLSearchParams();
     // admin endpoints keep legacy behavior; do not request client-facing facets here
-    if (keyword) params.append("keyword", keyword);
+    const trimmedKeyword = String(keyword || "").trim();
+    if (trimmedKeyword) params.append("keyword", trimmedKeyword);
     if (creatorFilter) params.append("createdBy", creatorFilter);
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
@@ -264,19 +272,59 @@ export default function ProductList() {
     return params;
   };
 
+  const fetchProductsFirstOk = async ({ params, token, signal }) => {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "ngrok-skip-browser-warning": "true",
+    };
+    const tryUrls = [
+      `${pathAdmin}/v1/admin/products?${params.toString()}`,
+      `${pathAdmin}/admin/products?${params.toString()}`,
+    ];
+
+    for (const url of tryUrls) {
+      const res = await fetch(url, {
+        method: "GET",
+        headers,
+        credentials: "include",
+        signal,
+      });
+      if (res.status === 404) continue;
+      const json = await res.json();
+      if (json?.code === "error") continue;
+      return json;
+    }
+    return null;
+  };
+
   const handleExportExcel = async () => {
     try {
       const token = localStorage.getItem("token");
       const params = buildProductParams(false);
-      const res = await fetch(`${pathAdmin}/v1/admin/products?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        credentials: "include",
-      });
-      const data = await res.json();
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      };
+
+      const tryUrls = [
+        `${pathAdmin}/v1/admin/products?${params.toString()}`,
+        `${pathAdmin}/admin/products?${params.toString()}`,
+      ];
+
+      let data = null;
+      for (const url of tryUrls) {
+        const res = await fetch(url, {
+          method: "GET",
+          headers,
+          credentials: "include",
+        });
+        if (res.status === 404) continue;
+        data = await res.json();
+        if (data?.code === "error") continue;
+        break;
+      }
+
+      if (!data) throw new Error("Không thể tải danh sách sản phẩm");
       const exportProducts = data?.data || [];
 
       if (!exportProducts.length) {
@@ -320,34 +368,61 @@ export default function ProductList() {
     const token = localStorage.getItem("token");
 
     setLoading(true);
-    const params = buildProductParams(true);
+    (async () => {
+      try {
+        const params = buildProductParams(true);
+        const data = await fetchProductsFirstOk({
+          params,
+          token,
+          signal: controller.signal,
+        });
 
-    fetch(`${pathAdmin}/v1/admin/products?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setProducts(data?.data || []);
-        setTotal(data?.total || 0);
-        setTotalPage(data?.totalPage || 1);
-        // legacy admin response handling
-      })
-      .catch((err) => {
+        if (!data) throw new Error("Failed to fetch");
+
+        const serverProducts = data?.data || [];
+        const serverTotal = data?.total || 0;
+        const serverTotalPage = data?.totalPage || 1;
+
+        // Fallback: some backends don't support keyword search consistently (or are accent/whitespace sensitive).
+        // If keyword is set but server returns nothing, we fetch a larger list and filter client-side.
+        const trimmedKeyword = String(keyword || "").trim();
+        if (trimmedKeyword && !serverProducts.length) {
+          const fallbackParams = buildProductParams(false, 5000);
+          fallbackParams.delete("keyword");
+
+          const allData = await fetchProductsFirstOk({
+            params: fallbackParams,
+            token,
+            signal: controller.signal,
+          });
+
+          const allProducts = allData?.data || [];
+          const kw = normalizeForSearch(trimmedKeyword);
+          const matched = allProducts.filter((p) =>
+            normalizeForSearch(p?.name).includes(kw),
+          );
+
+          const start = (page - 1) * limit;
+          const pageItems = matched.slice(start, start + limit);
+          setProducts(pageItems);
+          setTotal(matched.length);
+          setTotalPage(Math.max(1, Math.ceil(matched.length / limit)));
+        } else {
+          setProducts(serverProducts);
+          setTotal(serverTotal);
+          setTotalPage(serverTotalPage);
+        }
+      } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch products failed", err);
         alert(err?.message || "Failed to fetch");
         setProducts([]);
         setTotal(0);
         setTotalPage(1);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    })();
 
     return () => controller.abort();
   }, [keyword, creatorFilter, startDate, endDate, minPrice, maxPrice, stockFilter, categoryFilter, collectionFilter, materialFilter, page, limit]);
@@ -551,10 +626,12 @@ export default function ProductList() {
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
               placeholder="Tìm kiếm"
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1);
-                  setKeyword(e.target.value);
+                  setKeyword(String(keywordInput || "").trim());
                 }
               }}
             />
