@@ -68,7 +68,11 @@ export default function ProductList() {
     const fetchFirstOk = async (urls) => {
       for (const url of urls) {
         try {
-          const res = await fetch(url, { method: "GET", headers, credentials: "include" });
+          const res = await fetch(url, {
+            method: "GET",
+            headers,
+            credentials: "include",
+          });
           if (res.status === 404) continue;
           const data = await res.json();
           if (data?.code === "error") continue;
@@ -136,7 +140,7 @@ export default function ProductList() {
   const getTotalSold = (item) => {
     const soldFromVariants = (item?.variants || []).reduce(
       (sum, v) => sum + (Number(v?.sold) || 0),
-      0
+      0,
     );
     if (soldFromVariants > 0) return soldFromVariants;
     if (Number.isFinite(Number(item?.totalSold))) return Number(item.totalSold);
@@ -166,7 +170,9 @@ export default function ProductList() {
     if (!Array.isArray(cats)) return null;
     return cats
       .slice()
-      .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")))
+      .sort((a, b) =>
+        String(a?.name || "").localeCompare(String(b?.name || "")),
+      )
       .map((c) => {
         const id = c?._id || c?.id;
         const name = c?.name || "";
@@ -259,7 +265,8 @@ export default function ProductList() {
       // and enables parent->descendants filtering on array-aware servers.
       for (const id of list) params.append("categoryId", String(id));
     }
-    if (collectionFilter) params.append("collectionId", String(collectionFilter));
+    if (collectionFilter)
+      params.append("collectionId", String(collectionFilter));
     if (materialFilter) params.append("material", materialFilter);
 
     if (withPagination) {
@@ -335,7 +342,7 @@ export default function ProductList() {
       const rows = exportProducts.map((item, index) => {
         const totalStock = (item?.variants || []).reduce(
           (sum, v) => sum + (v?.quantity || 0),
-          0
+          0,
         );
         const totalSold = getTotalSold(item);
 
@@ -343,8 +350,11 @@ export default function ProductList() {
           STT: index + 1,
           "Mã sản phẩm": item?._id || "",
           "Tên sản phẩm": item?.name || "",
-          "Ngày tạo": item?.createdAt ? new Date(item.createdAt).toLocaleDateString("vi-VN") : "",
-          "Người tạo": item?.createdBy?.fullName || item?.createdBy?.email || "",
+          "Ngày tạo": item?.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("vi-VN")
+            : "",
+          "Người tạo":
+            item?.createdBy?.fullName || item?.createdBy?.email || "",
           "Tồn kho": totalStock,
           "Đã bán": totalSold,
         };
@@ -425,20 +435,37 @@ export default function ProductList() {
     })();
 
     return () => controller.abort();
-  }, [keyword, creatorFilter, startDate, endDate, minPrice, maxPrice, stockFilter, categoryFilter, collectionFilter, materialFilter, page, limit]);
+  }, [
+    keyword,
+    creatorFilter,
+    startDate,
+    endDate,
+    minPrice,
+    maxPrice,
+    stockFilter,
+    categoryFilter,
+    collectionFilter,
+    materialFilter,
+    page,
+    limit,
+  ]);
 
   // no client-facing facet selections in admin UI
 
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý sản phẩm</div>
+        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">
+          Quản lý sản phẩm
+        </div>
 
         <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
           <div className="flex items-center gap-0 min-w-max">
             <div className="py-[15px] px-[20px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
               <FaFilter className="text-[16px]" />
-              <span className="font-[700] text-[13px] whitespace-nowrap">Bộ lọc</span>
+              <span className="font-[700] text-[13px] whitespace-nowrap">
+                Bộ lọc
+              </span>
             </div>
             <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
               <select
@@ -479,12 +506,17 @@ export default function ProductList() {
                 className="font-[700] outline-none text-[12px] w-[120px]"
               >
                 <option value="">Tất cả danh mục</option>
-                {Array.isArray(categories) && categories.some((c) => Array.isArray(c?.children) && c.children.length)
+                {Array.isArray(categories) &&
+                categories.some(
+                  (c) => Array.isArray(c?.children) && c.children.length,
+                )
                   ? renderCategoryOptions(categories)
                   : categories
                       .slice()
                       .sort((a, b) =>
-                        String(a?.name || "").localeCompare(String(b?.name || "")),
+                        String(a?.name || "").localeCompare(
+                          String(b?.name || ""),
+                        ),
                       )
                       .map((cat) => (
                         <option
@@ -541,11 +573,7 @@ export default function ProductList() {
                 <option value="">Tất cả chất liệu</option>
                 {(materials && materials.length
                   ? materials
-                  : [
-                      { name: "Vàng" },
-                      { name: "Vàng hồng" },
-                      { name: "Bạc" },
-                    ]
+                  : [{ name: "Vàng" }, { name: "Vàng hồng" }, { name: "Bạc" }]
                 )
                   .slice()
                   .sort((a, b) =>
@@ -662,21 +690,45 @@ export default function ProductList() {
                     <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
                       <input type="checkbox" className="w-[20px] h-[20px]" />
                     </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">Ảnh</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[360px]">Tên sản phẩm</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Tên danh mục</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Bộ sưu tập</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Giá</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Tồn kho</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Đã bán</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">Ngày tạo</td>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">
+                      Ảnh
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[360px]">
+                      Tên sản phẩm
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">
+                      Khắc
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">
+                      Tên danh mục
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">
+                      Bộ sưu tập
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">
+                      Giá
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">
+                      Tồn kho
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">
+                      Đã bán
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[100px]">
+                      Ngày tạo
+                    </td>
+                    <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">
+                      Hành động
+                    </td>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="9" className="p-[15px] text-[14px] text-gray-500">
+                      <td
+                        colSpan="9"
+                        className="p-[15px] text-[14px] text-gray-500"
+                      >
                         Đang tải...
                       </td>
                     </tr>
@@ -698,28 +750,52 @@ export default function ProductList() {
                           />
                         </td>
                         <td className="p-[15px] text-[14px]">{item.name}</td>
-                        <td className="p-[15px] text-[14px]">{item.category.name}</td>
                         <td className="p-[15px] text-[14px]">
-                          {(item.collections || []).map((c) => c?.name).filter(Boolean).join(", ") || ""}
+                          {item?.engraving?.enabled ? (
+                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm font-semibold">
+                              Khắc
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
                         </td>
-                        <td className="p-[15px] text-[14px]">{getDisplayPrice(item)}</td>
+                        <td className="p-[15px] text-[14px]">
+                          {item.category.name}
+                        </td>
+                        <td className="p-[15px] text-[14px]">
+                          {(item.collections || [])
+                            .map((c) => c?.name)
+                            .filter(Boolean)
+                            .join(", ") || ""}
+                        </td>
+                        <td className="p-[15px] text-[14px]">
+                          {getDisplayPrice(item)}
+                        </td>
                         <td className="p-[15px] text-[14px]">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-[600] ${item?.stockStatus === "out_of_stock"
-                              ? "bg-red-100 text-red-800"
-                              : item?.stockStatus === "low_stock"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-green-100 text-green-800"
-                              }`}
+                            className={`px-2 py-1 rounded text-xs font-[600] ${
+                              item?.stockStatus === "out_of_stock"
+                                ? "bg-red-100 text-red-800"
+                                : item?.stockStatus === "low_stock"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-green-100 text-green-800"
+                            }`}
                           >
                             {(() => {
-                              const total = (item?.variants || []).reduce((sum, v) => sum + (v?.quantity || 0), 0);
+                              const total = (item?.variants || []).reduce(
+                                (sum, v) => sum + (v?.quantity || 0),
+                                0,
+                              );
                               return total;
                             })()}
                           </span>
                         </td>
-                        <td className="p-[15px] text-[14px]">{getTotalSold(item)}</td>
-                        <td className="p-[15px] text-[14px]">{formatDate(item.createdAt)}</td>
+                        <td className="p-[15px] text-[14px]">
+                          {getTotalSold(item)}
+                        </td>
+                        <td className="p-[15px] text-[14px]">
+                          {formatDate(item.createdAt)}
+                        </td>
 
                         <td className="p-[15px]">
                           <div className="flex">
@@ -729,7 +805,10 @@ export default function ProductList() {
                             >
                               <FaRegEdit className="text-[16px] font-[700]" />
                             </Link>
-                            <ProductDelete product={item} onDeleted={handleDeletedSuccess} />
+                            <ProductDelete
+                              product={item}
+                              onDeleted={handleDeletedSuccess}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -739,7 +818,9 @@ export default function ProductList() {
                       <td colSpan="9">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
-                          <span className="md:text-[16px] text-[14px]">Không tìm thấy sản phẩm</span>
+                          <span className="md:text-[16px] text-[14px]">
+                            Không tìm thấy sản phẩm
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -753,7 +834,10 @@ export default function ProductList() {
         <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
           {total > 0 ? (
             <>
-              <span>Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}</span>
+              <span>
+                Hiển thị {(page - 1) * limit + 1} -{" "}
+                {Math.min(page * limit, total)} của {total}
+              </span>
               <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
                 <select
                   className="outline-none border-none bg-transparent focus:ring-0"
