@@ -3,6 +3,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { pathAdmin } from "../../../config/api";
@@ -44,6 +45,8 @@ export default function ProductList() {
   const [total, setTotal] = useState(0);
   // admin UI: no facets here (client-facing filters live in frontend2)
   const limit = 10;
+
+  const navigate = useNavigate();
 
   const formatPrice = (price) => {
     return Number(price).toLocaleString("vi-VN") + "₫";
@@ -378,6 +381,8 @@ export default function ProductList() {
     const token = localStorage.getItem("token");
 
     setLoading(true);
+    
+
     (async () => {
       try {
         const params = buildProductParams(true);
@@ -386,6 +391,15 @@ export default function ProductList() {
           token,
           signal: controller.signal,
         });
+
+        // Handle explicit permission error returned by backend
+        if (data && data.success === false && data.error === 'insufficient_permissions') {
+          // Clear token and redirect to login so admin can re-authenticate
+          try { localStorage.removeItem('token'); sessionStorage.removeItem('admin_profile_cache'); } catch (e) {}
+          alert('Bạn không có đủ quyền truy cập. Vui lòng đăng nhập lại với tài khoản quản trị.');
+          navigate('/admin/authen/login');
+          return;
+        }
 
         if (!data) throw new Error("Failed to fetch");
 
