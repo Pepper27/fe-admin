@@ -106,6 +106,30 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
     }
   };
 
+  // Helper to download remote image via fetch -> blob to force download (works around cross-origin/browser behavior)
+  const downloadImage = async (url, filename) => {
+    try {
+      const resp = await fetch(url, { mode: 'cors' });
+      if (!resp.ok) throw new Error('Network error');
+      const blob = await resp.blob();
+      const ext = (blob.type && blob.type.split('/')[1]) || 'jpg';
+      const name = filename || `image.${ext}`;
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (e) {
+      // Fallback: open in new tab if download via blob fails
+      try {
+        window.open(url, '_blank');
+      } catch (_) {}
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -269,8 +293,15 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                      <a href={it.engraving.previewImage} target="_blank" rel="noreferrer" className="text-sm text-[#2563eb]">Mở ảnh</a>
-                                      <a href={it.engraving.previewImage} download className="text-sm text-[#2563eb]">Tải xuống</a>
+                                    <a href={it.engraving.previewImage} target="_blank" rel="noreferrer" className="text-sm text-[#2563eb]">Mở ảnh</a>
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadImage(it.engraving.previewImage, `${order.orderCode || order._id}-engraving.jpg`)}
+                                      className="text-sm"
+                                      style={{ color: '#2563eb', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                                    >
+                                      Tải xuống
+                                    </button>
                                     </div>
                                   </div>
                                 </td>
