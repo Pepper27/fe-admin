@@ -9,8 +9,8 @@ const STATUS_LABELS = {
   cancelled: "Đã hủy",
 };
 
-// Only allow moving forward in the normal order lifecycle.
-const STATUS_FLOW = ["pending", "confirmed", "shipping", "delivered"];
+// Luồng dịch chuyển trạng thái tuần tự thông thường
+const STATUS_FLOW = ["pending", "confirmed", "shipping", "delivered", "cancelled"];
 
 const PAY_LABELS = {
   unpaid: "Chưa thanh toán",
@@ -54,9 +54,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
         const o = data?.data;
         setOrder(o || null);
         setStatus(o?.status || "pending");
-        // Infer payStatus for display:
-        // - if backend provided payStatus use it
-        // - otherwise, consider the order.method or payment.provider or capturedAmount
+        
         let inferredPayStatus = "unpaid";
         try {
           if (o?.payStatus) inferredPayStatus = o.payStatus;
@@ -106,7 +104,6 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
     }
   };
 
-  // Helper to download remote image via fetch -> blob to force download (works around cross-origin/browser behavior)
   const downloadImage = async (url, filename) => {
     try {
       const resp = await fetch(url, { mode: 'cors' });
@@ -123,7 +120,6 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (e) {
-      // Fallback: open in new tab if download via blob fails
       try {
         window.open(url, '_blank');
       } catch (_) {}
@@ -174,50 +170,80 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
               </div>
 
               <div className="mt-[12px] grid grid-cols-1 md:grid-cols-2 gap-[12px]">
+                {/* TRẠNG THÁI ĐƠN HÀNG */}
                 <div className="rounded-[12px] border border-gray-200 p-[12px]">
                   <div className="text-[12px] text-gray-500 mb-[6px]">Trạng thái đơn</div>
                   <select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) => {
+                      const nextStatus = e.target.value;
+                      setStatus(nextStatus);
+                      // Tự động chuyển Đã thanh toán khi bấm chọn Đã giao
+                      if (nextStatus === "delivered") {
+                        setPayStatus("paid");
+                      }
+                    }}
                     className="w-full border border-gray-300 rounded-[10px] px-[10px] py-[10px] outline-none text-[14px]"
-                    // If order already cancelled, do not allow changing status away from cancelled
-                    disabled={order?.status === "cancelled"}
+                    // Khóa hoàn toàn nếu đơn từ dữ liệu gốc đã Đã giao hoặc Đã hủy
+                    disabled={order?.status === "cancelled" || order?.status === "delivered" || status === "cancelled"}
                   >
                     {(() => {
+                      // Nếu trạng thái ban đầu của đơn hàng là đã huỷ, chỉ hiển thị duy nhất option huỷ
                       if (order?.status === "cancelled") {
-                        return (
-                          <option value="cancelled">{STATUS_LABELS.cancelled}</option>
-                        );
+                        return <option value="cancelled">{STATUS_LABELS.cancelled}</option>;
                       }
 
-                      const current = String(order?.status || "pending");
-                      const currentIdx = STATUS_FLOW.indexOf(current);
+                      const orgStatus = String(order?.status || "pending");
+                      const orgIdx = STATUS_FLOW.indexOf(orgStatus);
 
-                      return STATUS_FLOW.map((k, idx) => (
-                        <option
-                          key={k}
-                          value={k}
-                          // If already at a later state, disable going back.
-                          disabled={currentIdx >= 0 && idx < currentIdx}
-                        >
-                          {STATUS_LABELS[k]}
-                        </option>
-                      ));
+                      return STATUS_FLOW.map((k, idx) => {
+                        const isCurrentStatus = idx === orgIdx;
+                        const isExactlyNext = idx === orgIdx + 1;
+                        
+                        // ĐIỀU KIỆN 1: Cho phép hủy đơn ('cancelled') khi đơn hiện tại đang ở mức 'pending' hoặc 'confirmed'
+                        const isAllowedCancel = k === "cancelled" && (orgStatus === "pending" || orgStatus === "confirmed");
+
+                        // Một phần tử hoạt động nếu nó là hiện tại, là bước tiếp theo liền kề, hoặc lệnh hủy hợp lệ
+                        const shouldDisable = !isCurrentStatus && !isExactlyNext && !isAllowedCancel;
+
+                        return (
+                          <option
+                            key={k}
+                            value={k}
+                            disabled={shouldDisable}
+                          >
+                            {STATUS_LABELS[k]}
+                          </option>
+                        );
+                      });
                     })()}
                   </select>
                 </div>
+
+                {/* TRẠNG THÁI THANH TOÁN */}
                 <div className="rounded-[12px] border border-gray-200 p-[12px]">
                   <div className="text-[12px] text-gray-500 mb-[6px]">Thanh toán</div>
                   <select
                     value={payStatus}
                     onChange={(e) => setPayStatus(e.target.value)}
                     className="w-full border border-gray-300 rounded-[10px] px-[10px] py-[10px] outline-none text-[14px]"
+                    // Khóa hoàn toàn select nếu đơn hàng đã được thanh toán hoặc đơn hàng đã bị hủy
+                    disabled={order?.payStatus === "paid" || order?.status === "cancelled" || status === "cancelled"} 
                   >
-                    {Object.keys(PAY_LABELS).map((k) => (
-                      <option key={k} value={k}>
-                        {PAY_LABELS[k]}
-                      </option>
-                    ))}
+                    {Object.keys(PAY_LABELS).map((k) => {
+                      const isUnpaidOption = k === "unpaid";
+                      const isCurrentlyPaid = payStatus === "paid";
+
+                      return (
+                        <option 
+                          key={k} 
+                          value={k}
+                          disabled={isCurrentlyPaid && isUnpaidOption}
+                        >
+                          {PAY_LABELS[k]}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
@@ -241,21 +267,17 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         const qty = Number(it?.quantity) || 0;
                         const line = price * qty;
 
-                        // Build a friendly classification string instead of exposing internal ids/codes
                         const classificationParts = [];
-                        // common variant attributes (may vary by backend shape)
                         if (it?.size) classificationParts.push(it.size);
                         if (it?.material) classificationParts.push(it.material);
                         if (it?.color) classificationParts.push(it.color);
-                        // variant/display name fallbacks
                         if (it?.variantName) classificationParts.push(it.variantName);
                         if (it?.variant?.name) classificationParts.push(it.variant.name);
-                        // final fallback: don't show raw mongo id unless nothing else
                         const classification = classificationParts.filter(Boolean).join(" · ") || (it?.variantCode || it?.variantId || "");
 
                         return (
-                          <>
-                            <tr key={idx}>
+                          <div key={idx} style={{ display: 'contents' }}>
+                            <tr>
                               <td className="p-[12px]">
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                   <img
@@ -293,21 +315,21 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    <a href={it.engraving.previewImage} target="_blank" rel="noreferrer" className="text-sm text-[#2563eb]">Mở ảnh</a>
-                                    <button
-                                      type="button"
-                                      onClick={() => downloadImage(it.engraving.previewImage, `${order.orderCode || order._id}-engraving.jpg`)}
-                                      className="text-sm"
-                                      style={{ color: '#2563eb', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
-                                    >
-                                      Tải xuống
-                                    </button>
+                                      <a href={it.engraving.previewImage} target="_blank" rel="noreferrer" className="text-sm text-[#2563eb]">Mở ảnh</a>
+                                      <button
+                                        type="button"
+                                        onClick={() => downloadImage(it.engraving.previewImage, `${order.orderCode || order._id}-engraving.jpg`)}
+                                        className="text-sm"
+                                        style={{ color: '#2563eb', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                                      >
+                                        Tải xuống
+                                      </button>
                                     </div>
                                   </div>
                                 </td>
                               </tr>
                             ) : null}
-                          </>
+                          </div>
                         );
                       })}
                     </tbody>
