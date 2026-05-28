@@ -230,24 +230,53 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         const classification = classificationParts.filter(Boolean).join(" · ") || (it?.variantCode || it?.variantId || "");
 
                         return (
-                          <tr key={idx}>
-                            <td className="p-[12px]">
-                              <img
-                                src={it?.image || "/image/demo.jpg"}
-                                alt=""
-                                className="w-[56px] h-[56px] object-cover rounded-[10px] border border-gray-200"
-                              />
-                            </td>
-                            <td className="p-[12px] text-[14px]">
-                              <div className="font-[700]">{it?.name || "(Không có tên)"}</div>
-                              {classification ? (
-                                <div className="text-[12px] text-gray-500">{classification}</div>
-                              ) : null}
-                            </td>
-                            <td className="p-[12px] text-[14px]">{formatMoney(price)}</td>
-                            <td className="p-[12px] text-[14px]">{qty}</td>
-                            <td className="p-[12px] text-[14px] font-[800]">{formatMoney(line)}</td>
-                          </tr>
+                          <>
+                            <tr key={idx}>
+                              <td className="p-[12px]">
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                  <img
+                                    src={it?.image || "/image/demo.jpg"}
+                                    alt=""
+                                    className="w-[56px] h-[56px] object-cover rounded-[10px] border border-gray-200"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-[12px] text-[14px]">
+                                <div className="font-[700]">{it?.name || "(Không có tên)"}</div>
+                                {classification ? (
+                                  <div className="text-[12px] text-gray-500">{classification}</div>
+                                ) : null}
+                              </td>
+                              <td className="p-[12px] text-[14px]">{formatMoney(price)}</td>
+                              <td className="p-[12px] text-[14px]">{qty}</td>
+                              <td className="p-[12px] text-[14px] font-[800]">{formatMoney(line)}</td>
+                            </tr>
+
+                            {it?.engraving?.previewImage ? (
+                              <tr key={`engr-${idx}`} className="bg-white">
+                                <td colSpan={5} className="p-[8px] pb-[16px]">
+                                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                      <div style={{ fontSize: 13, color: '#374151', fontWeight: 700 }}>Ảnh khắc</div>
+                                      <div style={{ marginTop: 8 }}>
+                                        <img
+                                          src={it.engraving.previewImage}
+                                          alt="khắc"
+                                          className="rounded-[8px] border border-gray-200"
+                                          style={{ width: 120, height: 120, objectFit: 'cover' }}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                      <a href={it.engraving.previewImage} target="_blank" rel="noreferrer" className="text-sm text-[#2563eb]">Mở ảnh</a>
+                                      <a href={it.engraving.previewImage} download className="text-sm text-[#2563eb]">Tải xuống</a>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : null}
+                          </>
                         );
                       })}
                     </tbody>
