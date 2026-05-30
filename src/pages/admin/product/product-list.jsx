@@ -701,10 +701,8 @@ export default function ProductList() {
               <table className="xl:w-full w-[1100px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
-                      <input type="checkbox" className="w-[20px] h-[20px]" />
-                    </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">
+         
+                    <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">
                       Ảnh
                     </td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[360px]">
@@ -749,13 +747,7 @@ export default function ProductList() {
                   ) : products.length ? (
                     products.map((item) => (
                       <tr key={item._id}>
-                        <td className="p-[15px] text-[14px] w-[40px]">
-                          <input
-                            type="checkbox"
-                            value={item._id}
-                            className="w-[20px] h-[20px]"
-                          />
-                        </td>
+                          
                         <td className="p-[15px] text-[14px]">
                           <img
                             src={item.variants?.[0]?.images?.[0]}
