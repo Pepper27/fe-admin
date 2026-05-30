@@ -94,27 +94,9 @@ export default function DesignList() {
         />
       ) : null}
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý My Designs</div>
+        <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý My Designs</div>
 
-        <div className="inline-flex lg:w-[840px] w-full flex-wrap gap-[20px] bg-[white] items-center rounded-[10px] border-[1px] border-gray-300">
-          <div className="py-[20px] px-[30px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-            <FaFilter className="text-[18px]" />
-            <span className="font-[700] text-[14px]">Bộ lọc</span>
-          </div>
-          <div className="w-[150px] py-[20px] pl-[10px] pr-[30px] flex gap-[5px] items-center text-[red] font-[700] text-[14px]">
-            <MdDelete className="text-[16px]" />
-            <button
-              type="button"
-              onClick={() => {
-                setPage(1);
-                setKey("");
-              }}
-              className="text-left"
-            >
-              Xóa lọc
-            </button>
-          </div>
-        </div>
+        
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
@@ -139,10 +121,8 @@ export default function DesignList() {
                   <table className="xl:w-full w-[1200px]">
                     <thead className="bg-[#e5e1e1] ">
                       <tr>
-                        <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
-                          <input type="checkbox" className="w-[20px] h-[20px]" />
-                        </td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Mã design</td>
+                
+                        <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Mã design</td>
                         <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">Owner</td>
                         <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[280px]">Bracelet</td>
                         <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[110px]">Slots</td>
@@ -155,9 +135,7 @@ export default function DesignList() {
                   {designs.length > 0 ? (
                     designs.map((d) => (
                       <tr key={d._id}>
-                        <td className="p-[15px] text-[14px] w-[40px]">
-                          <input type="checkbox" className="w-[20px] h-[20px]" />
-                        </td>
+                       
                         <td className="p-[15px] text-[14px]">
                           <div className="font-[800]">{designCode(d) || "-"}</div>
                         </td>
