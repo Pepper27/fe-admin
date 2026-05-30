@@ -55,30 +55,8 @@ export default function CollectionList() {
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">
+        <div className="sm:text-[30px] text-[20px] font-[700]">
           Quản lý bộ sưu tập
-        </div>
-
-        <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
-          <div className="flex items-center gap-0 min-w-max">
-            <div className="py-[15px] px-[20px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-              <FaFilter className="text-[16px]" />
-              <span className="font-[700] text-[13px] whitespace-nowrap">
-                Bộ lọc
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setPage(1);
-                setKey("");
-              }}
-              className="py-[15px] px-[15px] flex gap-[5px] items-center text-[red] font-[700] text-[13px] hover:opacity-70 whitespace-nowrap"
-            >
-              <MdDelete className="text-[14px]" />
-              <span>Xóa lọc</span>
-            </button>
-          </div>
         </div>
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
@@ -111,10 +89,8 @@ export default function CollectionList() {
               <table className="xl:w-full w-[1100px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
-                      <input type="checkbox" className="w-[20px] h-[20px]" />
-                    </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">
+              
+                    <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">
                       Tên bộ sưu tập
                     </td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[190px]">
@@ -150,12 +126,7 @@ export default function CollectionList() {
                   ) : collections.length > 0 ? (
                     collections.map((item) => (
                       <tr key={item._id}>
-                        <td className="p-[15px] text-[14px] w-[40px]">
-                          <input
-                            type="checkbox"
-                            className="w-[20px] h-[20px]"
-                          />
-                        </td>
+                 
                         <td className="p-[15px] text-[14px] ">{item.name}</td>
                         <td className="p-[15px] ">
                           {item.avatar || item.poster ? (
