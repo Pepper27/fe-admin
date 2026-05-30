@@ -43,29 +43,8 @@ export default function ColorList() {
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý màu sắc</div>
-        <div className="inline-flex lg:w-[840px] w-full flex-wrap gap-[20px] bg-[white] items-center rounded-[10px] border-[1px] border-gray-300">
-          <div className="py-[20px] px-[30px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-            <FaFilter className="text-[18px]" />
-            <span className="font-[700] text-[14px]">Bộ lọc</span>
-          </div>
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300">
-            <select className="font-[700] outline-none text-[14px] mr-[7px] w-[120px] ">
-              <option value="">Người tạo</option>
-              <option>Nguyễn Đạt</option>
-              <option>Nguyễn Đạt</option>
-            </select>
-          </div>
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300 flex items-center">
-            <input type="date" className="font-[700] text-[14px] outline-none" />
-            <span className="mx-[10px]">-</span>
-            <input type="date" className="font-[700] text-[14px] outline-none" />
-          </div>
-          <div className="w-[150px] py-[20px] pl-[10px] pr-[30px] flex gap-[5px] items-center text-[red] font-[700] text-[14px]">
-            <MdDelete className="text-[16px]" />
-            <div>Xóa lọc</div>
-          </div>
-        </div>
+        <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý màu sắc</div>
+     
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
@@ -86,10 +65,8 @@ export default function ColorList() {
               <table className="xl:w-full  w-[1100px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr >
-                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[70px]">
-                      <input type="checkbox" className="w-[20px] h-[20px]"></input>
-                    </td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Tên màu sắc</td>
+                
+                    <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Tên màu sắc</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[190px]">Mã màu</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Tạo bởi</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Cập nhật bởi</td>
@@ -101,9 +78,7 @@ export default function ColorList() {
                     colors.length > 0 ? (
                       colors.map(item => (
                         <tr key={item._id}>
-                          <td className="p-[15px] text-[14px] w-[40px]">
-                            <input type="checkbox" className="w-[20px] h-[20px]"></input>
-                          </td>
+                      
                           <td className="p-[15px] text-[14px] ">
                             <div>{item.name}</div>
                           </td>

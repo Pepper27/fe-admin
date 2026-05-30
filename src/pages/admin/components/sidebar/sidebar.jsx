@@ -26,8 +26,7 @@ const Sidebar = () => {
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
     { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },
-    { icon: IoMdSettings, href: "/admin/setting", title: "Cài đặt chung" },
-    { icon: FaUserCog, href: "/admin/profile", title: "Thông tin cá nhân" },
+    { icon: IoMdSettings, href: "/admin/setting", title: "Cài đặt chung" }
   ];
 
   const logout = async () => {
