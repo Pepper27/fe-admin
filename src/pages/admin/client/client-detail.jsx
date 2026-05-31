@@ -49,8 +49,8 @@ export default function ClientDetail() {
         alert(err?.message || "Failed to fetch client");
       });
 
-    // fetch orders for client (best-effort)
-    fetch(`${pathAdmin}/admin/order?userId=${id}&limit=20&page=1`, {
+    // fetch orders for client (best-effort) - use admin-wide default limit = 10
+    fetch(`${pathAdmin}/admin/order?userId=${id}&limit=10&page=1`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

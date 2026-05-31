@@ -252,12 +252,12 @@ export default function OrderList() {
               <table className="xl:w-full w-[1200px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr>
-                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[260px]">Đơn hàng</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">Khách hàng</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[120px]">Số lượng</td>
+                    <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[220px]">Đơn hàng</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Khách hàng</td>
+                    {/* <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[120px]">Số lượng</td> */}
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Tổng tiền</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[170px]">Trạng thái</td>
-                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[170px]">Thanh toán</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Trạng thái</td>
+                    <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[200px]">Thanh toán</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[180px]">Tạo lúc</td>
                     <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
                   </tr>
@@ -281,7 +281,7 @@ export default function OrderList() {
                           <div className="text-[12px] text-gray-500">{o?.userId?.email || o?.email || ""}</div>
                           <div className="text-[12px] text-gray-500">{o?.userId?.phone || o?.phone || ""}</div>
                         </td>
-                        <td className="p-[15px] text-[14px]">{o.itemsCount ?? (o.cart || []).length}</td>
+                        {/* <td className="p-[15px] text-[14px]">{o.itemsCount ?? (o.cart || []).length}</td> */}
                         <td className="p-[15px] text-[14px] font-[800]">{formatMoney(o.totalPrice)}</td>
                         <td className="p-[15px] text-[14px]">
                           <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("status", o.status)}`}>

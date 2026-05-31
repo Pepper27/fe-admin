@@ -15,7 +15,8 @@ export default function CategoryList() {
   const [key, setKey] = useState("")
   const fetchCategories = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/categories?page=${page}&keyword=${key}`, {
+    const limit = 10;
+    fetch(`${pathAdmin}/admin/categories?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -165,7 +166,7 @@ export default function CategoryList() {
             </div>
           </div>
         </div>
-        <Pagination page={page} totalPage={totalPage} total={total} limit={4} onChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
       </div>
     </>
   )

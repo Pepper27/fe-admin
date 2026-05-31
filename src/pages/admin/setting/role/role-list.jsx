@@ -14,9 +14,10 @@ export default function RolesList() {
   const [key, setKey] = useState("")
   const [start,setStart] = useState("")
   const [end,setEnd] = useState("")
+  const limit = 10;
   const fetchRoles = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/roles?page=${page}&keyword=${key}&start=${start}&end=${end}`, {
+    fetch(`${pathAdmin}/admin/roles?page=${page}&limit=${limit}&keyword=${key}&start=${start}&end=${end}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -158,7 +159,7 @@ export default function RolesList() {
             </div>
           </div>
         </div>
-        <Pagination page={page} totalPage={totalPage} total={total} limit={4} onChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>
     </>
   )

@@ -14,7 +14,8 @@ export default function SizeList() {
   const [key, setKey] = useState("")
   const fetchSizes = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/sizes?page=${page}&keyword=${key}`, {
+    const limit = 10;
+    fetch(`${pathAdmin}/admin/sizes?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -126,7 +127,7 @@ export default function SizeList() {
             </div>
           </div>
         </div>
-        <Pagination page={page} totalPage={totalPage} total={total} limit={4} onChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
       </div>
     </>
   )

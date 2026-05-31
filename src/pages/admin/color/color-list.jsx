@@ -14,8 +14,9 @@ export default function ColorList() {
   const [key, setKey] = useState("")
   const fetchColors = () => {
     const token = localStorage.getItem("token");
+    const limit = 10;
     
-    fetch(`${pathAdmin}/admin/colors?page=${page}&keyword=${key}`, {
+    fetch(`${pathAdmin}/admin/colors?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -130,7 +131,7 @@ export default function ColorList() {
             </div>
           </div>
         </div>
-        <Pagination page={page} totalPage={totalPage} total={total} limit={4} onChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
       </div>
     </>
   )
