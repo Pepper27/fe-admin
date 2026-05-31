@@ -4,6 +4,7 @@ import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
 export default function SizeList() {
   const [sizes, setSizes] = useState([])
@@ -125,31 +126,7 @@ export default function SizeList() {
             </div>
           </div>
         </div>
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {
-            sizes.length > 0 ? (
-              <>
-                <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
-                <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                  <select
-                    className="outline-none border-none bg-transparent focus:ring-0"
-                    value={page}
-                    onChange={(e) => setPage(Number(e.target.value))}
-                  >
-                    {[...Array(totalPage)].map((_, i) => (
-                      <option key={i} value={i + 1}>
-                        Trang {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )
-              :
-              <>
-              </>
-          }
-        </div>
+        <Pagination page={page} totalPage={totalPage} total={total} limit={4} onChange={setPage} />
       </div>
     </>
   )

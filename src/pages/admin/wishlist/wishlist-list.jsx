@@ -2,6 +2,7 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
+import Pagination from '../../../components/Pagination'
 import { pathAdmin } from "../../../config/api";
 
 export default function WishlistList() {
@@ -155,28 +156,7 @@ export default function WishlistList() {
           </div>
         </div>
 
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {total > 0 ? (
-            <>
-              <span>
-                Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}
-              </span>
-              <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                <select
-                  className="outline-none border-none bg-transparent focus:ring-0"
-                  value={page}
-                  onChange={(e) => setPage(Number(e.target.value))}
-                >
-                  {[...Array(totalPage)].map((_, i) => (
-                    <option key={i} value={i + 1}>
-                      Trang {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          ) : null}
-        </div>
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>
     </>
   );
