@@ -17,6 +17,7 @@ export const routes = {
   collectionUpdate: "/admin/collection/update/:id",
   designList: "/admin/design",
   clientList: "/admin/client",
+  clientDetail: "/admin/client/:id",
   orderList: "/admin/order",
   refundJobs: "/admin/refunds",
   wishlistList: "/admin/wishlist",

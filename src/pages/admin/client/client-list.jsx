@@ -107,7 +107,7 @@ export default function ClientList() {
                             <button
                               type="button"
                               className="rounded-l-[10px] text-[14px] p-[15px] bg-[white] border-y border-l border-gray-300 hover:bg-gray-50"
-                              onClick={() => alert("Chưa có màn xem chi tiết")}
+                              onClick={() => window.location.href = `/admin/client/${c._id}`}
                             >
                               Xem
                             </button>
