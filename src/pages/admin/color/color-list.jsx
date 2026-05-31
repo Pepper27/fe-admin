@@ -3,7 +3,7 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
 export default function ColorList() {
@@ -12,17 +12,26 @@ export default function ColorList() {
   const [totalPage, setTotalPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [key, setKey] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const fetchControllerRef = useRef(null)
   const fetchColors = () => {
     const token = localStorage.getItem("token");
     const limit = 10;
-    
-    fetch(`${pathAdmin}/admin/colors?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
+    const usePage = page
+    const useKey = key
+
+    try { fetchControllerRef.current?.abort(); } catch (e) {}
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+
+    fetch(`${pathAdmin}/admin/colors?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
       },
       credentials: "include",
+      signal: controller.signal,
     })
       .then(res => res.json())
       .then(data => {
@@ -30,10 +39,13 @@ export default function ColorList() {
           throw new Error(data.message || "Unauthorized");
         }
         setColors(data.data)
-        setTotalPage(data.totalPage)
-        setTotal(data.total)
+        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
+        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
+        setTotalPage(serverTotalPage)
+        setTotal(serverTotal)
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return
         console.error("Fetch colors failed", err);
         alert(err?.message || "Failed to fetch");
         setColors([]);
@@ -42,6 +54,11 @@ export default function ColorList() {
   useEffect(() => {
     fetchColors();
   }, [page, key])
+  useEffect(() => {
+    return () => {
+      try { fetchControllerRef.current?.abort() } catch (e) {}
+    }
+  }, [])
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
@@ -51,15 +68,34 @@ export default function ColorList() {
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
             <input className="placeholder:text-[14px] text-[14px] outline-none w-[300px]" placeholder="Tìm kiếm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1)
-                  setKey(e.target.value)
+                  setKey(searchInput)
                 }
               }}
-            ></input>
+            />
           </div>
-          <a href="/admin/color/create" className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300">+ Tạo mới</a>
+          <div className="flex items-center gap-[10px]">
+            {searchInput !== '' && (
+              <button
+                onClick={() => {
+                  setSearchInput('')
+                  setKey('')
+                  setPage(1)
+                  fetchColors({ page: 1, keyword: '' })
+                }}
+                className="flex items-center gap-[8px] text-[#ff2d2d] hover:opacity-90 bg-white border border-gray-200 rounded-[10px] py-[18px] px-[16px] text-[16px]"
+                title="Xóa lọc"
+              >
+                <MdDelete className="text-[18px]" />
+                <span className="text-[14px] font-[700]">Xóa lọc</span>
+              </button>
+            )}
+            <a href="/admin/color/create" className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300">+ Tạo mới</a>
+          </div>
         </div>
         <div className="mt-[20px]">
           <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]" >

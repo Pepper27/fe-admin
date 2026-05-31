@@ -2,7 +2,7 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
@@ -15,13 +15,21 @@ export default function CollectionList() {
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const fetchControllerRef = useRef(null)
   const limit = 10;
 
-  const fetchCollections = () => {
+  const fetchCollections = (overrides = {}) => {
     const token = localStorage.getItem("token");
     setLoading(true);
+    const usePage = overrides.page ?? page
+    const useKey = overrides.keyword ?? key
+    try { fetchControllerRef.current?.abort(); } catch(e) {}
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+
     fetch(
-      `${pathAdmin}/admin/collections?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`,
+      `${pathAdmin}/admin/collections?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`,
       {
         method: "GET",
         headers: {
@@ -29,6 +37,7 @@ export default function CollectionList() {
           "ngrok-skip-browser-warning": "true",
         },
         credentials: "include",
+        signal: controller.signal,
       },
     )
       .then((res) => res.json())
@@ -36,10 +45,17 @@ export default function CollectionList() {
         if (data?.code === "error")
           throw new Error(data.message || "Unauthorized");
         setCollections(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
+        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
+        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
+        setTotalPage(serverTotalPage);
+        setTotal(serverTotal);
+        if (usePage > serverTotalPage && serverTotalPage > 0) {
+          setPage(serverTotalPage)
+          return
+        }
       })
       .catch((err) => {
+        if (err?.name === 'AbortError') return
         console.error("Fetch collections failed", err);
         alert(err?.message || "Failed to fetch");
         setCollections([]);
@@ -64,24 +80,41 @@ export default function CollectionList() {
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
             <input
-              key={key}
+              value={searchInput}
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
               placeholder="Tìm kiếm"
-              defaultValue={key}
+              onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1);
-                  setKey(e.target.value);
+                  setKey(searchInput);
                 }
               }}
             />
           </div>
-          <Link
-            to="/admin/collection/create"
-            className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300"
-          >
-            + Tạo mới
-          </Link>
+          <div className="flex items-center gap-[10px]">
+            {searchInput !== '' && (
+              <button
+                onClick={() => {
+                  setSearchInput('')
+                  setKey('')
+                  setPage(1)
+                  fetchCollections({ page: 1, keyword: '' })
+                }}
+                className="flex items-center gap-[8px] text-[#ff2d2d] hover:opacity-90 bg-white border border-gray-200 rounded-[10px] py-[18px] px-[16px] text-[16px]"
+                title="Xóa lọc"
+              >
+                <MdDelete className="text-[18px]" />
+                <span className="text-[14px] font-[700]">Xóa lọc</span>
+              </button>
+            )}
+            <Link
+              to="/admin/collection/create"
+              className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300"
+            >
+              + Tạo mới
+            </Link>
+          </div>
         </div>
 
         <div className="mt-[20px]">
