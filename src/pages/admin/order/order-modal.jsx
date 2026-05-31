@@ -130,8 +130,8 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 px-[12px]">
-      <div className="w-full max-w-[920px] rounded-[16px] bg-white border border-gray-200 shadow-lg">
-        <div className="flex items-center justify-between px-[18px] py-[14px] border-b border-gray-200">
+      <div className="w-full max-w-[920px] rounded-[16px] bg-white border border-gray-200 shadow-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 48px)' }}>
+        <div className="flex items-center justify-between px-[18px] py-[14px] border-b border-gray-200 flex-shrink-0">
           <div className="font-[800] text-[16px]">Chi tiết đơn hàng</div>
           <button
             type="button"
@@ -142,7 +142,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
           </button>
         </div>
 
-        <div className="p-[18px]">
+        <div className="p-[18px] overflow-auto" style={{ flex: '1 1 auto' }}>
           {loading ? (
             <div className="text-[14px] text-gray-500">Đang tải...</div>
           ) : !order ? (
@@ -336,26 +336,26 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                   </table>
                 </div>
               </div>
-
-              <div className="mt-[14px] flex items-center justify-end gap-[10px]">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-[14px] py-[10px] rounded-[12px] border border-gray-300 hover:bg-gray-50 text-[14px]"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={save}
-                  className="px-[14px] py-[10px] rounded-[12px] bg-pri hover:bg-second text-white text-[14px] disabled:opacity-60"
-                >
-                  {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
-              </div>
             </>
           )}
+        </div>
+
+        <div className="px-[18px] py-[12px] border-t border-gray-200 flex items-center justify-end gap-[10px] flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-[14px] py-[10px] rounded-[12px] border border-gray-300 hover:bg-gray-50 text-[14px]"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={save}
+            className="px-[14px] py-[10px] rounded-[12px] bg-pri hover:bg-second text-white text-[14px] disabled:opacity-60"
+          >
+            {saving ? "Đang lưu..." : "Lưu thay đổi"}
+          </button>
         </div>
       </div>
     </div>
