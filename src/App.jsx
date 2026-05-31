@@ -22,6 +22,7 @@ import CollectionCreate from "./pages/admin/collection/collection-create";
 import CollectionUpdate from "./pages/admin/collection/collection-update";
 import DesignList from "./pages/admin/design/design-list";
 import ClientList from "./pages/admin/client/client-list";
+import ClientDetail from "./pages/admin/client/client-detail";
 import WishlistList from "./pages/admin/wishlist/wishlist-list";
 import OrderList from "./pages/admin/order/order-list";
 import RefundsPage from "./pages/admin/refunds";
@@ -236,6 +237,18 @@ function App() {
               <LayoutAdmin>
                 <PermissionGuard permission="user-view">
                   <ClientList />
+                </PermissionGuard>
+              </LayoutAdmin>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={routes.clientDetail}
+          element={
+            <PrivateRoute>
+              <LayoutAdmin>
+                <PermissionGuard permission="user-view">
+                  <ClientDetail />
                 </PermissionGuard>
               </LayoutAdmin>
             </PrivateRoute>
