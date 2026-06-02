@@ -3,6 +3,8 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import FilterBar from '../../../components/FilterBar'
+import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
 import { pathAdmin } from "../../../config/api"
 import CategoryDelete from "./category-delete";
@@ -38,9 +40,20 @@ export default function CategoryList() {
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  // use centralized filter hook for maintainability
+  const { values: filterValues, handleChange: onFilterChange, reset: resetFilters } = useFilter({
+    defaultValues: { categoryFilter: '', dateRange: { start: '', end: '' } },
+    onApply: (payload) => {
+      // when filters apply, ensure page resets to 1
+      setPage(1);
+      // payload will be used by useEffect dependency to refetch
+    },
+    debounce: 200,
+  });
+
+  const categoryFilter = filterValues.categoryFilter;
+  const startDate = filterValues.dateRange?.start || '';
+  const endDate = filterValues.dateRange?.end || '';
   const fetchCategories = () => {
     const token = localStorage.getItem("token");
     const limit = 10;
@@ -114,9 +127,7 @@ export default function CategoryList() {
   }, [page, key, categoryFilter, startDate, endDate]);
 
   const handleResetFilters = () => {
-    setCategoryFilter("");
-    setStartDate("");
-    setEndDate("");
+    resetFilters();
     setPage(1);
     // also clear search state and active keyword so search is fully reset
     setSearchInput("");
@@ -128,55 +139,30 @@ export default function CategoryList() {
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý danh mục</div>
 
-        {/* Thanh Bộ lọc */}
-        <div className="inline-flex lg:w-[900px] w-full flex-wrap gap-[20px] bg-[white] items-center rounded-[10px] border-[1px] border-gray-300">
-          <div className="py-[20px] px-[30px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-            <FaFilter className="text-[18px]" />
-            <span className="font-[700] text-[14px]">Bộ lọc</span>
-          </div>
-
-          {/* Lọc theo danh mục với thiết kế cây (thụt lề --) */}
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300">
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setPage(1);
-                setCategoryFilter(e.target.value);
-              }}
-              className="font-[700] outline-none text-[12px] w-[150px] bg-transparent cursor-pointer"
-            >
-              <option value="">Tất cả danh mục</option>
-              {/* 3. Gọi hàm đệ quy map cây tại đây */}
-              {renderCategoryOptions(treeCategories)}
-            </select>
-          </div>
-
-          {/* Lọc theo khoảng ngày (createdAt) */}
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300 flex items-center">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => { setPage(1); setStartDate(e.target.value); }}
-              className="font-[700] text-[14px] outline-none"
-            />
-            <span className="mx-[10px]-">-</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => { setPage(1); setEndDate(e.target.value); }}
-              className="font-[700] text-[14px] outline-none"
-            />
-          </div>
-
-          {/* Nút Xóa lọc */}
-          <div
-            onClick={handleResetFilters}
-            className="w-[150px] py-[20px] pl-[10px] pr-[30px] flex gap-[5px] items-center text-[red] font-[700] text-[14px] cursor-pointer hover:opacity-80"
-          >
-            <MdDelete className="text-[16px]" />
-            <div>Xóa lọc</div>
-          </div>
-        </div>
+        {/* Thanh Bộ lọc - migrated to FilterBar for reuse */}
+        <FilterBar
+          fields={[
+            { name: 'categoryFilter', type: 'custom', render: (value, onChange) => (
+                <select
+                  value={value || ''}
+                  onChange={(e) => { onChange(e.target.value); }}
+                  className="font-[700] outline-none text-[12px] w-[150px] bg-transparent cursor-pointer"
+                >
+                  <option value="">Tất cả danh mục</option>
+                  {renderCategoryOptions(treeCategories)}
+                </select>
+              ),
+            },
+            { name: 'dateRange', type: 'date-range' },
+          ]}
+          values={filterValues}
+          onChange={(v) => {
+            // when change, ensure page resets in hook's onApply; however set page here too on immediate change
+            setPage(1);
+            onFilterChange(v);
+          }}
+          onReset={handleResetFilters}
+        />
 
         {/* Thanh Tìm kiếm & Tạo mới */}
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">

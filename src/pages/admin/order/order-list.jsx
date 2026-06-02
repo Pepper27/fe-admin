@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import FilterBar from '../../../components/FilterBar'
+import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
 import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
@@ -62,22 +64,24 @@ export default function OrderList() {
   const limit = 10;
 
   const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState("");
-  const [method, setMethod] = useState("");
-  const [payStatus, setPayStatus] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const { values: filterValues, handleChange: onFilterChange, reset: resetFilterValues } = useFilter({
+    defaultValues: { status: '', method: '', payStatus: '', dateRange: { start: '', end: '' } },
+    onApply: () => setPage(1),
+    debounce: 200,
+  });
+
+  const status = filterValues.status;
+  const method = filterValues.method;
+  const payStatus = filterValues.payStatus;
+  const startDate = filterValues.dateRange?.start || '';
+  const endDate = filterValues.dateRange?.end || '';
 
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState("");
 
   const resetFilters = () => {
     setKeyword("");
-    setStatus("");
-    setMethod("");
-    setPayStatus("");
-    setStartDate("");
-    setEndDate("");
+    resetFilterValues();
     setPage(1);
   };
 
@@ -140,94 +144,17 @@ export default function OrderList() {
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý đơn hàng</div>
 
-        <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
-          <div className="flex items-center gap-0 min-w-max">
-            <div className="py-[15px] px-[20px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-              <FaFilter className="text-[16px]" />
-              <span className="font-[700] text-[13px] whitespace-nowrap">Bộ lọc</span>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={status}
-                onChange={(e) => {
-                  setPage(1);
-                  setStatus(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[160px]"
-              >
-                <option value="">Tất cả trạng thái</option>
-                {Object.keys(STATUS_LABELS).map((k) => (
-                  <option key={k} value={k}>
-                    {STATUS_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={payStatus}
-                onChange={(e) => {
-                  setPage(1);
-                  setPayStatus(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[170px]"
-              >
-                <option value="">Tất cả thanh toán</option>
-                {Object.keys(PAY_LABELS).map((k) => (
-                  <option key={k} value={k}>
-                    {PAY_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={method}
-                onChange={(e) => {
-                  setPage(1);
-                  setMethod(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[140px]"
-              >
-                <option value="">Tất cả phương thức</option>
-                {Object.keys(METHOD_LABELS).map((k) => (
-                  <option key={k} value={k}>
-                    {METHOD_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300 flex items-center gap-[8px]">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setStartDate(e.target.value);
-                }}
-                className="font-[700] text-[12px] outline-none w-[120px]"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setEndDate(e.target.value);
-                }}
-                className="font-[700] text-[12px] outline-none w-[120px]"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="py-[15px] px-[15px] flex gap-[5px] items-center text-[red] font-[700] text-[13px] hover:opacity-70 whitespace-nowrap"
-            >
-              <MdDelete className="text-[14px]" />
-              <span>Xóa lọc</span>
-            </button>
-          </div>
-        </div>
+        <FilterBar
+          fields={[
+            { name: 'status', type: 'select', options: [{ label: 'Tất cả trạng thái', value: '' }, ...Object.keys(STATUS_LABELS).map(k => ({ label: STATUS_LABELS[k], value: k }))] },
+            { name: 'payStatus', type: 'select', options: [{ label: 'Tất cả thanh toán', value: '' }, ...Object.keys(PAY_LABELS).map(k => ({ label: PAY_LABELS[k], value: k }))] },
+            { name: 'method', type: 'select', options: [{ label: 'Tất cả phương thức', value: '' }, ...Object.keys(METHOD_LABELS).map(k => ({ label: METHOD_LABELS[k], value: k }))] },
+            { name: 'dateRange', type: 'date-range' },
+          ]}
+          values={filterValues}
+          onChange={(v) => { setPage(1); onFilterChange(v); }}
+          onReset={resetFilters}
+        />
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">

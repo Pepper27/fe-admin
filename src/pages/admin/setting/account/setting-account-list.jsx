@@ -3,14 +3,21 @@ import { pathAdmin } from "../../../../config/api";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
+import FilterBar from '../../../../../src/components/FilterBar'
+import useFilter from '../../../../../src/hooks/useFilter'
 
 export default function SettingAccountList() {
   const [accounts, setAccounts] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const { values: filterValues, handleChange: onFilterChange, reset: resetFilters } = useFilter({
+    defaultValues: { statusFilter: '', roleFilter: '' },
+    debounce: 200,
+  });
+
+  const statusFilter = filterValues.statusFilter;
+  const roleFilter = filterValues.roleFilter;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -101,38 +108,23 @@ export default function SettingAccountList() {
       </div>
 
       <div className="flex flex-wrap gap-[12px] mb-[20px]">
-        <div className="flex items-center bg-white border border-gray-300 rounded-[10px] px-[14px] py-[12px] w-[260px]">
-          <CiSearch />
-          <input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Tìm kiếm"
-            className="ml-[8px] text-[14px] outline-none w-full"
+        <div className="w-full">
+          <FilterBar
+            fields={[
+              { name: 'statusFilter', type: 'select', options: [{ label: 'Trạng thái', value: '' }, { label: 'Khởi tạo', value: 'initial' }, { label: 'Hoạt động', value: 'active' }] },
+              { name: 'roleFilter', type: 'select', options: [{ label: 'Nhóm quyền', value: '' }, ...roles.map(r => ({ label: r.name, value: r._id }))] },
+              { name: 'keyword', type: 'custom', render: (v, onChange) => (
+                  <div className="flex items-center bg-white border border-gray-300 rounded-[10px] px-[14px] py-[12px] w-[260px]">
+                    <CiSearch />
+                    <input value={keyword} onChange={(e)=>setKeyword(e.target.value)} placeholder="Tìm kiếm" className="ml-[8px] text-[14px] outline-none w-full" />
+                  </div>
+                ) },
+            ]}
+            values={{ ...filterValues, keyword }}
+            onChange={(v) => { onFilterChange(v); }}
+            onReset={() => { resetFilters(); setKeyword(''); }}
           />
         </div>
-
-        <select
-          className="bg-white border border-gray-300 rounded-[10px] px-[14px] py-[12px] text-[14px]"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">Trạng thái</option>
-          <option value="initial">Khởi tạo</option>
-          <option value="active">Hoạt động</option>
-        </select>
-
-        <select
-          className="bg-white border border-gray-300 rounded-[10px] px-[14px] py-[12px] text-[14px]"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="">Nhóm quyền</option>
-          {roles.map((role) => (
-            <option key={role._id} value={role._id}>
-              {role.name}
-            </option>
-          ))}
-        </select>
 
         <a
           href="/admin/setting/account/create"

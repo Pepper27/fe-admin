@@ -3,6 +3,8 @@ import { FaRegEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import React, { useEffect, useState } from "react";
+import FilterBar from '../../../components/FilterBar'
+import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -31,16 +33,25 @@ export default function ProductList() {
   const [collections, setCollections] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
+
+  const { values: filterValues, handleChange: onFilterChange, reset: resetFilterValues } = useFilter({
+    defaultValues: {
+      creatorFilter: '', categoryFilter: '', collectionFilter: '', stockFilter: '', materialFilter: '', minPrice: '', maxPrice: '', dateRange: { start: '', end: '' }
+    },
+    onApply: () => setPage(1),
+    debounce: 200,
+  });
+
+  const creatorFilter = filterValues.creatorFilter;
+  const categoryFilter = filterValues.categoryFilter;
+  const collectionFilter = filterValues.collectionFilter;
+  const stockFilter = filterValues.stockFilter;
+  const materialFilter = filterValues.materialFilter;
+  const minPrice = filterValues.minPrice;
+  const maxPrice = filterValues.maxPrice;
+  const startDate = filterValues.dateRange?.start || '';
+  const endDate = filterValues.dateRange?.end || '';
   const [loading, setLoading] = useState(false);
-  const [stockFilter, setStockFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [collectionFilter, setCollectionFilter] = useState("");
-  const [materialFilter, setMaterialFilter] = useState("");
-  const [creatorFilter, setCreatorFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -153,15 +164,7 @@ export default function ProductList() {
   };
 
   const handleResetFilters = () => {
-    setStockFilter("");
-    setCategoryFilter("");
-    setCollectionFilter("");
-    setMaterialFilter("");
-    setCreatorFilter("");
-    setStartDate("");
-    setEndDate("");
-    setMinPrice("");
-    setMaxPrice("");
+    resetFilterValues();
     setKeyword("");
     setKeywordInput("");
     setPage(1);
@@ -382,7 +385,7 @@ export default function ProductList() {
     const token = localStorage.getItem("token");
 
     setLoading(true);
-    
+
 
     (async () => {
       try {
@@ -396,7 +399,7 @@ export default function ProductList() {
         // Handle explicit permission error returned by backend
         if (data && data.success === false && data.error === 'insufficient_permissions') {
           // Clear token and redirect to login so admin can re-authenticate
-          try { localStorage.removeItem('token'); sessionStorage.removeItem('admin_profile_cache'); } catch (e) {}
+          try { localStorage.removeItem('token'); sessionStorage.removeItem('admin_profile_cache'); } catch (e) { }
           alert('Bạn không có đủ quyền truy cập. Vui lòng đăng nhập lại với tài khoản quản trị.');
           navigate('/admin/authen/login');
           return;
@@ -476,187 +479,73 @@ export default function ProductList() {
 
         <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
           <div className="flex items-center gap-0 min-w-max">
-            <div className="py-[15px] px-[20px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-              <FaFilter className="text-[16px]" />
-              <span className="font-[700] text-[13px] whitespace-nowrap">
-                Bộ lọc
-              </span>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={creatorFilter}
-                onChange={(e) => {
-                  setPage(1);
-                  setCreatorFilter(e.target.value);
-                }}
-                className="font-[700] text-black outline-none text-[12px] w-[80px]"
-              >
-                <option value="">Người tạo</option>
-                {creators
-                  .slice()
-                  .sort((a, b) =>
-                    String(a?.fullName || a?.email || "").localeCompare(
-                      String(b?.fullName || b?.email || ""),
-                    ),
+            <FilterBar
+              fields={[
+                {
+                  name: 'creatorFilter', type: 'custom', render: (v, onChange) => (
+                    <select value={v || ''} onChange={(e) => onChange(e.target.value)} className="font-semibold text-black outline-none text-sm w-[90px]">
+                      <option value="">Người tạo</option>
+                      {creators.slice().sort((a, b) => String(a?.fullName || a?.email || "").localeCompare(String(b?.fullName || b?.email || ""))).map(creator => {
+                        const id = creator?._id || creator?.id; const label = creator?.fullName || creator?.email || String(id || "");
+                        return <option key={String(id)} value={String(id)}>{label}</option>
+                      })}
+                    </select>
                   )
-                  .map((creator) => {
-                    const id = creator?._id || creator?.id;
-                    const label =
-                      creator?.fullName || creator?.email || String(id || "");
-                    return (
-                      <option key={String(id)} value={String(id)}>
-                        {label}
-                      </option>
-                    );
-                  })}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={categoryFilter}
-                onChange={(e) => {
-                  setPage(1);
-                  setCategoryFilter(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[120px]"
-              >
-                <option value="">Tất cả danh mục</option>
-                {Array.isArray(categories) &&
-                categories.some(
-                  (c) => Array.isArray(c?.children) && c.children.length,
-                )
-                  ? renderCategoryOptions(categories)
-                  : categories
-                      .slice()
-                      .sort((a, b) =>
-                        String(a?.name || "").localeCompare(
-                          String(b?.name || ""),
-                        ),
-                      )
-                      .map((cat) => (
-                        <option
-                          key={String(cat?._id || cat?.id)}
-                          value={String(cat?._id || cat?.id)}
-                        >
-                          {cat?.name}
-                        </option>
-                      ))}
-              </select>
-            </div>
-
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={collectionFilter}
-                onChange={(e) => {
-                  setPage(1);
-                  setCollectionFilter(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[120px]"
-              >
-                <option value="">Tất cả bộ sưu tập</option>
-                {collections.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={stockFilter}
-                onChange={(e) => {
-                  setPage(1);
-                  setStockFilter(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[90px]"
-              >
-                <option value="">Tất cả kho</option>
-                <option value="in_stock">In stock</option>
-                <option value="low_stock">Low stock</option>
-                <option value="out_of_stock">Out of stock</option>
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300">
-              <select
-                value={materialFilter}
-                onChange={(e) => {
-                  setPage(1);
-                  setMaterialFilter(e.target.value);
-                }}
-                className="font-[700] outline-none text-[12px] w-[120px]"
-              >
-                <option value="">Tất cả chất liệu</option>
-                {(materials && materials.length
-                  ? materials
-                  : [{ name: "Vàng" }, { name: "Vàng hồng" }, { name: "Bạc" }]
-                )
-                  .slice()
-                  .sort((a, b) =>
-                    String(a?.name || "").localeCompare(String(b?.name || "")),
+                },
+                {
+                  name: 'categoryFilter', type: 'custom', render: (v, onChange) => (
+                    <select value={v || ''} onChange={(e) => onChange(e.target.value)} className="font-semibold outline-none text-sm w-[140px]">
+                      <option value="">Tất cả danh mục</option>
+                      {Array.isArray(categories) && categories.some(c => Array.isArray(c?.children) && c.children.length) ? renderCategoryOptions(categories) : categories.slice().sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || ""))).map(cat => (<option key={String(cat?._id || cat?.id)} value={String(cat?._id || cat?.id)}>{cat?.name}</option>))}
+                    </select>
                   )
-                  .map((m) => {
-                    const name = m?.name || "";
-                    const id = m?._id || name;
-                    return (
-                      <option key={String(id)} value={name}>
-                        {name}
-                      </option>
-                    );
-                  })}
-              </select>
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300 flex items-center gap-[5px]">
-              <input
-                type="number"
-                value={minPrice}
-                onChange={(e) => {
-                  setPage(1);
-                  setMinPrice(e.target.value);
-                }}
-                placeholder="Min"
-                className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded"
-              />
-              <span className="text-gray-400 text-[12px]">-</span>
-              <input
-                type="number"
-                value={maxPrice}
-                onChange={(e) => {
-                  setPage(1);
-                  setMaxPrice(e.target.value);
-                }}
-                placeholder="Max"
-                className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded"
-              />
-            </div>
-            <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300 flex items-center gap-[8px]">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setStartDate(e.target.value);
-                }}
-                className="font-[700] text-[12px] outline-none w-[110px]"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setPage(1);
-                  setEndDate(e.target.value);
-                }}
-                className="font-[700] text-[12px] outline-none w-[110px]"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="py-[15px] px-[15px] flex gap-[5px] items-center text-[red] font-[700] text-[13px] hover:opacity-70 whitespace-nowrap"
-            >
-              <MdDelete className="text-[14px]" />
-              <span>Xóa lọc</span>
-            </button>
+                },
+                { name: 'collectionFilter', type: 'select', options: [{ label: 'Tất cả bộ sưu tập', value: '' }, ...collections.map(c => ({ label: c.name, value: c._id }))] },
+                // { 
+                //   name: 'stockFilter', 
+                //   type: 'custom', 
+                //   className: '!w-[100px]', 
+                //   options: [
+                //     { label: 'Tất cả kho', value: '' }, 
+                //     { label: 'In stock', value: 'in_stock' }, 
+                //     { label: 'Low stock', value: 'low_stock' }, 
+                //     { label: 'Out of stock', value: 'out_of_stock' }
+                //   ] 
+                // },
+                {
+                  name: 'stockFilter',
+                  type: 'custom',
+                  className: 'py-2 px-2 border-r border-gray-300 !w-[100px] min-w-[110px] flex items-center',
+                  render: (v, onChange) => (
+                    <select
+                      value={v || ''}
+                      onChange={(e) => onChange(e.target.value)}
+                      className="font-semibold text-sm w-full outline-none bg-transparent cursor-pointer"
+                    >
+                      <option value="">Tất cả kho</option>
+                      <option value="in_stock">In stock</option>
+                      <option value="low_stock">Low stock</option>
+                      <option value="out_of_stock">Out of stock</option>
+                    </select>
+                  )
+                },
+                { name: 'materialFilter', type: 'select', options: [{ label: 'Tất cả chất liệu', value: '' }, ...((materials && materials.length ? materials : [{ name: 'Vàng' }, { name: 'Vàng hồng' }, { name: 'Bạc' }]).slice().sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || ""))).map(m => ({ label: m?.name || '', value: m?._id || m?.name || '' })))] },
+                {
+                  name: 'minPrice', type: 'custom', render: (v, onChange) => (
+                    <div className="flex items-center gap-[5px]"><input type="number" value={v || ''} onChange={(e) => onChange(e.target.value)} placeholder="Min" className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded" /></div>
+                  )
+                },
+                {
+                  name: 'maxPrice', type: 'custom', render: (v, onChange) => (
+                    <input type="number" value={v || ''} onChange={(e) => onChange(e.target.value)} placeholder="Max" className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded" />
+                  )
+                },
+                { name: 'dateRange', type: 'date-range' },
+              ]}
+              values={filterValues}
+              onChange={(v) => { setPage(1); onFilterChange(v); }}
+              onReset={() => { resetFilterValues(); setKeyword(''); setKeywordInput(''); setPage(1); }}
+            />
           </div>
         </div>
 
@@ -699,7 +588,7 @@ export default function ProductList() {
               <table className="xl:w-full w-[1100px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr>
-         
+
                     <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[90px]">
                       Ảnh
                     </td>
@@ -745,7 +634,7 @@ export default function ProductList() {
                   ) : products.length ? (
                     products.map((item) => (
                       <tr key={item._id}>
-                          
+
                         <td className="p-[15px] text-[14px]">
                           <img
                             src={item.variants?.[0]?.images?.[0]}
@@ -777,13 +666,12 @@ export default function ProductList() {
                         </td>
                         <td className="p-[15px] text-[14px]">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-[600] ${
-                              item?.stockStatus === "out_of_stock"
+                            className={`px-2 py-1 rounded text-xs font-[600] ${item?.stockStatus === "out_of_stock"
                                 ? "bg-red-100 text-red-800"
                                 : item?.stockStatus === "low_stock"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-green-100 text-green-800"
-                            }`}
+                              }`}
                           >
                             {(() => {
                               const total = (item?.variants || []).reduce(
