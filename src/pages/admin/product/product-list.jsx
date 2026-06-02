@@ -477,9 +477,10 @@ export default function ProductList() {
           Quản lý sản phẩm
         </div>
 
-        <div className="flex w-full overflow-x-auto bg-[white] rounded-[10px] border-[1px] border-gray-300">
-          <div className="flex items-center gap-0 min-w-max">
-            <FilterBar
+        {/* Use card prop on FilterBar and remove extra outer wrapper so border sizes to content */}
+        <div>
+          <FilterBar
+            card={true}
               fields={[
                 {
                   name: 'creatorFilter', type: 'custom', render: (v, onChange) => (
@@ -501,17 +502,6 @@ export default function ProductList() {
                   )
                 },
                 { name: 'collectionFilter', type: 'select', options: [{ label: 'Tất cả bộ sưu tập', value: '' }, ...collections.map(c => ({ label: c.name, value: c._id }))] },
-                // { 
-                //   name: 'stockFilter', 
-                //   type: 'custom', 
-                //   className: '!w-[100px]', 
-                //   options: [
-                //     { label: 'Tất cả kho', value: '' }, 
-                //     { label: 'In stock', value: 'in_stock' }, 
-                //     { label: 'Low stock', value: 'low_stock' }, 
-                //     { label: 'Out of stock', value: 'out_of_stock' }
-                //   ] 
-                // },
                 {
                   name: 'stockFilter',
                   type: 'custom',
@@ -529,7 +519,24 @@ export default function ProductList() {
                     </select>
                   )
                 },
-                { name: 'materialFilter', type: 'select', options: [{ label: 'Tất cả chất liệu', value: '' }, ...((materials && materials.length ? materials : [{ name: 'Vàng' }, { name: 'Vàng hồng' }, { name: 'Bạc' }]).slice().sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || ""))).map(m => ({ label: m?.name || '', value: m?._id || m?.name || '' })))] },
+                // { name: 'materialFilter', type: 'select', options: [{ label: 'Tất cả chất liệu', value: '' }, ...((materials && materials.length ? materials : [{ name: 'Vàng' }, { name: 'Vàng hồng' }, { name: 'Bạc' }]).slice().sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || ""))).map(m => ({ label: m?.name || '', value: m?._id || m?.name || '' })))] },
+                {
+                  name: 'materialFilter',
+                  type: 'custom',
+                  className: 'py-2 px-2 border-r border-gray-300 !w-[100px] min-w-[150px] flex items-center',
+                  render: (v, onChange) => (
+                    <select
+                      value={v || ''}
+                      onChange={(e) => onChange(e.target.value)}
+                      className="font-semibold text-sm w-full outline-none bg-transparent cursor-pointer"
+                    >
+                      <option value="">Tất cả chất liệu</option>
+                      <option value="gold">Vàng</option>
+                      <option value="rose_gold">Vàng hồng</option>
+                      <option value="silver">Bạc</option>
+                    </select>
+                  )
+                },
                 {
                   name: 'minPrice', type: 'custom', render: (v, onChange) => (
                     <div className="flex items-center gap-[5px]"><input type="number" value={v || ''} onChange={(e) => onChange(e.target.value)} placeholder="Min" className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded" /></div>
@@ -546,7 +553,6 @@ export default function ProductList() {
               onChange={(v) => { setPage(1); onFilterChange(v); }}
               onReset={() => { resetFilterValues(); setKeyword(''); setKeywordInput(''); setPage(1); }}
             />
-          </div>
         </div>
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">

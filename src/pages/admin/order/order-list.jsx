@@ -154,6 +154,7 @@ export default function OrderList() {
           values={filterValues}
           onChange={(v) => { setPage(1); onFilterChange(v); }}
           onReset={resetFilters}
+        card={true}
         />
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">

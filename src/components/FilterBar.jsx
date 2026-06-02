@@ -10,11 +10,16 @@ export default function FilterBar({
   onChange = () => {},
   onReset = () => {},
   className = '',
+  card = false, // when true, FilterBar renders its own card border/background
 }) {
+  const outerClass = card
+    ? `inline-flex self-start items-center gap-2 bg-white rounded-[10px] border border-gray-300 px-1 py-1 max-w-max ${className}`
+    : `w-full flex items-center gap-2 ${className}`;
+
   return (
-    // No outer border/bg so parent container can provide the card border; keeps internal separators
-    <div className={`w-full flex items-center gap-2 ${className}`}>
-      <div className="py-2 px-3 flex gap-2 items-center border-r border-gray-300">
+    // if card=true, FilterBar draws outer card; otherwise parent should provide card if desired
+    <div className={outerClass}>
+      <div className="py-3 px-3 flex gap-2 items-center border-r border-gray-300">
         <FaFilter className="text-[18px]" />
         <span className="font-[700] text-[14px]">Bộ lọc</span>
       </div>
@@ -23,11 +28,11 @@ export default function FilterBar({
         const val = values[f.name] ?? '';
         if (f.type === 'select') {
           return (
-            <div key={f.name} className="py-2 px-2 border-r border-gray-300 min-w-0 max-w-[160px] flex items-center">
+            <div key={f.name} className="py-4 px-3 border-r border-gray-300 min-w-0 max-w-[220px] flex items-center">
               <select
                 value={val}
                 onChange={(e) => onChange({ ...values, [f.name]: e.target.value })}
-                className="font-semibold outline-none text-sm  w-[140px] bg-transparent cursor-pointer"
+                className="font-semibold outline-none text-sm w-[140px] bg-transparent cursor-pointer"
               >
                 {(f.options || []).map((o) => (
                   <option key={o.value ?? o.id ?? o._id ?? o.label} value={String(o.value ?? o.id ?? o._id ?? '')}>
@@ -41,7 +46,7 @@ export default function FilterBar({
 
         if (f.type === 'date-range') {
           return (
-            <div key={f.name} className="py-2 px-2 border-r border-gray-300 flex items-center min-w-0">
+            <div key={f.name} className="py-1 px-3 border-r border-gray-300 flex items-center min-w-0">
               <input
                 type="date"
                 value={val?.start || ''}
@@ -60,8 +65,8 @@ export default function FilterBar({
         }
 
         if (f.type === 'custom' && typeof f.render === 'function') {
-          return (
-            <div key={f.name} className={f.className ? f.className : 'py-2 px-3 border-r border-gray-300'}>
+            return (
+            <div key={f.name} className={f.className ? f.className : 'py-1 px-3 border-r border-gray-300'}>
               {f.render(values[f.name], (v) => onChange({ ...values, [f.name]: v }))}
             </div>
           );
@@ -69,7 +74,7 @@ export default function FilterBar({
 
         // fallback: text
         return (
-          <div key={f.name} className="py-2 px-3 border-r border-gray-300 min-w-0 max-w-[160px]">
+          <div key={f.name} className="py-1 px-3 border-r border-gray-300 min-w-0 max-w-[220px]">
             <input
               value={val}
               onChange={(e) => onChange({ ...values, [f.name]: e.target.value })}
@@ -81,9 +86,9 @@ export default function FilterBar({
       })}
 
       {/* Reset control - pages can control handler via onReset */}
-      <div onClick={onReset} className="py-2 pl-2 pr-3 flex gap-2 items-center text-red-600 font-semibold text-sm cursor-pointer hover:opacity-80">
+      <div onClick={onReset} className="px-2 py-1 flex gap-2 items-center text-red-600 font-semibold text-sm cursor-pointer hover:opacity-80">
         <div className="text-[16px]">🗑</div>
-        <div>Xóa lọc</div>
+        <div className="whitespace-nowrap">Xóa lọc</div>
       </div>
     </div>
   );

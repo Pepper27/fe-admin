@@ -123,6 +123,7 @@ export default function SettingAccountList() {
             values={{ ...filterValues, keyword }}
             onChange={(v) => { onFilterChange(v); }}
             onReset={() => { resetFilters(); setKeyword(''); }}
+          card={true}
           />
         </div>
 

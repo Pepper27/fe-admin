@@ -162,6 +162,7 @@ export default function CategoryList() {
             onFilterChange(v);
           }}
           onReset={handleResetFilters}
+        card={true}
         />
 
         {/* Thanh Tìm kiếm & Tạo mới */}
