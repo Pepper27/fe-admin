@@ -37,6 +37,7 @@ export default function CategoryList() {
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -117,6 +118,9 @@ export default function CategoryList() {
     setStartDate("");
     setEndDate("");
     setPage(1);
+    // also clear search state and active keyword so search is fully reset
+    setSearchInput("");
+    setKey("");
   };
 
   return (
@@ -181,10 +185,12 @@ export default function CategoryList() {
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
               placeholder="Tìm kiếm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.currentTarget.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1);
-                  setKey(e.currentTarget.value);
+                  setKey(searchInput);
                 }
               }}
             />
