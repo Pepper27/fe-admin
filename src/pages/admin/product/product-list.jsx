@@ -489,7 +489,7 @@ export default function ProductList() {
                   setPage(1);
                   setCreatorFilter(e.target.value);
                 }}
-                className="font-[700] text-black outline-none text-[12px] w-[140px]"
+                className="font-[700] text-black outline-none text-[12px] w-[80px]"
               >
                 <option value="">Người tạo</option>
                 {creators
@@ -551,7 +551,7 @@ export default function ProductList() {
                   setPage(1);
                   setCollectionFilter(e.target.value);
                 }}
-                className="font-[700] outline-none text-[12px] w-[140px]"
+                className="font-[700] outline-none text-[12px] w-[120px]"
               >
                 <option value="">Tất cả bộ sưu tập</option>
                 {collections.map((c) => (
@@ -568,7 +568,7 @@ export default function ProductList() {
                   setPage(1);
                   setStockFilter(e.target.value);
                 }}
-                className="font-[700] outline-none text-[12px] w-[110px]"
+                className="font-[700] outline-none text-[12px] w-[90px]"
               >
                 <option value="">Tất cả kho</option>
                 <option value="in_stock">In stock</option>
@@ -583,7 +583,7 @@ export default function ProductList() {
                   setPage(1);
                   setMaterialFilter(e.target.value);
                 }}
-                className="font-[700] outline-none text-[12px] w-[110px]"
+                className="font-[700] outline-none text-[12px] w-[120px]"
               >
                 <option value="">Tất cả chất liệu</option>
                 {(materials && materials.length
@@ -614,7 +614,7 @@ export default function ProductList() {
                   setMinPrice(e.target.value);
                 }}
                 placeholder="Min"
-                className="font-[700] outline-none text-[12px] w-[70px] px-[5px] py-[4px] border border-gray-200 rounded"
+                className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded"
               />
               <span className="text-gray-400 text-[12px]">-</span>
               <input
@@ -625,7 +625,7 @@ export default function ProductList() {
                   setMaxPrice(e.target.value);
                 }}
                 placeholder="Max"
-                className="font-[700] outline-none text-[12px] w-[70px] px-[5px] py-[4px] border border-gray-200 rounded"
+                className="font-[700] outline-none text-[12px] w-[90px] px-[5px] py-[4px] border border-gray-200 rounded"
               />
             </div>
             <div className="py-[15px] px-[15px] border-r-[1px] border-r-gray-300 flex items-center gap-[8px]">
@@ -636,7 +636,7 @@ export default function ProductList() {
                   setPage(1);
                   setStartDate(e.target.value);
                 }}
-                className="font-[700] text-[12px] outline-none w-[120px]"
+                className="font-[700] text-[12px] outline-none w-[110px]"
               />
               <span className="text-gray-400">-</span>
               <input
@@ -646,7 +646,7 @@ export default function ProductList() {
                   setPage(1);
                   setEndDate(e.target.value);
                 }}
-                className="font-[700] text-[12px] outline-none w-[120px]"
+                className="font-[700] text-[12px] outline-none w-[110px]"
               />
             </div>
             <button
@@ -659,9 +659,6 @@ export default function ProductList() {
             </button>
           </div>
         </div>
-
-        {/* Smart facet panel returned from backend */}
-        {/* No client-facing facet panel in admin UI */}
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
