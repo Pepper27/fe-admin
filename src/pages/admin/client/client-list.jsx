@@ -3,7 +3,7 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
 import Pagination from '../../../components/Pagination'
-import { pathAdmin } from "../../../config/api";
+import { fetchClients as fetchClientsService } from '../../../services/client.service';
 import ClientDelete from "./client-delete";
 
 export default function ClientList() {
@@ -14,30 +14,20 @@ export default function ClientList() {
   const [key, setKey] = useState("");
   const limit = 10;
 
-  const fetchClients = () => {
-    const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/clients?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setClients(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
-      })
-      .catch((err) => {
-        console.error("Fetch clients failed", err);
-        alert(err?.message || "Failed to fetch");
-        setClients([]);
-        setTotalPage(1);
-        setTotal(0);
-      });
+  const fetchClients = async () => {
+    try {
+      const data = await fetchClientsService({ page, keyword: key, limit });
+      if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+      setClients(data?.data || []);
+      setTotalPage(data?.totalPage || 1);
+      setTotal(data?.total || 0);
+    } catch (err) {
+      console.error("Fetch clients failed", err);
+      alert(err?.message || "Failed to fetch");
+      setClients([]);
+      setTotalPage(1);
+      setTotal(0);
+    }
   };
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { pathAdmin } from "../../../../config/api";
+import { fetchAccountsAndRoles, deleteAccount } from '../../../../services/account.service'
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -25,26 +25,7 @@ export default function SettingAccountList() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [accountRes, roleRes] = await Promise.all([
-          fetch(`${pathAdmin}/admin/account`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true",
-            },
-            credentials: "include",
-          }),
-          fetch(`${pathAdmin}/admin/roles/all`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true",
-            },
-            credentials: "include",
-          }),
-        ]);
-
-        const accountData = await accountRes.json();
-        const roleData = await roleRes.json();
-
+        const { accountData, roleData } = await fetchAccountsAndRoles();
         setAccounts(Array.isArray(accountData?.data) ? accountData.data : []);
         setRoles(Array.isArray(roleData?.data) ? roleData.data : []);
       } catch (error) {
@@ -82,19 +63,9 @@ export default function SettingAccountList() {
     if (!ok) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${pathAdmin}/admin/account/${item._id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        credentials: "include",
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || data?.code === "error") {
-        throw new Error(data?.message || "Xóa thất bại!");
-      }
+      const resp = await deleteAccount(item._id);
+      const { ok, data } = resp;
+      if (!ok || data?.code === 'error') throw new Error(data?.message || 'Xóa thất bại!');
       setAccounts((prev) => prev.filter((x) => x._id !== item._id));
     } catch (error) {
       alert(error?.message || "Xóa thất bại!");

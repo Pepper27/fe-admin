@@ -5,7 +5,7 @@ import Pagination from '../../../components/Pagination'
 import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
-import { pathAdmin } from "../../../config/api";
+import { fetchOrders } from '../../../services/order.service'
 import OrderModal from "./order-modal";
 
 const STATUS_LABELS = {
@@ -90,41 +90,24 @@ export default function OrderList() {
     const controller = new AbortController();
 
     setLoading(true);
-    const params = new URLSearchParams();
-    if (keyword) params.append("keyword", keyword);
-    if (status) params.append("status", status);
-    if (method) params.append("method", method);
-    if (payStatus) params.append("payStatus", payStatus);
-    if (startDate) params.append("startDate", startDate);
-    if (endDate) params.append("endDate", endDate);
-    params.append("page", String(page));
-    params.append("limit", String(limit));
-
-    fetch(`${pathAdmin}/admin/order?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
+    (async () => {
+      try {
+        const data = await fetchOrders({ keyword, status, method, payStatus, startDate, endDate, page, limit, signal: controller.signal });
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
         setRows(data?.data || []);
         setTotal(data?.total || 0);
         setTotalPage(data?.totalPage || 1);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch orders failed", err);
         alert(err?.message || "Failed to fetch");
         setRows([]);
         setTotal(0);
         setTotalPage(1);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    })();
 
     return () => controller.abort();
   }, [keyword, status, method, payStatus, startDate, endDate, page]);

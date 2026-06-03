@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
-import { pathAdmin } from "../../../config/api"
+import { fetchCategoryList, fetchCategoryTree } from '../../../services/category.service'
 import CategoryDelete from "./category-delete";
 
 
@@ -54,33 +54,18 @@ export default function CategoryList() {
   const categoryFilter = filterValues.categoryFilter;
   const startDate = filterValues.dateRange?.start || '';
   const endDate = filterValues.dateRange?.end || '';
-  const fetchCategories = () => {
-    const token = localStorage.getItem("token");
-    const limit = 10;
-    const url = `${pathAdmin}/admin/categories?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}&categoryId=${categoryFilter}&startDate=${startDate}&endDate=${endDate}`;
-    fetch(url, {
-
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data?.code === "error") {
-          throw new Error(data.message || "Unauthorized");
-        }
-        setCategory(data.data || []);
-        setTotalPage(data.totalPage || 1);
-        setTotal(data.total || 0);
-      })
-      .catch((err) => {
-        console.error("Fetch categories failed", err);
-        alert(err?.message || "Failed to fetch");
-        setCategory([]);
-      });
+  const fetchCategories = async () => {
+    try {
+      const data = await fetchCategoryList({ page, keyword: key, categoryId: categoryFilter, startDate, endDate, limit: 10 });
+      if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+      setCategory(data.data || []);
+      setTotalPage(data.totalPage || 1);
+      setTotal(data.total || 0);
+    } catch (err) {
+      console.error("Fetch categories failed", err);
+      alert(err?.message || "Failed to fetch");
+      setCategory([]);
+    }
   };
 
   // 2. Hàm quét thử các API để lấy TOÀN BỘ danh mục dạng cây (để hiển thị select)
@@ -110,12 +95,7 @@ export default function CategoryList() {
   // Gọi API lấy dữ liệu cây 1 lần duy nhất khi component mount
   useEffect(() => {
     const loadTreeData = async () => {
-      const categoriesRes = await fetchFirstOk([
-        `${pathAdmin}/admin/categories/parent`,
-        `${pathAdmin}/v1/admin/categories/parent`,
-        `${pathAdmin}/v1/admin/categories`,
-        `${pathAdmin}/admin/categories`,
-      ]);
+      const categoriesRes = await fetchCategoryTree();
       setTreeCategories(categoriesRes?.data || []);
     };
     loadTreeData();

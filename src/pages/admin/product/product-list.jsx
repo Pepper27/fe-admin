@@ -5,6 +5,7 @@ import { CiSearch } from "react-icons/ci";
 import React, { useEffect, useState } from "react";
 import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
+import { getDisplayPrice } from '../../../helpers/price'
 import Pagination from '../../../components/Pagination'
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -137,20 +138,7 @@ export default function ProductList() {
     })();
   }, []);
 
-  const getDisplayPrice = (product) => {
-    const prices = (product?.variants || [])
-      .map((v) => Number(v?.price))
-      .filter((p) => Number.isFinite(p));
-
-    if (!prices.length) return "0₫";
-
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-
-    if (min === max) return formatPrice(min);
-
-    return `${formatPrice(min)} - ${formatPrice(max)}`;
-  };
+  // getDisplayPrice moved to src/helpers/price.js
 
   const getTotalSold = (item) => {
     const soldFromVariants = (item?.variants || []).reduce(
@@ -668,7 +656,7 @@ export default function ProductList() {
                             .join(", ") || ""}
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          {getDisplayPrice(item)}
+                          {getDisplayPrice(item, formatPrice)}
                         </td>
                         <td className="p-[15px] text-[14px]">
                           <span
