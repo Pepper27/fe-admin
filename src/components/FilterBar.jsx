@@ -32,7 +32,7 @@ export default function FilterBar({
               <select
                 value={val}
                 onChange={(e) => onChange({ ...values, [f.name]: e.target.value })}
-                className="font-semibold outline-none text-sm w-[140px] bg-transparent cursor-pointer"
+                className="font-semibold outline-none text-sm w-[160px] bg-transparent cursor-pointer"
               >
                 {(f.options || []).map((o) => (
                   <option key={o.value ?? o.id ?? o._id ?? o.label} value={String(o.value ?? o.id ?? o._id ?? '')}>

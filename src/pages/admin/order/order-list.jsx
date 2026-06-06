@@ -137,7 +137,7 @@ export default function OrderList() {
           values={filterValues}
           onChange={(v) => { setPage(1); onFilterChange(v); }}
           onReset={resetFilters}
-        card={true}
+          card={true}
         />
 
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
@@ -204,9 +204,9 @@ export default function OrderList() {
                             const explicit = o?.payStatus;
                             const inferred = explicit
                               ? explicit
-                            : (String(o?.method || "").trim().toLowerCase().includes("zalopay") || String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay") || Number(o?.payment?.capturedAmount) > 0)
-                              ? "paid"
-                              : "unpaid";
+                              : (String(o?.method || "").trim().toLowerCase().includes("zalopay") || String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay") || Number(o?.payment?.capturedAmount) > 0)
+                                ? "paid"
+                                : "unpaid";
                             return (
                               <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("pay", inferred)}`}>
                                 {PAY_LABELS[inferred] || inferred}
