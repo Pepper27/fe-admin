@@ -6,6 +6,8 @@ import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
+import { toast } from "react-toastify";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 export default function ColorList() {
   const [colors, setColors] = useState([])
   const [page, setPage] = useState(1)
@@ -24,7 +26,7 @@ export default function ColorList() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    fetch(`${pathAdmin}/admin/colors?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`, {
+    fetch(`${pathAdmin}/admin/colors?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(useKey)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -38,16 +40,15 @@ export default function ColorList() {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        setColors(data.data)
-        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
-        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
-        setTotalPage(serverTotalPage)
-        setTotal(serverTotal)
+        const allColors = sortByCreatedDesc(data.data || [])
+        setColors(paginateItems(allColors, usePage, limit))
+        setTotalPage(Math.max(1, Math.ceil(allColors.length / limit)))
+        setTotal(allColors.length)
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
         console.error("Fetch colors failed", err);
-        alert(err?.message || "Failed to fetch");
+        toast.error(err?.message || "Failed to fetch");
         setColors([]);
       })
   };
@@ -178,11 +179,10 @@ async function handleDelete(id) {
   if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return
   try {
     await apiCall(adminEndpoints.colors.delete(id), { method: 'DELETE' })
-    // Find and update the DOM state by reloading list - simplest approach is to reload page
-    // but better is to refetch. We'll trigger a page reload to keep change minimal and reliable.
-    window.location.reload()
+    toast.success('Xoá màu sắc thành công!')
+    window.setTimeout(() => window.location.reload(), 800)
   } catch (err) {
     console.error('Delete error', err)
-    alert(err.message || 'Không thể xóa')
+    toast.error(err.message || 'Không thể xóa')
   }
 }

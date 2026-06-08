@@ -1,7 +1,7 @@
 import { pathAdmin } from "../config/api";
 
 export async function fetchCategoryList({ page = 1, keyword = '', categoryId = '', startDate = '', endDate = '', limit = 10, token } = {}) {
-  const url = `${pathAdmin}/admin/categories?page=${page}&limit=${limit}&keyword=${encodeURIComponent(keyword)}&categoryId=${categoryId}&startDate=${startDate}&endDate=${endDate}`;
+  const url = `${pathAdmin}/admin/categories?page=${page}&limit=${limit}&keyword=${encodeURIComponent(keyword)}&categoryId=${categoryId}&startDate=${startDate}&endDate=${endDate}&sortKey=createdAt&sortValue=desc`;
   const headers = {
     Authorization: `Bearer ${token || localStorage.getItem('token')}`,
     'ngrok-skip-browser-warning': 'true',

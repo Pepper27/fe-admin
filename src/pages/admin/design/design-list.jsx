@@ -6,6 +6,7 @@ import Pagination from '../../../components/Pagination'
 import { pathAdmin } from "../../../config/api";
 import DesignDelete from "./design-delete";
 import DesignModal from "./design-modal";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function DesignList() {
   const [designs, setDesigns] = useState([]);
@@ -19,7 +20,7 @@ export default function DesignList() {
   const fetchDesigns = () => {
     const token = localStorage.getItem("token");
     // includeBundles=1: guest MVP stores mix designs as cart bundles (not in designs collection)
-    fetch(`${pathAdmin}/admin/designs?page=${page}&limit=${limit}&includeBundles=1&keyword=${encodeURIComponent(key)}`, {
+    fetch(`${pathAdmin}/admin/designs?page=1&limit=${ADMIN_LIST_LIMIT}&includeBundles=1&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -30,9 +31,10 @@ export default function DesignList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setDesigns(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
+        const allDesigns = sortByCreatedDesc(data?.data || []);
+        setDesigns(paginateItems(allDesigns, page, limit));
+        setTotalPage(Math.max(1, Math.ceil(allDesigns.length / limit)));
+        setTotal(allDesigns.length);
       })
       .catch((err) => {
         console.error("Fetch designs failed", err);
@@ -95,7 +97,7 @@ export default function DesignList() {
         />
       ) : null}
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-        <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý My Designs</div>
+        <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý thiết kế</div>
 
         
 
@@ -104,7 +106,7 @@ export default function DesignList() {
             <CiSearch />
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
-              placeholder="Tìm theo tên / guestId / email / userId"
+              placeholder="Tìm theo tên / email khách hàng"
               defaultValue={key}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -123,12 +125,12 @@ export default function DesignList() {
                     <thead className="bg-[#e5e1e1] ">
                       <tr>
                 
-                        <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Mã design</td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">Owner</td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[280px]">Bracelet</td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[110px]">Slots</td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Total</td>
-                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Created</td>
+                        <td className="rounded-l-[10px] p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Mã thiết kế</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[260px]">Khách hàng</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[280px]">Vòng</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[110px]">Vị trí</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Tổng tiền</td>
+                        <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[160px]">Ngày tạo</td>
                         <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px] w-[140px]">Hành động</td>
                       </tr>
                     </thead>
@@ -174,7 +176,7 @@ export default function DesignList() {
                       <td colSpan="8">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
-                          <span className="md:text-[16px] text-[14px]">Không tìm thấy designs</span>
+                          <span className="md:text-[16px] text-[14px]">Không tìm thấy thiết kế</span>
                         </div>
                       </td>
                     </tr>

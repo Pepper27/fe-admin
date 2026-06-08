@@ -7,6 +7,7 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { fetchOrders } from '../../../services/order.service'
 import OrderModal from "./order-modal";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 const STATUS_LABELS = {
   pending: "Chờ xác nhận",
@@ -92,11 +93,12 @@ export default function OrderList() {
     setLoading(true);
     (async () => {
       try {
-        const data = await fetchOrders({ keyword, status, method, payStatus, startDate, endDate, page, limit, signal: controller.signal });
+        const data = await fetchOrders({ keyword, status, method, payStatus, startDate, endDate, page: 1, limit: ADMIN_LIST_LIMIT, signal: controller.signal });
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setRows(data?.data || []);
-        setTotal(data?.total || 0);
-        setTotalPage(data?.totalPage || 1);
+        const allRows = sortByCreatedDesc(data?.data || []);
+        setRows(paginateItems(allRows, page, limit));
+        setTotal(allRows.length);
+        setTotalPage(Math.max(1, Math.ceil(allRows.length / limit)));
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch orders failed", err);
@@ -231,7 +233,7 @@ export default function OrderList() {
                       <td colSpan="8">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
-                          <span className="md:text-[16px] text-[14px]">Không có đơn hàng</span>
+                          <span className="md:text-[16px] text-[14px]">Không tìm thấy đơn hàng</span>
                         </div>
                       </td>
                     </tr>

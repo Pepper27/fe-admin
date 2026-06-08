@@ -44,10 +44,17 @@ import MaterialCreate from "./pages/admin/material/material-create";
 import SizeUpdate from "./pages/admin/size/size-update";
 import ColorUpdate from "./pages/admin/color/color-update";
 import MaterialUpdate from "./pages/admin/material/material-update";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        style={{ top: "72px", right: "16px", zIndex: 10000 }}
+      />
       <Routes>
         <Route path={routes.login} element={<Login />} />
         <Route path={routes.forgotPassword} element={<ForgotPassword />} />

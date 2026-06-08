@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { pathAdmin } from "../../../../config/api";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const PERMISSION_LIST = [
   { lable: "Xem trang tổng quan", value: "dashboard-view" },
@@ -94,7 +95,7 @@ export default function RoleUpdate() {
           Array.isArray(data.data.permissions) ? data.data.permissions : []
         );
       } catch (err) {
-        alert(err?.message || "Không lấy được thông tin quyền");
+        toast.error(err?.message || "Không lấy được thông tin quyền");
         navigate("/admin/role");
       } finally {
         setLoading(false);
@@ -159,9 +160,9 @@ export default function RoleUpdate() {
         throw new Error(data?.message || "Cập nhật quyền thất bại!");
       }
 
-      alert("Cập nhật thành công!")
+      toast.success("Cập nhật nhóm quyền thành công!")
     } catch (err) {
-      alert(err?.message || "Cập nhật quyền thất bại!");
+      toast.error(err?.message || "Cập nhật quyền thất bại!");
     } finally {
       setSubmitting(false);
     }

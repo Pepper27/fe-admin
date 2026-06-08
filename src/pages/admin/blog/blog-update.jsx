@@ -8,6 +8,7 @@ import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+import { toast } from "react-toastify";
 
 registerPlugin(FilePondPluginImagePreview);
 
@@ -41,7 +42,7 @@ export default function BlogUpdate() {
       })
       .catch((err) => {
         console.error("Fetch blog failed", err);
-        alert(err?.message || "Không thể tải bài viết");
+        toast.error(err?.message || "Không thể tải bài viết");
         navigate("/admin/blog");
       });
   }, [id, navigate]);
@@ -80,10 +81,11 @@ export default function BlogUpdate() {
         return data;
       })
       .then(() => {
+        toast.success("Cập nhật bài viết thành công!");
         navigate("/admin/blog");
       })
       .catch((err) => {
-        alert(err?.message || "Cập nhật thất bại");
+        toast.error(err?.message || "Cập nhật thất bại");
       });
   };
 

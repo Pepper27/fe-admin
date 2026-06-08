@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { pathAdmin } from "../../../config/api";
+import { toast } from "react-toastify";
 
 export default function SettingInfoWebsite() {
   const [form, setForm] = useState({
@@ -64,9 +65,9 @@ export default function SettingInfoWebsite() {
       if (!response.ok || data?.code === "error") {
         throw new Error(data?.message || "Cập nhật thất bại!");
       }
-      alert(data?.message || "Cập nhật thành công!");
+      toast.success("Cập nhật thông tin website thành công!");
     } catch (error) {
-      alert(error?.message || "Cập nhật thất bại!");
+      toast.error(error?.message || "Cập nhật thất bại!");
     } finally {
       setSubmitting(false);
     }

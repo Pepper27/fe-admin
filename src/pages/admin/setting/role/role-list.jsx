@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Pagination from '../../../../components/Pagination'
 import { pathAdmin } from "../../../../config/api"
 import RoleDelete from "./role-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../../helpers/adminList';
 export default function RolesList() {
   const [roles, SetRoles] = useState([])
   const [page, setPage] = useState(1)
@@ -17,7 +18,7 @@ export default function RolesList() {
   const limit = 10;
   const fetchRoles = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/roles?page=${page}&limit=${limit}&keyword=${key}&start=${start}&end=${end}`, {
+    fetch(`${pathAdmin}/admin/roles?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${key}&start=${start}&end=${end}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -30,9 +31,10 @@ export default function RolesList() {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        SetRoles(data.data)
-        setTotalPage(data.totalPage)
-        setTotal(data.total)
+        const allRoles = sortByCreatedDesc(data.data || [])
+        SetRoles(paginateItems(allRoles, page, limit))
+        setTotalPage(Math.max(1, Math.ceil(allRoles.length / limit)))
+        setTotal(allRoles.length)
       })
       .catch((err) => {
         console.error("Fetch roles failed", err);

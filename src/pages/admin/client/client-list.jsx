@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Pagination from '../../../components/Pagination'
 import { fetchClients as fetchClientsService } from '../../../services/client.service';
 import ClientDelete from "./client-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function ClientList() {
   const [clients, setClients] = useState([]);
@@ -16,11 +17,12 @@ export default function ClientList() {
 
   const fetchClients = async () => {
     try {
-      const data = await fetchClientsService({ page, keyword: key, limit });
+      const data = await fetchClientsService({ page: 1, keyword: key, limit: ADMIN_LIST_LIMIT });
       if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-      setClients(data?.data || []);
-      setTotalPage(data?.totalPage || 1);
-      setTotal(data?.total || 0);
+      const allClients = sortByCreatedDesc(data?.data || []);
+      setClients(paginateItems(allClients, page, limit));
+      setTotal(allClients.length);
+      setTotalPage(Math.max(1, Math.ceil(allClients.length / limit)));
     } catch (err) {
       console.error("Fetch clients failed", err);
       alert(err?.message || "Failed to fetch");

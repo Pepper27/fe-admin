@@ -6,6 +6,8 @@ import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
+import { toast } from "react-toastify";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 export default function SizeList() {
   const [sizes, setSizes] = useState([])
   const [page, setPage] = useState(1)
@@ -24,7 +26,7 @@ export default function SizeList() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    fetch(`${pathAdmin}/admin/sizes?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`, {
+    fetch(`${pathAdmin}/admin/sizes?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(useKey)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -38,20 +40,20 @@ export default function SizeList() {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        setSizes(data.data)
-        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
-        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
-        setTotalPage(serverTotalPage)
-        setTotal(serverTotal)
-        if (usePage > serverTotalPage && serverTotalPage > 0) {
-          setPage(serverTotalPage)
+        const allSizes = sortByCreatedDesc(data.data || [])
+        const computedTotalPage = Math.max(1, Math.ceil(allSizes.length / limit))
+        setSizes(paginateItems(allSizes, usePage, limit))
+        setTotalPage(computedTotalPage)
+        setTotal(allSizes.length)
+        if (usePage > computedTotalPage && computedTotalPage > 0) {
+          setPage(computedTotalPage)
           return
         }
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
         console.error("Fetch sizes failed", err);
-        alert(err?.message || "Failed to fetch");
+        toast.error(err?.message || "Failed to fetch");
         setSizes([]);
       })
   };
@@ -176,10 +178,10 @@ async function handleDelete(id) {
   if (!window.confirm('Bạn có chắc chắn muốn xóa kích thước này?')) return
   try {
     await apiCall(adminEndpoints.sizes.delete(id), { method: 'DELETE' })
-    // remove from current DOM state by reloading page to keep changes minimal
-    window.location.reload()
+    toast.success('Xoá kích thước thành công!')
+    window.setTimeout(() => window.location.reload(), 800)
   } catch (err) {
     console.error('Error deleting size:', err)
-    alert(err.message || 'Không thể xóa kích thước')
+    toast.error(err.message || 'Không thể xóa kích thước')
   }
 }

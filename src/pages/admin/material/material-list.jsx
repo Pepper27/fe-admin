@@ -6,6 +6,8 @@ import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
+import { toast } from "react-toastify";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 export default function MaterialList() {
   const [materials, setMaterials] = useState([])
   const [page, setPage] = useState(1)
@@ -25,7 +27,7 @@ export default function MaterialList() {
     const controller = new AbortController()
     fetchControllerRef.current = controller
 
-    fetch(`${pathAdmin}/admin/materials?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`, {
+    fetch(`${pathAdmin}/admin/materials?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(useKey)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -39,22 +41,20 @@ export default function MaterialList() {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        setMaterials(data.data)
-        // server may not return total/totalPage -> fallback
-        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
-        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
-        setTotalPage(serverTotalPage)
-        setTotal(serverTotal)
-        // clamp page if needed
-        if (usePage > serverTotalPage && serverTotalPage > 0) {
-          setPage(serverTotalPage)
+        const allMaterials = sortByCreatedDesc(data.data || [])
+        const computedTotalPage = Math.max(1, Math.ceil(allMaterials.length / limit))
+        setMaterials(paginateItems(allMaterials, usePage, limit))
+        setTotalPage(computedTotalPage)
+        setTotal(allMaterials.length)
+        if (usePage > computedTotalPage && computedTotalPage > 0) {
+          setPage(computedTotalPage)
           return
         }
       })
       .catch((err) => {
         if (err.name === 'AbortError') return
         console.error("Fetch materials failed", err);
-        alert(err?.message || "Failed to fetch");
+        toast.error(err?.message || "Failed to fetch");
         setMaterials([]);
       })
   };
@@ -183,9 +183,10 @@ async function handleDelete(id) {
   if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return
   try {
     await apiCall(adminEndpoints.materials.delete(id), { method: 'DELETE' })
-    window.location.reload()
+    toast.success('Xoá chất liệu thành công!')
+    window.setTimeout(() => window.location.reload(), 800)
   } catch (err) {
     console.error('Delete error', err)
-    alert(err.message || 'Không thể xóa')
+    toast.error(err.message || 'Không thể xóa')
   }
 }

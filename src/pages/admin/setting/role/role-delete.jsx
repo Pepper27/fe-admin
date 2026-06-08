@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { pathAdmin } from "../../../../config/api";
+import { toast } from "react-toastify";
 
 export default function RoleDelete({ role, roles, onDeleted }) {
     const roleData = role || roles;
@@ -27,9 +28,9 @@ export default function RoleDelete({ role, roles, onDeleted }) {
             const data = await response.json();
             if (!response.ok) throw new Error(data?.message || "Xoá thất bại!");
             onDeleted?.(roleData._id);
-            alert(data?.message || "Xoá thành công!");
+            toast.success("Xoá nhóm quyền thành công!");
         } catch (error) {
-            alert(error?.message || "Xoá thất bại!");
+            toast.error(error?.message || "Xoá thất bại!");
         } finally {
             setDeleting(false);
         }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { pathAdmin } from "../../../../config/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function SettingAccountCreate() {
   const navigate = useNavigate();
@@ -56,9 +57,10 @@ export default function SettingAccountCreate() {
       if (!response.ok || data?.code === "error") {
         throw new Error(data?.message || "Tạo tài khoản thất bại!");
       }
+      toast.success("Tạo tài khoản nội bộ thành công!");
       navigate("/admin/setting/account");
     } catch (error) {
-      alert(error?.message || "Tạo tài khoản thất bại!");
+      toast.error(error?.message || "Tạo tài khoản thất bại!");
     } finally {
       setSubmitting(false);
     }

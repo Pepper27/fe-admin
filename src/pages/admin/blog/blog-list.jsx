@@ -7,6 +7,7 @@ import Pagination from '../../../components/Pagination'
 import { Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 import BlogDelete from "./blog-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function BlogList() {
   const [blogs, setBlogs] = useState([]);
@@ -20,7 +21,7 @@ export default function BlogList() {
   const fetchBlogs = () => {
     const token = localStorage.getItem("token");
     setLoading(true);
-    fetch(`${pathAdmin}/admin/blogs?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
+    fetch(`${pathAdmin}/admin/blogs?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -31,9 +32,10 @@ export default function BlogList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setBlogs(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
+        const allBlogs = sortByCreatedDesc(data?.data || []);
+        setBlogs(paginateItems(allBlogs, page, limit));
+        setTotalPage(Math.max(1, Math.ceil(allBlogs.length / limit)));
+        setTotal(allBlogs.length);
       })
       .catch((err) => {
         console.error("Fetch blogs failed", err);

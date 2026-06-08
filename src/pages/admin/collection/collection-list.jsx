@@ -7,6 +7,7 @@ import Pagination from '../../../components/Pagination'
 import { Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 import CollectionDelete from "./collection-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function CollectionList() {
   const [collections, setCollections] = useState([]);
@@ -29,7 +30,7 @@ export default function CollectionList() {
     fetchControllerRef.current = controller
 
     fetch(
-      `${pathAdmin}/admin/collections?page=${usePage}&limit=${limit}&keyword=${encodeURIComponent(useKey)}`,
+      `${pathAdmin}/admin/collections?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(useKey)}`,
       {
         method: "GET",
         headers: {
@@ -44,13 +45,13 @@ export default function CollectionList() {
       .then((data) => {
         if (data?.code === "error")
           throw new Error(data.message || "Unauthorized");
-        setCollections(data?.data || []);
-        const serverTotal = typeof data.total === 'number' ? data.total : (Array.isArray(data.data) ? data.data.length : 0)
-        const serverTotalPage = typeof data.totalPage === 'number' ? data.totalPage : Math.max(1, Math.ceil(serverTotal / limit))
-        setTotalPage(serverTotalPage);
-        setTotal(serverTotal);
-        if (usePage > serverTotalPage && serverTotalPage > 0) {
-          setPage(serverTotalPage)
+        const allCollections = sortByCreatedDesc(data?.data || []);
+        const computedTotalPage = Math.max(1, Math.ceil(allCollections.length / limit));
+        setCollections(paginateItems(allCollections, usePage, limit));
+        setTotalPage(computedTotalPage);
+        setTotal(allCollections.length);
+        if (usePage > computedTotalPage && computedTotalPage > 0) {
+          setPage(computedTotalPage)
           return
         }
       })

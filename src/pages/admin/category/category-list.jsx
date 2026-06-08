@@ -3,6 +3,8 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
@@ -40,6 +42,52 @@ export default function CategoryList() {
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getCategoryId = (item) => String(item?._id || item?.id || "");
+
+  const parseCreatedAtFormat = (value) => {
+    const text = String(value || "").trim();
+    if (!text) return NaN;
+
+    const match = text.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/,
+    );
+    if (!match) return NaN;
+
+    const [, day, month, year, hour = "0", minute = "0", second = "0"] = match;
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    ).getTime();
+  };
+
+  const getCreatedTime = (item) => {
+    const createdAt = item?.createdAt ? new Date(item.createdAt).getTime() : NaN;
+    if (Number.isFinite(createdAt) && createdAt > 0) return createdAt;
+
+    const createdAtFormat = parseCreatedAtFormat(item?.createdAtFormat);
+    if (Number.isFinite(createdAtFormat) && createdAtFormat > 0) return createdAtFormat;
+
+    const objectId = String(item?._id || item?.id || "");
+    if (/^[a-f\d]{24}$/i.test(objectId)) {
+      return parseInt(objectId.slice(0, 8), 16) * 1000;
+    }
+
+    return 0;
+  };
+
+  const sortByNewest = (items) => {
+    if (!Array.isArray(items)) return [];
+    return items.slice().sort((a, b) => {
+      return getCreatedTime(b) - getCreatedTime(a);
+    });
+  };
   // use centralized filter hook for maintainability
   const { values: filterValues, handleChange: onFilterChange, reset: resetFilters } = useFilter({
     defaultValues: { categoryFilter: '', dateRange: { start: '', end: '' } },
@@ -56,11 +104,27 @@ export default function CategoryList() {
   const endDate = filterValues.dateRange?.end || '';
   const fetchCategories = async () => {
     try {
-      const data = await fetchCategoryList({ page, keyword: key, categoryId: categoryFilter, startDate, endDate, limit: 10 });
+      const data = await fetchCategoryList({
+        page: 1,
+        keyword: key,
+        categoryId: categoryFilter,
+        startDate,
+        endDate,
+        limit: 1000,
+      });
       if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-      setCategory(data.data || []);
-      setTotalPage(data.totalPage || 1);
-      setTotal(data.total || 0);
+      const allCategories = sortByNewest(data.data || []);
+      const createdCategory = location.state?.createdCategory;
+      const createdCategoryId = getCategoryId(createdCategory);
+      const mergedCategories = createdCategoryId
+        ? [createdCategory, ...allCategories.filter((item) => getCategoryId(item) !== createdCategoryId)]
+        : allCategories;
+      const pageSize = 10;
+      const startIndex = (page - 1) * pageSize;
+
+      setCategory(mergedCategories.slice(startIndex, startIndex + pageSize));
+      setTotal(mergedCategories.length);
+      setTotalPage(Math.max(1, Math.ceil(mergedCategories.length / pageSize)));
     } catch (err) {
       console.error("Fetch categories failed", err);
       alert(err?.message || "Failed to fetch");
@@ -105,6 +169,13 @@ export default function CategoryList() {
   useEffect(() => {
     fetchCategories();
   }, [page, key, categoryFilter, startDate, endDate]);
+
+  useEffect(() => {
+    if (!location.state?.createdCategory) return;
+
+    toast.success("Tạo danh mục thành công!");
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const handleResetFilters = () => {
     resetFilters();

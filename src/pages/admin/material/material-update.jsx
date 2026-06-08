@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminEndpoints, apiCall } from '../../../config/api'
+import { toast } from "react-toastify";
 
 export default function MaterialUpdate() {
   const { id } = useParams()
@@ -16,7 +17,7 @@ export default function MaterialUpdate() {
         setForm(res.data || {})
       } catch (err) {
         console.error('Fetch material failed', err)
-        alert(err.message || 'Không thể tải chất liệu')
+        toast.error(err.message || 'Không thể tải chất liệu')
       } finally {
         setLoading(false)
       }
@@ -36,11 +37,11 @@ export default function MaterialUpdate() {
         method: 'PATCH',
         body: JSON.stringify(form)
       })
-      alert('Cập nhật thành công')
+      toast.success('Cập nhật chất liệu thành công!')
       navigate('/admin/material')
     } catch (err) {
       console.error('Update failed', err)
-      alert(err.message || 'Không thể cập nhật chất liệu')
+      toast.error(err.message || 'Không thể cập nhật chất liệu')
     }
   }
 

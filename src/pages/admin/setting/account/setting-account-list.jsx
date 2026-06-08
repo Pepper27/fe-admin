@@ -5,6 +5,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 import FilterBar from '../../../../../src/components/FilterBar'
 import useFilter from '../../../../../src/hooks/useFilter'
+import { toast } from "react-toastify";
 
 export default function SettingAccountList() {
   const [accounts, setAccounts] = useState([]);
@@ -29,7 +30,7 @@ export default function SettingAccountList() {
         setAccounts(Array.isArray(accountData?.data) ? accountData.data : []);
         setRoles(Array.isArray(roleData?.data) ? roleData.data : []);
       } catch (error) {
-        alert("Không tải được danh sách tài khoản!");
+        toast.error("Không tải được danh sách tài khoản!");
       } finally {
         setLoading(false);
       }
@@ -67,8 +68,9 @@ export default function SettingAccountList() {
       const { ok, data } = resp;
       if (!ok || data?.code === 'error') throw new Error(data?.message || 'Xóa thất bại!');
       setAccounts((prev) => prev.filter((x) => x._id !== item._id));
+      toast.success("Xoá tài khoản nội bộ thành công!");
     } catch (error) {
-      alert(error?.message || "Xóa thất bại!");
+      toast.error(error?.message || "Xóa thất bại!");
     }
   };
 

@@ -7,14 +7,16 @@ import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
 import { getDisplayPrice } from '../../../helpers/price'
 import Pagination from '../../../components/Pagination'
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { pathAdmin } from "../../../config/api";
 import ProductDelete from "./product-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function ProductList() {
   const [materials, setMaterials] = useState([]);
+  const location = useLocation();
 
   const normalizeText = (value) =>
     String(value || "")
@@ -68,6 +70,8 @@ export default function ProductList() {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("vi-VN");
   };
+
+  const getProductId = (item) => String(item?._id || item?.id || "");
 
   const handleDeletedSuccess = (deletedId) => {
     setProducts((prev) => prev.filter((item) => item._id !== deletedId));
@@ -377,7 +381,7 @@ export default function ProductList() {
 
     (async () => {
       try {
-        const params = buildProductParams(true);
+        const params = buildProductParams(false, ADMIN_LIST_LIMIT);
         const data = await fetchProductsFirstOk({
           params,
           token,
@@ -396,38 +400,16 @@ export default function ProductList() {
         if (!data) throw new Error("Failed to fetch");
 
         const serverProducts = data?.data || [];
-        const serverTotal = data?.total || 0;
-        const serverTotalPage = data?.totalPage || 1;
+        const sortedProducts = sortByCreatedDesc(serverProducts);
+        const createdProduct = location.state?.createdProduct;
+        const createdProductId = getProductId(createdProduct);
+        const mergedProducts = createdProductId
+          ? [createdProduct, ...sortedProducts.filter((item) => getProductId(item) !== createdProductId)]
+          : sortedProducts;
 
-        // Fallback: some backends don't support keyword search consistently (or are accent/whitespace sensitive).
-        // If keyword is set but server returns nothing, we fetch a larger list and filter client-side.
-        const trimmedKeyword = String(keyword || "").trim();
-        if (trimmedKeyword && !serverProducts.length) {
-          const fallbackParams = buildProductParams(false, 5000);
-          fallbackParams.delete("keyword");
-
-          const allData = await fetchProductsFirstOk({
-            params: fallbackParams,
-            token,
-            signal: controller.signal,
-          });
-
-          const allProducts = allData?.data || [];
-          const kw = normalizeForSearch(trimmedKeyword);
-          const matched = allProducts.filter((p) =>
-            normalizeForSearch(p?.name).includes(kw),
-          );
-
-          const start = (page - 1) * limit;
-          const pageItems = matched.slice(start, start + limit);
-          setProducts(pageItems);
-          setTotal(matched.length);
-          setTotalPage(Math.max(1, Math.ceil(matched.length / limit)));
-        } else {
-          setProducts(serverProducts);
-          setTotal(serverTotal);
-          setTotalPage(serverTotalPage);
-        }
+        setProducts(paginateItems(mergedProducts, page, limit));
+        setTotal(mergedProducts.length);
+        setTotalPage(Math.max(1, Math.ceil(mergedProducts.length / limit)));
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch products failed", err);
@@ -455,6 +437,11 @@ export default function ProductList() {
     page,
     limit,
   ]);
+
+  useEffect(() => {
+    if (!location.state?.createdProduct) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   // no client-facing facet selections in admin UI
 
