@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
+import { toast } from "react-toastify";
+import { updateClientStatus } from "../../../services/client.service";
 
 const SUCCESS_ORDER_STATUS = "delivered";
 
@@ -10,6 +12,11 @@ const STATUS_LABELS = {
   shipping: "Đang giao",
   delivered: "Đã giao",
   cancelled: "Đã hủy",
+};
+
+const CLIENT_STATUS_LABELS = {
+  active: "Hoạt động",
+  inactive: "Khóa tài khoản",
 };
 
 const formatDateTime = (date) => {
@@ -35,6 +42,7 @@ export default function ClientDetail() {
   const [client, setClient] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const clientOrders = orders.filter((order) => {
     const clientId = String(client?._id || client?.id || id || "");
@@ -68,6 +76,34 @@ export default function ClientDetail() {
     (sum, order) => sum + (Number(order?.totalPrice) || 0),
     0,
   );
+
+  const handleStatusChange = async (event) => {
+    const nextStatus = event.target.value;
+    if (!client?._id && !client?.id) return;
+
+    const previousStatus = client?.status || "active";
+    if (nextStatus === previousStatus) return;
+
+    setUpdatingStatus(true);
+    try {
+      const clientId = client?._id || client?.id;
+      const { ok, data } = await updateClientStatus(clientId, nextStatus);
+      if (!ok) {
+        throw new Error(data?.message || "Cập nhật trạng thái tài khoản khách hàng thất bại!");
+      }
+
+      setClient((prev) => ({ ...prev, ...(data?.data || {}), status: nextStatus }));
+      toast.success(
+        nextStatus === "inactive"
+          ? "Khóa tài khoản khách hàng thành công!"
+          : "Mở khóa tài khoản khách hàng thành công!",
+      );
+    } catch (error) {
+      toast.error(error?.message || "Cập nhật trạng thái tài khoản khách hàng thất bại!");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -145,6 +181,21 @@ export default function ClientDetail() {
           <div>
             <div className="text-sm text-gray-500">Số điện thoại</div>
             <div className="font-[700]">{client?.phone || ""}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Trạng thái tài khoản</div>
+            <select
+              value={client?.status || "active"}
+              onChange={handleStatusChange}
+              disabled={updatingStatus}
+              className="mt-[4px] min-w-[180px] rounded-[8px] border border-gray-300 bg-white px-[12px] py-[10px] text-[14px] font-[600] outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+            >
+              {Object.entries(CLIENT_STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <div className="text-sm text-gray-500">ID</div>
