@@ -27,6 +27,14 @@ const METHOD_LABELS = {
   zalopay: "ZaloPay",
 };
 
+const isPaidOrder = (order) => {
+  if (!order) return false;
+  if (String(order?.payStatus || "").trim().toLowerCase() === "paid") return true;
+  if (Number(order?.payment?.capturedAmount) > 0) return true;
+  if (String(order?.payment?.zpTransId || "").trim()) return true;
+  return false;
+};
+
 const formatMoney = (n) => {
   const num = Number(n) || 0;
   return num.toLocaleString("vi-VN") + "₫";
@@ -147,7 +155,7 @@ export default function OrderList() {
             <CiSearch />
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
-              placeholder="Tìm mã đơn / SĐT / địa chỉ"
+              placeholder="Tìm mã đơn / SĐT / tên khách hàng"
               defaultValue={keyword}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -203,12 +211,7 @@ export default function OrderList() {
                         </td>
                         <td className="p-[15px] text-[14px]">
                           {(() => {
-                            const explicit = o?.payStatus;
-                            const inferred = explicit
-                              ? explicit
-                              : (String(o?.method || "").trim().toLowerCase().includes("zalopay") || String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay") || Number(o?.payment?.capturedAmount) > 0)
-                                ? "paid"
-                                : "unpaid";
+                            const inferred = isPaidOrder(o) ? "paid" : "unpaid";
                             return (
                               <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("pay", inferred)}`}>
                                 {PAY_LABELS[inferred] || inferred}

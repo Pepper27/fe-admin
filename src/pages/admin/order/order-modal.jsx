@@ -22,6 +22,22 @@ const METHOD_LABELS = {
   zalopay: "ZaloPay",
 };
 
+const isPaidOrder = (order) => {
+  if (!order) return false;
+  if (String(order?.payStatus || "").trim().toLowerCase() === "paid") return true;
+  if (Number(order?.payment?.capturedAmount) > 0) return true;
+  if (String(order?.payment?.zpTransId || "").trim()) return true;
+  return false;
+};
+
+const isPaidZaloPayOrder = (order, nextPayStatus) => {
+  if (!order) return false;
+  const isZaloPay = String(order?.method || "").trim().toLowerCase() === "zalopay";
+  if (!isZaloPay) return false;
+  if (String(nextPayStatus || "").trim().toLowerCase() === "paid") return true;
+  return isPaidOrder(order);
+};
+
 const formatMoney = (n) => {
   const num = Number(n) || 0;
   return num.toLocaleString("vi-VN") + "₫";
@@ -54,16 +70,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
         const o = data?.data;
         setOrder(o || null);
         setStatus(o?.status || "pending");
-        
-        let inferredPayStatus = "unpaid";
-        try {
-          if (o?.payStatus) inferredPayStatus = o.payStatus;
-          else if (String(o?.method || "").trim().toLowerCase().includes("zalopay")) inferredPayStatus = "paid";
-          else if (String(o?.payment?.provider || "").trim().toLowerCase().includes("zalopay")) inferredPayStatus = "paid";
-          else if (Number(o?.payment?.capturedAmount) > 0) inferredPayStatus = "paid";
-        } catch (e) {
-          inferredPayStatus = o?.payStatus || "unpaid";
-        }
+        const inferredPayStatus = isPaidOrder(o) ? "paid" : "unpaid";
         setPayStatus(inferredPayStatus);
       })
       .catch((err) => {
@@ -79,6 +86,10 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
 
   const save = async () => {
     if (!orderId) return;
+    if (status === "cancelled" && isPaidZaloPayOrder(order, payStatus)) {
+      alert("Đơn ZaloPay đã thanh toán không thể hủy");
+      return;
+    }
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
@@ -193,15 +204,19 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         return <option value="cancelled">{STATUS_LABELS.cancelled}</option>;
                       }
 
-                      const orgStatus = String(order?.status || "pending");
-                      const orgIdx = STATUS_FLOW.indexOf(orgStatus);
+                       const orgStatus = String(order?.status || "pending");
+                       const orgIdx = STATUS_FLOW.indexOf(orgStatus);
+                       const paidZaloPay = isPaidZaloPayOrder(order, payStatus);
 
-                      return STATUS_FLOW.map((k, idx) => {
-                        const isCurrentStatus = idx === orgIdx;
-                        const isExactlyNext = idx === orgIdx + 1;
-                        
-                        // ĐIỀU KIỆN 1: Cho phép hủy đơn ('cancelled') khi đơn hiện tại đang ở mức 'pending' hoặc 'confirmed'
-                        const isAllowedCancel = k === "cancelled" && (orgStatus === "pending" || orgStatus === "confirmed");
+                       return STATUS_FLOW.map((k, idx) => {
+                         const isCurrentStatus = idx === orgIdx;
+                         const isExactlyNext = idx === orgIdx + 1;
+
+                         // ĐIỀU KIỆN 1: Cho phép hủy đơn ('cancelled') khi đơn hiện tại đang ở mức 'pending' hoặc 'confirmed'
+                        const isAllowedCancel =
+                          k === "cancelled" &&
+                          (orgStatus === "pending" || orgStatus === "confirmed") &&
+                          !paidZaloPay;
 
                         // Một phần tử hoạt động nếu nó là hiện tại, là bước tiếp theo liền kề, hoặc lệnh hủy hợp lệ
                         const shouldDisable = !isCurrentStatus && !isExactlyNext && !isAllowedCancel;
