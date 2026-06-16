@@ -1,14 +1,22 @@
 import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
+
 import { FaRegEdit } from "react-icons/fa";
-import React, { useEffect, useState } from "react";
-import { pathAdmin } from "../../../config/api";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import FilterBar from '../../../components/FilterBar'
+import useFilter from '../../../hooks/useFilter'
+import Pagination from '../../../components/Pagination'
+import { fetchCategoryList, fetchCategoryTree } from '../../../services/category.service'
 import CategoryDelete from "./category-delete";
+
 
 
 const renderCategoryOptions = (cats, level = 0) => {
   if (!Array.isArray(cats)) return null;
+
   return cats
     .slice()
     .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")))
@@ -17,56 +25,116 @@ const renderCategoryOptions = (cats, level = 0) => {
       const name = c?.name || "";
       const children = c?.children;
       return (
-        <React.Fragment key={String(id)}>
+        <>
           <option value={String(id)}>
             {"--".repeat(level)} {name}
           </option>
           {Array.isArray(children) && children.length
             ? renderCategoryOptions(children, level + 1)
             : null}
-        </React.Fragment>
+
+        </>
       );
     });
 };
 
+
 export default function CategoryList() {
-  const [category, SetCategory] = useState([]); // Dữ liệu phân trang hiển thị Table
-  const [treeCategories, setTreeCategories] = useState([]); // Toàn bộ dữ liệu cây phục vụ Select Filter
-  
+  const [category, setCategory] = useState([]); 
+  const [treeCategories, setTreeCategories] = useState([]); 
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Hàm gọi API lấy danh mục hiển thị Table (có bộ lọc và phân trang)
-  const fetchCategories = () => {
-    const token = localStorage.getItem("token");
-    const url = `${pathAdmin}/admin/categories?page=${page}&keyword=${key}&categoryId=${categoryFilter}&startDate=${startDate}&endDate=${endDate}`;
-    fetch(url, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data?.code === "error") {
-          throw new Error(data.message || "Unauthorized");
-        }
-        SetCategory(data.data || []);
-        setTotalPage(data.totalPage || 1);
-        setTotal(data.total || 0);
-      })
-      .catch((err) => {
-        console.error("Fetch categories failed", err);
-        alert(err?.message || "Failed to fetch");
-        SetCategory([]);
+  const getCategoryId = (item) => String(item?._id || item?.id || "");
+
+  const parseCreatedAtFormat = (value) => {
+    const text = String(value || "").trim();
+    if (!text) return NaN;
+
+    const match = text.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/,
+    );
+    if (!match) return NaN;
+
+    const [, day, month, year, hour = "0", minute = "0", second = "0"] = match;
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    ).getTime();
+  };
+
+  const getCreatedTime = (item) => {
+    const createdAt = item?.createdAt ? new Date(item.createdAt).getTime() : NaN;
+    if (Number.isFinite(createdAt) && createdAt > 0) return createdAt;
+
+    const createdAtFormat = parseCreatedAtFormat(item?.createdAtFormat);
+    if (Number.isFinite(createdAtFormat) && createdAtFormat > 0) return createdAtFormat;
+
+    const objectId = String(item?._id || item?.id || "");
+    if (/^[a-f\d]{24}$/i.test(objectId)) {
+      return parseInt(objectId.slice(0, 8), 16) * 1000;
+    }
+
+    return 0;
+  };
+
+  const sortByNewest = (items) => {
+    if (!Array.isArray(items)) return [];
+    return items.slice().sort((a, b) => {
+      return getCreatedTime(b) - getCreatedTime(a);
+    });
+  };
+  // use centralized filter hook for maintainability
+  const { values: filterValues, handleChange: onFilterChange, reset: resetFilters } = useFilter({
+    defaultValues: { categoryFilter: '', dateRange: { start: '', end: '' } },
+    onApply: (payload) => {
+      // when filters apply, ensure page resets to 1
+      setPage(1);
+      // payload will be used by useEffect dependency to refetch
+    },
+    debounce: 200,
+  });
+
+  const categoryFilter = filterValues.categoryFilter;
+  const startDate = filterValues.dateRange?.start || '';
+  const endDate = filterValues.dateRange?.end || '';
+  const fetchCategories = async () => {
+    try {
+      const data = await fetchCategoryList({
+        page: 1,
+        keyword: key,
+        categoryId: categoryFilter,
+        startDate,
+        endDate,
+        limit: 1000,
       });
+      if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+      const allCategories = sortByNewest(data.data || []);
+      const createdCategory = location.state?.createdCategory;
+      const createdCategoryId = getCategoryId(createdCategory);
+      const mergedCategories = createdCategoryId
+        ? [createdCategory, ...allCategories.filter((item) => getCategoryId(item) !== createdCategoryId)]
+        : allCategories;
+      const pageSize = 10;
+      const startIndex = (page - 1) * pageSize;
+
+      setCategory(mergedCategories.slice(startIndex, startIndex + pageSize));
+      setTotal(mergedCategories.length);
+      setTotalPage(Math.max(1, Math.ceil(mergedCategories.length / pageSize)));
+    } catch (err) {
+      console.error("Fetch categories failed", err);
+      alert(err?.message || "Failed to fetch");
+      setCategory([]);
+    }
   };
 
   // 2. Hàm quét thử các API để lấy TOÀN BỘ danh mục dạng cây (để hiển thị select)
@@ -95,13 +163,9 @@ export default function CategoryList() {
 
   // Gọi API lấy dữ liệu cây 1 lần duy nhất khi component mount
   useEffect(() => {
+
     const loadTreeData = async () => {
-      const categoriesRes = await fetchFirstOk([
-        `${pathAdmin}/admin/categories/parent`,
-        `${pathAdmin}/v1/admin/categories/parent`,
-        `${pathAdmin}/v1/admin/categories`,
-        `${pathAdmin}/admin/categories`,
-      ]);
+      const categoriesRes = await fetchCategoryTree();
       setTreeCategories(categoriesRes?.data || []);
     };
     loadTreeData();
@@ -112,79 +176,66 @@ export default function CategoryList() {
     fetchCategories();
   }, [page, key, categoryFilter, startDate, endDate]);
 
+  useEffect(() => {
+    if (!location.state?.createdCategory) return;
+
+    toast.success("Tạo danh mục thành công!");
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
   const handleResetFilters = () => {
-    setCategoryFilter("");
-    setStartDate("");
-    setEndDate("");
+    resetFilters();
     setPage(1);
+    // also clear search state and active keyword so search is fully reset
+    setSearchInput("");
+    setKey("");
   };
 
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý danh mục</div>
-        
-        {/* Thanh Bộ lọc */}
-        <div className="inline-flex lg:w-[900px] w-full flex-wrap gap-[20px] bg-[white] items-center rounded-[10px] border-[1px] border-gray-300">
-          <div className="py-[20px] px-[30px] flex gap-[5px] items-center border-r-[1px] border-r-gray-300">
-            <FaFilter className="text-[18px]" />
-            <span className="font-[700] text-[14px]">Bộ lọc</span>
-          </div>
-          
-          {/* Lọc theo danh mục với thiết kế cây (thụt lề --) */}
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300">
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setPage(1);
-                setCategoryFilter(e.target.value);
-              }}
-              className="font-[700] outline-none text-[12px] w-[150px] bg-transparent cursor-pointer"
-            >
-              <option value="">Tất cả danh mục</option>
-              {/* 3. Gọi hàm đệ quy map cây tại đây */}
-              {renderCategoryOptions(treeCategories)}
-            </select>
-          </div>
 
-          {/* Lọc theo khoảng ngày (createdAt) */}
-          <div className="py-[20px] px-[20px] border-r-[1px] border-r-gray-300 flex items-center">
-            <input 
-              type="date" 
-              value={startDate}
-              onChange={(e) => { setPage(1); setStartDate(e.target.value); }}
-              className="font-[700] text-[14px] outline-none" 
-            />
-            <span className="mx-[10px]-">-</span>
-            <input 
-              type="date" 
-              value={endDate}
-              onChange={(e) => { setPage(1); setEndDate(e.target.value); }}
-              className="font-[700] text-[14px] outline-none" 
-            />
-          </div>
-
-          {/* Nút Xóa lọc */}
-          <div 
-            onClick={handleResetFilters}
-            className="w-[150px] py-[20px] pl-[10px] pr-[30px] flex gap-[5px] items-center text-[red] font-[700] text-[14px] cursor-pointer hover:opacity-80"
-          >
-            <MdDelete className="text-[16px]" />
-            <div>Xóa lọc</div>
-          </div>
-        </div>
+        {/* Thanh Bộ lọc - migrated to FilterBar for reuse */}
+        <FilterBar
+          fields={[
+            { name: 'categoryFilter', type: 'custom', render: (value, onChange) => (
+                <select
+                  value={value || ''}
+                  onChange={(e) => { onChange(e.target.value); }}
+                  className="font-[700] outline-none text-[12px] w-[150px] bg-transparent cursor-pointer"
+                >
+                  <option value="">Tất cả danh mục</option>
+                  {renderCategoryOptions(treeCategories)}
+                </select>
+              ),
+            },
+            { name: 'dateRange', type: 'date-range' },
+          ]}
+          values={filterValues}
+          onChange={(v) => {
+            // when change, ensure page resets in hook's onApply; however set page here too on immediate change
+            setPage(1);
+            onFilterChange(v);
+          }}
+          onReset={handleResetFilters}
+        card={true}
+        />
 
         {/* Thanh Tìm kiếm & Tạo mới */}
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
-            <input 
-              className="placeholder:text-[14px] text-[14px] outline-none w-[300px]" 
+
+            <input
+              className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
               placeholder="Tìm kiếm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.currentTarget.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1);
-                  setKey(e.currentTarget.value);
+                  setKey(searchInput);
                 }
               }}
             />
@@ -252,26 +303,9 @@ export default function CategoryList() {
           </div>
         </div>
 
-        {/* Phân trang */}
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {category.length > 0 && (
-            <>
-              <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
-              <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                <select
-                  className="outline-none border-none bg-transparent focus:ring-0"
-                  value={page}
-                  onChange={(e) => setPage(Number(e.target.value))}
-                >
-                  {[...Array(totalPage)].map((_, i) => (
-                    <option key={i} value={i + 1}>Trang {i + 1}</option>
-                  ))}
-                </select>
-              </div>
-            </>
-          )}
-        </div>
+        <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
       </div>
     </>
   );
 }
+

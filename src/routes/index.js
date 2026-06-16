@@ -19,7 +19,6 @@ export const routes = {
   clientList: "/admin/client",
   clientDetail: "/admin/client/:id",
   orderList: "/admin/order",
-  refundJobs: "/admin/refunds",
   wishlistList: "/admin/wishlist",
   roleList: "/admin/role",
   roleCreate: "/admin/role/create",

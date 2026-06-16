@@ -103,7 +103,9 @@ export default function DesignModal({ id, onClose }) {
 
       <div className="relative w-[min(920px,92vw)] max-h-[88vh] overflow-auto rounded-[14px] bg-white border border-gray-200 shadow-lg">
         <div className="px-[22px] py-[18px] border-b border-gray-200">
-          <div className="text-[18px] font-[800]">Design #{String(data?._id || id).slice(-3)}</div>
+
+          <div className="text-[18px] font-[800]">Thiết kế #{String(data?._id || id).slice(-3)}</div>
+
           <div className="text-[12px] text-gray-500">{data?._id || id}</div>
         </div>
 
@@ -178,10 +180,12 @@ export default function DesignModal({ id, onClose }) {
 
               <div className="mt-[18px] border-t border-gray-200" />
               <div className="mt-[12px] text-[13px] text-gray-700">
-                <div>Created: {formatDate(data.createdAt)}</div>
-                <div>Source: {meta.source || "-"}</div>
-                <div>GuestId: {meta.guestId || "-"}</div>
-                <div>Owner: {meta.userEmail || meta.userFullName || "(guest)"}</div>
+
+                <div>Ngày tạo: {formatDate(data.createdAt)}</div>
+                {/* <div>Source: {meta.source || "-"}</div>
+                <div>GuestId: {meta.guestId || "-"}</div> */}
+                <div>Khách hàng: {meta.userEmail || meta.userFullName || "(guest)"}</div>
+
                 <div className="break-all">UserId: {meta.userId ? String(meta.userId) : "-"}</div>
               </div>
             </>

@@ -22,7 +22,7 @@ const Sidebar = () => {
     { icon: FaFillDrip, href: "/admin/color", title: "Quản lý Màu sắc" },
     { icon: FaGem, href: "/admin/material", title: "Quản lý Chất liệu" },
     { icon: AiFillProduct, href: "/admin/product", title: "Quản lý sản phẩm" },
-    { icon: FaPalette, href: "/admin/design", title: "Quản lý My designs" },
+    { icon: FaPalette, href: "/admin/design", title: "Quản lý thiết kế" },
     { icon: IoIosListBox, href: "/admin/order", title: "Quản lý đơn hàng" },
     { icon: FaBlog, href: "/admin/blog", title: "Quản lý bài viết" },
     { icon: FaUsers, href: "/admin/client", title: "Quản lý account" },

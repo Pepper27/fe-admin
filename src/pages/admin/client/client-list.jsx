@@ -2,8 +2,12 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
-import { pathAdmin } from "../../../config/api";
+
+import Pagination from '../../../components/Pagination'
+import { fetchClients as fetchClientsService } from '../../../services/client.service';
 import ClientDelete from "./client-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function ClientList() {
   const [clients, setClients] = useState([]);
@@ -13,30 +17,23 @@ export default function ClientList() {
   const [key, setKey] = useState("");
   const limit = 10;
 
-  const fetchClients = () => {
-    const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/clients?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setClients(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
-      })
-      .catch((err) => {
-        console.error("Fetch clients failed", err);
-        alert(err?.message || "Failed to fetch");
-        setClients([]);
-        setTotalPage(1);
-        setTotal(0);
-      });
+
+  const fetchClients = async () => {
+    try {
+      const data = await fetchClientsService({ page: 1, keyword: key, limit: ADMIN_LIST_LIMIT });
+      if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+      const allClients = sortByCreatedDesc(data?.data || []);
+      setClients(paginateItems(allClients, page, limit));
+      setTotal(allClients.length);
+      setTotalPage(Math.max(1, Math.ceil(allClients.length / limit)));
+    } catch (err) {
+      console.error("Fetch clients failed", err);
+      alert(err?.message || "Failed to fetch");
+      setClients([]);
+      setTotalPage(1);
+      setTotal(0);
+    }
+
   };
 
   useEffect(() => {
@@ -132,28 +129,9 @@ export default function ClientList() {
           </div>
         </div>
 
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {total > 0 ? (
-            <>
-              <span>
-                Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}
-              </span>
-              <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                <select
-                  className="outline-none border-none bg-transparent focus:ring-0"
-                  value={page}
-                  onChange={(e) => setPage(Number(e.target.value))}
-                >
-                  {[...Array(totalPage)].map((_, i) => (
-                    <option key={i} value={i + 1}>
-                      Trang {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          ) : null}
-        </div>
+
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
+
       </div>
     </>
   );

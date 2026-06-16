@@ -2,6 +2,9 @@ import { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 import React from "react";
+
+import { toast } from "react-toastify";
+
 export default function SizeCreate() {
   const navigate = useNavigate();
   const [arrayCategory, setArrayCategory] = useState([]);  
@@ -30,7 +33,9 @@ export default function SizeCreate() {
     })   
     .catch((err) => {
         console.error("Fetch parent categories failed", err);
-        alert(err?.message || "Failed to fetch");
+
+        toast.error(err?.message || "Failed to fetch");
+
         setArrayCategory([]);
     })
   },[])
@@ -88,6 +93,9 @@ export default function SizeCreate() {
       const data = await response.json();
       
       if (data.code === 'success') {
+
+        toast.success("Tạo kích thước thành công!");
+
         navigate('/admin/size');
       } else {
         setError(data.message || 'Tạo size thất bại');
@@ -210,3 +218,4 @@ export default function SizeCreate() {
     </div>
   );
 }
+

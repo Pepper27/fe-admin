@@ -25,7 +25,6 @@ import ClientList from "./pages/admin/client/client-list";
 import ClientDetail from "./pages/admin/client/client-detail";
 import WishlistList from "./pages/admin/wishlist/wishlist-list";
 import OrderList from "./pages/admin/order/order-list";
-import RefundsPage from "./pages/admin/refunds";
 import RoleList from "./pages/admin/setting/role/role-list";
 import RoleCreate from "./pages/admin/setting/role/role-ceate";
 import RoleUpdate from "./pages/admin/setting/role/role-update";
@@ -45,9 +44,19 @@ import SizeUpdate from "./pages/admin/size/size-update";
 import ColorUpdate from "./pages/admin/color/color-update";
 import MaterialUpdate from "./pages/admin/material/material-update";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 function App() {
   return (
     <BrowserRouter>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        style={{ top: "72px", right: "16px", zIndex: 10000 }}
+      />
+
       <Routes>
         <Route path={routes.login} element={<Login />} />
         <Route path={routes.forgotPassword} element={<ForgotPassword />} />
@@ -268,19 +277,7 @@ function App() {
           }
         />
         <Route
-          path={routes.refundJobs}
-          element={
-            <PrivateRoute>
-              <LayoutAdmin>
-                <PermissionGuard permission="order-view">
-                  <RefundsPage />
-                </PermissionGuard>
-              </LayoutAdmin>
-            </PrivateRoute>
-          }
-        />
 
-        <Route
           path={routes.wishlistList}
           element={
             <PrivateRoute>

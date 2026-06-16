@@ -4,10 +4,13 @@ import { FilePond, registerPlugin } from "react-filepond";
 import "filepond/dist/filepond.min.css";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
+
 import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+import { toast } from "react-toastify";
+
 
 registerPlugin(FilePondPluginImagePreview);
 
@@ -39,9 +42,10 @@ export default function BlogUpdate() {
         setContent(current?.content || "");
         setExistingAvatar(current?.avatar || "");
       })
+
       .catch((err) => {
         console.error("Fetch blog failed", err);
-        alert(err?.message || "Không thể tải bài viết");
+        toast.error(err?.message || "Không thể tải bài viết");
         navigate("/admin/blog");
       });
   }, [id, navigate]);
@@ -78,13 +82,16 @@ export default function BlogUpdate() {
         const data = await res.json();
         if (!res.ok) throw new Error(data?.message || "Cập nhật thất bại");
         return data;
+
       })
       .then(() => {
+        toast.success("Cập nhật bài viết thành công!");
         navigate("/admin/blog");
       })
       .catch((err) => {
-        alert(err?.message || "Cập nhật thất bại");
+        toast.error(err?.message || "Cập nhật thất bại");
       });
+
   };
 
   return (

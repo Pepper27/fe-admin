@@ -3,10 +3,13 @@ import { FilePond, registerPlugin } from "react-filepond";
 import "filepond/dist/filepond.min.css";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
+
 import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+import { toast } from "react-toastify";
+
 
 registerPlugin(FilePondPluginImagePreview);
 
@@ -50,12 +53,14 @@ export default function BlogCreate() {
         const data = await res.json();
         if (!res.ok) throw new Error(data?.message || "Tạo thất bại");
         return data;
+
       })
       .then(() => {
+        toast.success("Tạo bài viết thành công!");
         navigate("/admin/blog");
       })
       .catch((err) => {
-        alert(err?.message || "Tạo thất bại");
+        toast.error(err?.message || "Tạo thất bại");
       });
   };
 

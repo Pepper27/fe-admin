@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 
+import { toast } from "react-toastify";
+ 
+
 export default function ColorCreate() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -43,6 +46,9 @@ export default function ColorCreate() {
       const data = await response.json();
       
       if (data.code === 'success') {
+
+        toast.success('Tạo màu sắc thành công!');
+
         navigate('/admin/color');
       } else {
         setError(data.message || 'Tạo màu sắc thất bại');
@@ -147,4 +153,6 @@ export default function ColorCreate() {
       </div>
     </div>
   );
+
 }
+

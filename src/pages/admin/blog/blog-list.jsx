@@ -2,10 +2,14 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
+
 import { useEffect, useState } from "react";
+import Pagination from '../../../components/Pagination'
 import { Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 import BlogDelete from "./blog-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function BlogList() {
   const [blogs, setBlogs] = useState([]);
@@ -19,7 +23,8 @@ export default function BlogList() {
   const fetchBlogs = () => {
     const token = localStorage.getItem("token");
     setLoading(true);
-    fetch(`${pathAdmin}/admin/blogs?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`, {
+
+    fetch(`${pathAdmin}/admin/blogs?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -30,9 +35,11 @@ export default function BlogList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setBlogs(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
+
+        const allBlogs = sortByCreatedDesc(data?.data || []);
+        setBlogs(paginateItems(allBlogs, page, limit));
+        setTotalPage(Math.max(1, Math.ceil(allBlogs.length / limit)));
+        setTotal(allBlogs.length);
       })
       .catch((err) => {
         console.error("Fetch blogs failed", err);
@@ -52,6 +59,7 @@ export default function BlogList() {
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý bài viết</div>
+
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
@@ -153,28 +161,8 @@ export default function BlogList() {
           </div>
         </div>
 
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {total > 0 ? (
-            <>
-              <span>
-                Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}
-              </span>
-              <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                <select
-                  className="outline-none border-none bg-transparent focus:ring-0"
-                  value={page}
-                  onChange={(e) => setPage(Number(e.target.value))}
-                >
-                  {[...Array(totalPage)].map((_, i) => (
-                    <option key={i} value={i + 1}>
-                      Trang {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          ) : null}
-        </div>
+
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>
     </>
   );

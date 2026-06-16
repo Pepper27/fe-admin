@@ -3,43 +3,72 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useRef } from "react";
+import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
+import { toast } from "react-toastify";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 export default function ColorList() {
   const [colors, setColors] = useState([])
   const [page, setPage] = useState(1)
   const [totalPage, setTotalPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [key, setKey] = useState("")
+
+  const [searchInput, setSearchInput] = useState("")
+  const fetchControllerRef = useRef(null)
   const fetchColors = () => {
     const token = localStorage.getItem("token");
-    
-    fetch(`${pathAdmin}/admin/colors?page=${page}&keyword=${key}`, {
+    const limit = 10;
+    const usePage = page
+    const useKey = key
+
+    try { fetchControllerRef.current?.abort(); } catch (e) {}
+    const controller = new AbortController()
+    fetchControllerRef.current = controller
+
+    fetch(`${pathAdmin}/admin/colors?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(useKey)}`, {
+
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
       },
       credentials: "include",
+
+      signal: controller.signal,
+
     })
       .then(res => res.json())
       .then(data => {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        setColors(data.data)
-        setTotalPage(data.totalPage)
-        setTotal(data.total)
+
+        const allColors = sortByCreatedDesc(data.data || [])
+        setColors(paginateItems(allColors, usePage, limit))
+        setTotalPage(Math.max(1, Math.ceil(allColors.length / limit)))
+        setTotal(allColors.length)
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return
         console.error("Fetch colors failed", err);
-        alert(err?.message || "Failed to fetch");
+        toast.error(err?.message || "Failed to fetch");
         setColors([]);
       })
   };
   useEffect(() => {
     fetchColors();
   }, [page, key])
+
+  useEffect(() => {
+    return () => {
+      try { fetchControllerRef.current?.abort() } catch (e) {}
+    }
+  }, [])
+
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
@@ -49,15 +78,36 @@ export default function ColorList() {
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
             <input className="placeholder:text-[14px] text-[14px] outline-none w-[300px]" placeholder="Tìm kiếm"
+
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setPage(1)
-                  setKey(e.target.value)
+                  setKey(searchInput)
                 }
               }}
-            ></input>
+            />
           </div>
-          <a href="/admin/color/create" className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300">+ Tạo mới</a>
+          <div className="flex items-center gap-[10px]">
+            {searchInput !== '' && (
+              <button
+                onClick={() => {
+                  setSearchInput('')
+                  setKey('')
+                  setPage(1)
+                  fetchColors({ page: 1, keyword: '' })
+                }}
+                className="flex items-center gap-[8px] text-[#ff2d2d] hover:opacity-90 bg-white border border-gray-200 rounded-[10px] py-[18px] px-[16px] text-[16px]"
+                title="Xóa lọc"
+              >
+                <MdDelete className="text-[18px]" />
+                <span className="text-[14px] font-[700]">Xóa lọc</span>
+              </button>
+            )}
+            <a href="/admin/color/create" className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300">+ Tạo mới</a>
+          </div>
+
         </div>
         <div className="mt-[20px]">
           <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]" >
@@ -129,31 +179,9 @@ export default function ColorList() {
             </div>
           </div>
         </div>
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {
-            colors.length > 0 ? (
-              <>
-                <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
-                <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                  <select
-                    className="outline-none border-none bg-transparent focus:ring-0"
-                    value={page}
-                    onChange={(e) => setPage(Number(e.target.value))}
-                  >
-                    {[...Array(totalPage)].map((_, i) => (
-                      <option key={i} value={i + 1}>
-                        Trang {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )
-              :
-              <>
-              </>
-          }
-        </div>
+
+        <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
+
       </div>
     </>
   )
@@ -164,11 +192,12 @@ async function handleDelete(id) {
   if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return
   try {
     await apiCall(adminEndpoints.colors.delete(id), { method: 'DELETE' })
-    // Find and update the DOM state by reloading list - simplest approach is to reload page
-    // but better is to refetch. We'll trigger a page reload to keep change minimal and reliable.
-    window.location.reload()
+
+    toast.success('Xoá màu sắc thành công!')
+    window.setTimeout(() => window.location.reload(), 800)
   } catch (err) {
     console.error('Delete error', err)
-    alert(err.message || 'Không thể xóa')
+    toast.error(err.message || 'Không thể xóa')
+
   }
 }

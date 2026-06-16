@@ -3,8 +3,12 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
+
+import Pagination from '../../../../components/Pagination'
 import { pathAdmin } from "../../../../config/api"
 import RoleDelete from "./role-delete";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../../helpers/adminList';
+
 export default function RolesList() {
   const [roles, SetRoles] = useState([])
   const [page, setPage] = useState(1)
@@ -13,9 +17,12 @@ export default function RolesList() {
   const [key, setKey] = useState("")
   const [start,setStart] = useState("")
   const [end,setEnd] = useState("")
+
+  const limit = 10;
   const fetchRoles = () => {
     const token = localStorage.getItem("token");
-    fetch(`${pathAdmin}/admin/roles?page=${page}&keyword=${key}&start=${start}&end=${end}`, {
+    fetch(`${pathAdmin}/admin/roles?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${key}&start=${start}&end=${end}`, {
+
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -28,9 +35,12 @@ export default function RolesList() {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
-        SetRoles(data.data)
-        setTotalPage(data.totalPage)
-        setTotal(data.total)
+
+        const allRoles = sortByCreatedDesc(data.data || [])
+        SetRoles(paginateItems(allRoles, page, limit))
+        setTotalPage(Math.max(1, Math.ceil(allRoles.length / limit)))
+        setTotal(allRoles.length)
+
       })
       .catch((err) => {
         console.error("Fetch roles failed", err);
@@ -157,31 +167,9 @@ export default function RolesList() {
             </div>
           </div>
         </div>
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {
-            roles? (
-              <>
-                <span>Hiển thị {(page - 1) * 4 + 1} - {Math.min(page * 4, total)} của {total}</span>
-                <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                  <select
-                    className="outline-none border-none bg-transparent focus:ring-0"
-                    value={page}
-                    onChange={(e) => setPage(Number(e.target.value))}
-                  >
-                    {[...Array(totalPage)].map((_, i) => (
-                      <option key={i} value={i + 1}>
-                        Trang {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )
-              :
-              <>
-              </>
-          }
-        </div>
+
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
+
       </div>
     </>
   )

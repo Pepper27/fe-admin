@@ -2,6 +2,9 @@ import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { pathAdmin } from "../../../config/api";
 
+import { toast } from "react-toastify";
+
+
 export default function ProductDelete({ product, onDeleted }) {
 	const [deleting, setDeleting] = useState(false);
 
@@ -9,7 +12,9 @@ export default function ProductDelete({ product, onDeleted }) {
 		if (!product?._id || deleting) return;
 
 		const confirmDelete = window.confirm(
-			`Bạn có chắc muốn xoá sản phẩm? "${product?.name || ""}"?`
+
+			`Bạn có chắc muốn xoá sản phẩm "${product?.name || ""}"?`
+
 		);
 		if (!confirmDelete) return;
 
@@ -32,10 +37,11 @@ export default function ProductDelete({ product, onDeleted }) {
 			}
 
 			onDeleted?.(product._id);
-			alert(data?.message || "Xoá sản phẩm thành công!");
+
+			toast.success("Xoá sản phẩm thành công!");
 		} catch (error) {
 			console.error("Delete product failed", error);
-			alert(error?.message || "Xoá sản phẩm thất bại!");
+			toast.error(error?.message || "Xoá sản phẩm thất bại!");
 		} finally {
 			setDeleting(false);
 		}

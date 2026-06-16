@@ -542,18 +542,22 @@ export default function DashboardNew() {
   const [chartLoaded, setChartLoaded] = useState(false);
   const canViewStatistics = permissions.includes("statistics-view");
   const [revenueChartData, setRevenueChartData] = useState(null);
+
   const [inventoryCategory, setInventoryCategory] = useState(() => {
     const url = new URL(window.location.href);
     return url.searchParams.get("category") || "";
   });
 
-  const [dateFilterType, setDateFilterType] = useState("month"); 
+
+  // BỘ LỌC THỜI GIAN CHÍNH Ở ĐẦU TRANG
+  const [dateFilterType, setDateFilterType] = useState("month"); // "range", "week", "month", "year"
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0]; 
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0]; // Đầu tháng
   });
   const [endDate, setEndDate] = useState(() => {
-    return new Date().toISOString().split("T")[0]; 
+    return new Date().toISOString().split("T")[0]; // Hôm nay
+
   });
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -564,6 +568,7 @@ export default function DashboardNew() {
   });
 
   const [productSearch, setProductSearch] = useState("");
+
 
   const revenueChartInstanceRef = useRef(null);
   const inventoryChartInstanceRef = useRef(null);
@@ -576,6 +581,7 @@ export default function DashboardNew() {
     if (status === "done") return { label: "Đã giao", cls: "bg-[#DDFFEE] text-[#10B981]" };
     return { label: "Đã hủy", cls: "bg-[#FEE2E2] text-[#EF4444]" };
   };
+
 
   const exportToExcel = (data, fileName, sheetName = "Sheet1") => {
     if (!data || data.length === 0) {
@@ -608,9 +614,14 @@ export default function DashboardNew() {
     })();
   }, []);
 
+
+  // 2. Fetch dữ liệu Dashboard Tổng quan (Tự động chạy lại khi thay đổi bộ lọc thời gian)
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
+
+
+    // Xác định tham số gửi lên API tùy thuộc vào loại filter
 
     let startParam = "";
     if (dateFilterType === "range") startParam = startDate;
@@ -638,11 +649,13 @@ export default function DashboardNew() {
           ...payload,
           topProduct: payload?.topProduct || [],
           orderNew: payload?.orderNew || [],
+
         });
       })
       .catch(() => setDashboard({}))
       .finally(() => setLoading(false));
   }, [dateFilterType, startDate, endDate, selectedMonth, selectedYear, productSearch]);
+
 
   useEffect(() => {
     if (!canViewStatistics) return;
@@ -747,6 +760,7 @@ export default function DashboardNew() {
 
     exportToExcel(formattedData, "Bao_Cao_Doanh_Thu_Bieu_Do", "Doanh thu");
   };
+
   // 5. Biểu đồ tồn kho
   useEffect(() => {
     if (!canViewStatistics || !chartLoaded) return;
@@ -829,8 +843,11 @@ export default function DashboardNew() {
     exportToExcel(formattedData, "Danh_Sach_Don_Hang", "Đơn hàng");
   };
 
+
   return (
     <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
+      
+      {/* SECTION THANH CHỌN THỜI GIAN ĐẦU TRANG WEBSITE */}
       <div className="w-full bg-[white] p-[20px] rounded-[20px] mb-[20px] md:mx-[30px] mx-[16px] flex flex-wrap items-center justify-between gap-[15px] shadow-sm">
         <div className="flex flex-col">
           <span className="text-[18px] font-[700] text-gray-800">Bộ lọc báo cáo tổng quan</span>
@@ -838,6 +855,8 @@ export default function DashboardNew() {
         </div>
         
         <div className="flex flex-wrap items-center gap-[10px]">
+
+          {/* Lựa chọn loại filter */}
           <select 
             value={dateFilterType} 
             onChange={(e) => setDateFilterType(e.target.value)}
@@ -848,6 +867,9 @@ export default function DashboardNew() {
             <option value="month">Xem theo Tháng</option>
             <option value="year">Xem theo Năm</option>
           </select>
+
+
+          {/* Render các ô nhập tùy biến dựa trên Tab đang được chọn */}
 
           {dateFilterType === "range" && (
             <div className="flex items-center gap-[5px]">
@@ -890,6 +912,8 @@ export default function DashboardNew() {
           )}
         </div>
       </div>
+
+      {/* Grid thông số tổng hợp */}
       <div className="w-full grid xl:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-y-[20px] xl:gap-x-[40px] gap-x-[20px] md:px-[30px] px-[16px]">
         <div className="bg-[white] flex items-center gap-[20px] justify-center py-[20px] rounded-[20px]">
           <img src="/image/user.png" className="w-[70px]" alt="" />
@@ -934,6 +958,7 @@ export default function DashboardNew() {
                   Xuất Excel
                 </button>
               </div>
+
               <div className="overflow-x-auto">
                 <canvas id="revenue-chart" style={{ height: "270px" }} />
               </div>
@@ -978,6 +1003,7 @@ export default function DashboardNew() {
                   Xuất Excel
                 </button>
               </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-[#e5e1e1]">
@@ -1010,7 +1036,6 @@ export default function DashboardNew() {
           </div>
         </>
       ) : null}
-
       <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
         <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
           
@@ -1088,7 +1113,8 @@ export default function DashboardNew() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="p-[15px] text-center text-[14px]">
-                      {loading ? "Đang tải dữ liệu kỳ báo cáo..." : "Không có đơn hàng nào khớp điều kiện chọn"}
+
+                      {loading ? "Đang tải dữ liệu kỳ báo cáo..." : "Không có đơn hàng nào trong khoảng thời gian đã chọn"}
                     </td>
                   </tr>
                 )}

@@ -2,7 +2,11 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
+
+import Pagination from '../../../components/Pagination'
 import { pathAdmin } from "../../../config/api";
+import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function WishlistList() {
   const [rows, setRows] = useState([]);
@@ -17,7 +21,8 @@ export default function WishlistList() {
     const token = localStorage.getItem("token");
     setLoading(true);
     fetch(
-      `${pathAdmin}/admin/wishlists/products?page=${page}&limit=${limit}&keyword=${encodeURIComponent(key)}`,
+
+      `${pathAdmin}/admin/wishlists/products?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(key)}`,
       {
         method: "GET",
         headers: {
@@ -30,9 +35,12 @@ export default function WishlistList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
-        setRows(data?.data || []);
-        setTotalPage(data?.totalPage || 1);
-        setTotal(data?.total || 0);
+
+        const allRows = sortByCreatedDesc(data?.data || [], ["lastWishAt", "createdAt"]);
+        setRows(paginateItems(allRows, page, limit));
+        setTotalPage(Math.max(1, Math.ceil(allRows.length / limit)));
+        setTotal(allRows.length);
+
       })
       .catch((err) => {
         console.error("Fetch wishlist stats failed", err);
@@ -154,29 +162,7 @@ export default function WishlistList() {
             </div>
           </div>
         </div>
-
-        <div className="mt-[30px] flex items-center gap-[10px] text-[14px]">
-          {total > 0 ? (
-            <>
-              <span>
-                Hiển thị {(page - 1) * limit + 1} - {Math.min(page * limit, total)} của {total}
-              </span>
-              <div className="bg-[white] p-[7px] rounded-[10px] border border-gray-300">
-                <select
-                  className="outline-none border-none bg-transparent focus:ring-0"
-                  value={page}
-                  onChange={(e) => setPage(Number(e.target.value))}
-                >
-                  {[...Array(totalPage)].map((_, i) => (
-                    <option key={i} value={i + 1}>
-                      Trang {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          ) : null}
-        </div>
+        <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>
     </>
   );
