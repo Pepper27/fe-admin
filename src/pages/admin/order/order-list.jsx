@@ -3,6 +3,7 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { pathAdmin } from "../../../config/api";
+
 import OrderModal from "./order-modal";
 
 const STATUS_LABELS = {
@@ -69,7 +70,7 @@ export default function OrderList() {
 
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState("");
-
+  const [exportLoading, setExportLoading] = useState(false);
   const resetFilters = () => {
     setKeyword("");
     setStatus("");
@@ -133,7 +134,47 @@ export default function OrderList() {
     if (!updated?._id) return;
     setRows((prev) => prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r)));
   };
+  const handleExportExcel = async () => {
+    try {
+      setExportLoading(true);
+      const token = localStorage.getItem("token");
+      
+      const params = new URLSearchParams();
+      if (keyword) params.append("keyword", keyword);
+      if (status) params.append("status", status);
+      if (method) params.append("method", method);
+      if (payStatus) params.append("payStatus", payStatus);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
 
+      const response = await fetch(`${pathAdmin}/admin/order/export?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể tải file excel từ server");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Danh_sach_don_hang_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+    
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export Excel failed", error);
+      alert(error.message || "Lỗi khi xuất file Excel");
+    } finally {
+      setExportLoading(false);
+    }
+  };
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
@@ -243,6 +284,17 @@ export default function OrderList() {
               }}
             />
           </div>
+          <button
+            type="button"
+            disabled={exportLoading}
+            onClick={handleExportExcel}
+            className={`flex items-center gap-[8px] bg-[#1d6f42] hover:bg-[#155231] text-white font-[700] text-[14px] px-[20px] py-[15px] rounded-[10px] transition-colors shadow-sm ${
+              exportLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            <div className="text-[16px]"></div>
+            <span>{exportLoading ? "Đang xuất..." : "Xuất Excel"}</span>
+          </button>
         </div>
 
         <div className="mt-[20px]">
