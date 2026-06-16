@@ -8,7 +8,9 @@ import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+
 import { toast } from "react-toastify";
+
 
 registerPlugin(FilePondPluginImagePreview);
 
@@ -48,7 +50,9 @@ export default function CollectionUpdate() {
       })
       .catch((err) => {
         console.error("Fetch collection failed", err);
+
         toast.error(err?.message || "Không thể tải bộ sưu tập");
+
         navigate("/admin/collection");
       });
   }, [id, navigate]);
@@ -97,11 +101,13 @@ export default function CollectionUpdate() {
         return data;
       })
       .then(() => {
+
         toast.success("Cập nhật bộ sưu tập thành công!");
         navigate("/admin/collection");
       })
       .catch((err) => {
         toast.error(err?.message || "Cập nhật thất bại");
+
       });
   };
 

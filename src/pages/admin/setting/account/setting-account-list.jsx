@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { fetchAccountsAndRoles, deleteAccount } from '../../../../services/account.service'
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
@@ -7,11 +8,13 @@ import FilterBar from '../../../../../src/components/FilterBar'
 import useFilter from '../../../../../src/hooks/useFilter'
 import { toast } from "react-toastify";
 
+
 export default function SettingAccountList() {
   const [accounts, setAccounts] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
+
   const { values: filterValues, handleChange: onFilterChange, reset: resetFilters } = useFilter({
     defaultValues: { statusFilter: '', roleFilter: '' },
     debounce: 200,
@@ -20,17 +23,20 @@ export default function SettingAccountList() {
   const statusFilter = filterValues.statusFilter;
   const roleFilter = filterValues.roleFilter;
 
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     const fetchAll = async () => {
       try {
         setLoading(true);
+
         const { accountData, roleData } = await fetchAccountsAndRoles();
         setAccounts(Array.isArray(accountData?.data) ? accountData.data : []);
         setRoles(Array.isArray(roleData?.data) ? roleData.data : []);
       } catch (error) {
         toast.error("Không tải được danh sách tài khoản!");
+
       } finally {
         setLoading(false);
       }
@@ -64,6 +70,7 @@ export default function SettingAccountList() {
     if (!ok) return;
 
     try {
+
       const resp = await deleteAccount(item._id);
       const { ok, data } = resp;
       if (!ok || data?.code === 'error') throw new Error(data?.message || 'Xóa thất bại!');
@@ -71,6 +78,7 @@ export default function SettingAccountList() {
       toast.success("Xoá tài khoản nội bộ thành công!");
     } catch (error) {
       toast.error(error?.message || "Xóa thất bại!");
+
     }
   };
 
@@ -81,6 +89,7 @@ export default function SettingAccountList() {
       </div>
 
       <div className="flex flex-wrap gap-[12px] mb-[20px]">
+
         <div className="w-full">
           <FilterBar
             fields={[
@@ -99,6 +108,7 @@ export default function SettingAccountList() {
           card={true}
           />
         </div>
+
 
         <a
           href="/admin/setting/account/create"

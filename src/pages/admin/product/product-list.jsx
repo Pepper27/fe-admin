@@ -3,20 +3,24 @@ import { FaRegEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import React, { useEffect, useState } from "react";
+
 import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
 import { getDisplayPrice } from '../../../helpers/price'
 import Pagination from '../../../components/Pagination'
 import { useLocation, useNavigate } from "react-router-dom";
+
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { pathAdmin } from "../../../config/api";
 import ProductDelete from "./product-delete";
+
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
 
 export default function ProductList() {
   const [materials, setMaterials] = useState([]);
   const location = useLocation();
+
 
   const normalizeText = (value) =>
     String(value || "")
@@ -37,6 +41,7 @@ export default function ProductList() {
   const [keyword, setKeyword] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
 
+
   const { values: filterValues, handleChange: onFilterChange, reset: resetFilterValues } = useFilter({
     defaultValues: {
       creatorFilter: '', categoryFilter: '', collectionFilter: '', stockFilter: '', materialFilter: '', minPrice: '', maxPrice: '', dateRange: { start: '', end: '' }
@@ -55,6 +60,7 @@ export default function ProductList() {
   const startDate = filterValues.dateRange?.start || '';
   const endDate = filterValues.dateRange?.end || '';
   const [loading, setLoading] = useState(false);
+
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -70,6 +76,7 @@ export default function ProductList() {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("vi-VN");
   };
+
 
   const getProductId = (item) => String(item?._id || item?.id || "");
   const getEntityId = (value) => String(value?._id || value?.id || value || "");
@@ -182,7 +189,9 @@ export default function ProductList() {
     })();
   }, []);
 
+
   // getDisplayPrice moved to src/helpers/price.js
+
 
   const getTotalSold = (item) => {
     const soldFromVariants = (item?.variants || []).reduce(
@@ -196,7 +205,9 @@ export default function ProductList() {
   };
 
   const handleResetFilters = () => {
+
     resetFilterValues();
+
     setKeyword("");
     setKeywordInput("");
     setPage(1);
@@ -419,9 +430,11 @@ export default function ProductList() {
     setLoading(true);
 
 
+
     (async () => {
       try {
         const params = buildProductParams(false, ADMIN_LIST_LIMIT);
+
         const data = await fetchProductsFirstOk({
           params,
           token,
@@ -431,7 +444,9 @@ export default function ProductList() {
         // Handle explicit permission error returned by backend
         if (data && data.success === false && data.error === 'insufficient_permissions') {
           // Clear token and redirect to login so admin can re-authenticate
+
           try { localStorage.removeItem('token'); sessionStorage.removeItem('admin_profile_cache'); } catch (e) { }
+
           alert('Bạn không có đủ quyền truy cập. Vui lòng đăng nhập lại với tài khoản quản trị.');
           navigate('/admin/authen/login');
           return;
@@ -440,6 +455,7 @@ export default function ProductList() {
         if (!data) throw new Error("Failed to fetch");
 
         const serverProducts = data?.data || [];
+
         const sortedProducts = sortByCreatedDesc(serverProducts);
         const createdProduct = location.state?.createdProduct;
         const createdProductId = getProductId(createdProduct);
@@ -474,6 +490,7 @@ export default function ProductList() {
         setProducts(paginateItems(mergedProducts, page, limit));
         setTotal(mergedProducts.length);
         setTotalPage(Math.max(1, Math.ceil(mergedProducts.length / limit)));
+
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch products failed", err);
@@ -502,6 +519,7 @@ export default function ProductList() {
     limit,
   ]);
 
+
   useEffect(() => {
     if (!location.state?.createdProduct) return;
     navigate(location.pathname, { replace: true, state: null });
@@ -515,6 +533,7 @@ export default function ProductList() {
         <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">
           Quản lý sản phẩm
         </div>
+
 
         {/* Use card prop on FilterBar and remove extra outer wrapper so border sizes to content */}
         <div>
@@ -716,16 +735,20 @@ export default function ProductList() {
                           {getCollectionNames(item)}
                         </td>
                         <td className="p-[15px] text-[14px]">
+
                           {getDisplayPrice(item, formatPrice)}
                         </td>
                         <td className="p-[15px] text-[14px]">
                           <span
                             className={`px-2 py-1 rounded text-xs font-[600] ${item?.stockStatus === "out_of_stock"
+
                                 ? "bg-red-100 text-red-800"
                                 : item?.stockStatus === "low_stock"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-green-100 text-green-800"
+
                               }`}
+
                           >
                             {(() => {
                               const total = (item?.variants || []).reduce(
@@ -776,6 +799,7 @@ export default function ProductList() {
             </div>
           </div>
         </div>
+
 
         <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>

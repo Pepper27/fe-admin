@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { pathAdmin } from "../../../../config/api";
 import { useNavigate } from "react-router-dom";
+
 import { toast } from "react-toastify";
+
 
 const PERMISSION_LIST = [
   { lable: "Xem trang tổng quan", value: "dashboard-view" },
@@ -117,10 +119,12 @@ export default function RoleCreate() {
         throw new Error(data?.message || "Tạo role thất bại!");
       }
 
+
       toast.success("Tạo nhóm quyền thành công!");
       navigate("/admin/role");
     } catch (err) {
       toast.error(err?.message || "Tạo role thất bại!");
+
     }
   };
 

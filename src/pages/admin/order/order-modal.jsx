@@ -22,6 +22,7 @@ const METHOD_LABELS = {
   zalopay: "ZaloPay",
 };
 
+
 const isPaidOrder = (order) => {
   if (!order) return false;
   if (String(order?.payStatus || "").trim().toLowerCase() === "paid") return true;
@@ -37,7 +38,6 @@ const isPaidZaloPayOrder = (order, nextPayStatus) => {
   if (String(nextPayStatus || "").trim().toLowerCase() === "paid") return true;
   return isPaidOrder(order);
 };
-
 const formatMoney = (n) => {
   const num = Number(n) || 0;
   return num.toLocaleString("vi-VN") + "₫";
@@ -70,7 +70,9 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
         const o = data?.data;
         setOrder(o || null);
         setStatus(o?.status || "pending");
+
         const inferredPayStatus = isPaidOrder(o) ? "paid" : "unpaid";
+
         setPayStatus(inferredPayStatus);
       })
       .catch((err) => {
@@ -86,10 +88,12 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
 
   const save = async () => {
     if (!orderId) return;
+
     if (status === "cancelled" && isPaidZaloPayOrder(order, payStatus)) {
       alert("Đơn ZaloPay đã thanh toán không thể hủy");
       return;
     }
+
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
@@ -141,8 +145,10 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
 
   return (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 px-[12px]">
+
       <div className="w-full max-w-[920px] rounded-[16px] bg-white border border-gray-200 shadow-lg flex flex-col" style={{ maxHeight: 'calc(100vh - 48px)' }}>
         <div className="flex items-center justify-between px-[18px] py-[14px] border-b border-gray-200 flex-shrink-0">
+
           <div className="font-[800] text-[16px]">Chi tiết đơn hàng</div>
           <button
             type="button"
@@ -153,7 +159,9 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
           </button>
         </div>
 
+
         <div className="p-[18px] overflow-auto" style={{ flex: '1 1 auto' }}>
+
           {loading ? (
             <div className="text-[14px] text-gray-500">Đang tải...</div>
           ) : !order ? (
@@ -204,6 +212,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         return <option value="cancelled">{STATUS_LABELS.cancelled}</option>;
                       }
 
+
                        const orgStatus = String(order?.status || "pending");
                        const orgIdx = STATUS_FLOW.indexOf(orgStatus);
                        const paidZaloPay = isPaidZaloPayOrder(order, payStatus);
@@ -217,6 +226,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                           k === "cancelled" &&
                           (orgStatus === "pending" || orgStatus === "confirmed") &&
                           !paidZaloPay;
+
 
                         // Một phần tử hoạt động nếu nó là hiện tại, là bước tiếp theo liền kề, hoặc lệnh hủy hợp lệ
                         const shouldDisable = !isCurrentStatus && !isExactlyNext && !isAllowedCancel;
@@ -351,6 +361,7 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                   </table>
                 </div>
               </div>
+
             </>
           )}
         </div>

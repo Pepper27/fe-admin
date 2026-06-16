@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminEndpoints, apiCall } from '../../../config/api'
+
 import { toast } from "react-toastify";
+
 
 export default function ColorUpdate() {
   const { id } = useParams()
@@ -17,7 +19,9 @@ export default function ColorUpdate() {
         setForm(res.data || {})
       } catch (err) {
         console.error('Fetch color failed', err)
+
         toast.error(err.message || 'Không thể tải màu')
+
       } finally {
         setLoading(false)
       }
@@ -37,11 +41,13 @@ export default function ColorUpdate() {
         method: 'PATCH',
         body: JSON.stringify(form)
       })
+
       toast.success('Cập nhật màu sắc thành công!')
       navigate('/admin/color')
     } catch (err) {
       console.error('Update failed', err)
       toast.error(err.message || 'Không thể cập nhật màu')
+
     }
   }
 

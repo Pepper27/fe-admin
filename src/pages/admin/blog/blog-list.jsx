@@ -2,12 +2,14 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegEdit } from "react-icons/fa";
+
 import { useEffect, useState } from "react";
 import Pagination from '../../../components/Pagination'
 import { Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
 import BlogDelete from "./blog-delete";
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function BlogList() {
   const [blogs, setBlogs] = useState([]);
@@ -21,6 +23,7 @@ export default function BlogList() {
   const fetchBlogs = () => {
     const token = localStorage.getItem("token");
     setLoading(true);
+
     fetch(`${pathAdmin}/admin/blogs?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(key)}`, {
       method: "GET",
       headers: {
@@ -32,6 +35,7 @@ export default function BlogList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+
         const allBlogs = sortByCreatedDesc(data?.data || []);
         setBlogs(paginateItems(allBlogs, page, limit));
         setTotalPage(Math.max(1, Math.ceil(allBlogs.length / limit)));
@@ -55,6 +59,7 @@ export default function BlogList() {
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700]">Quản lý bài viết</div>
+
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
@@ -155,6 +160,7 @@ export default function BlogList() {
             </div>
           </div>
         </div>
+
 
         <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>

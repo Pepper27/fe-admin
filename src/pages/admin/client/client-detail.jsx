@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
 import { updateClientStatus } from "../../../services/client.service";
 
@@ -33,15 +34,18 @@ const formatMoney = (n) => {
   return num.toLocaleString("vi-VN") + "₫";
 };
 
+
 const formatOrderStatus = (status) => STATUS_LABELS[status] || status || "";
 
 const normalizeText = (value) => String(value || "").trim().toLowerCase();
+
 
 export default function ClientDetail() {
   const { id } = useParams();
   const [client, setClient] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const clientOrders = orders.filter((order) => {
@@ -132,8 +136,10 @@ export default function ClientDetail() {
         alert(err?.message || "Failed to fetch client");
       });
 
+
     // fetch all orders for client so summary metrics are calculated globally
     fetch(`${pathAdmin}/admin/order?userId=${id}&limit=5000&page=1`, {
+
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -183,6 +189,7 @@ export default function ClientDetail() {
             <div className="font-[700]">{client?.phone || ""}</div>
           </div>
           <div>
+
             <div className="text-sm text-gray-500">Trạng thái tài khoản</div>
             <select
               value={client?.status || "active"}
@@ -198,6 +205,7 @@ export default function ClientDetail() {
             </select>
           </div>
           <div>
+
             <div className="text-sm text-gray-500">ID</div>
             <div className="font-[700] break-all">{client?._id || client?.id}</div>
           </div>
@@ -207,6 +215,7 @@ export default function ClientDetail() {
           </div>
           <div>
             <div className="text-sm text-gray-500">Số đơn hàng</div>
+
             <div className="font-[700]">{clientOrders.length}</div>
           </div>
           <div>
@@ -216,6 +225,7 @@ export default function ClientDetail() {
           <div>
             <div className="text-sm text-gray-500">Tổng số tiền đã mua</div>
             <div className="font-[700]">{formatMoney(successfulOrdersTotal)}</div>
+
           </div>
         </div>
         <div className="mt-4">
@@ -224,11 +234,13 @@ export default function ClientDetail() {
       </div>
 
       <div className="bg-[white] rounded-[20px] p-[24px] border border-gray-300">
+
         <div className="text-[18px] font-[700] mb-4">Danh sách đơn đã đặt</div>
         {clientOrders.length === 0 ? (
           <div className="text-gray-500">Không tìm thấy đơn hàng.</div>
         ) : (
           <div className="max-h-[560px] overflow-y-auto overflow-x-auto">
+
             <table className="w-full">
               <thead className="bg-[#e5e1e1]">
                 <tr>
@@ -239,11 +251,13 @@ export default function ClientDetail() {
                 </tr>
               </thead>
               <tbody>
+
                 {clientOrders.map((o) => (
                   <tr key={o._id}>
                     <td className="p-3 font-[700]">{o.orderCode || o._id}</td>
                     <td className="p-3">{formatMoney(o.totalPrice)}</td>
                     <td className="p-3">{formatOrderStatus(o.status)}</td>
+
                     <td className="p-3">{formatDateTime(o.createdAt)}</td>
                   </tr>
                 ))}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
 
 export default function ClientDelete({ client, onDeleted }) {
@@ -28,10 +29,12 @@ export default function ClientDelete({ client, onDeleted }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message || "Xoá thất bại!");
       onDeleted?.(client._id);
+
       toast.success("Xoá tài khoản khách hàng thành công!");
     } catch (error) {
       console.error("Delete client failed", error);
       toast.error(error?.message || "Xoá thất bại!");
+
     } finally {
       setDeleting(false);
     }

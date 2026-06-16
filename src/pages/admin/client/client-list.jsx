@@ -2,10 +2,12 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
+
 import Pagination from '../../../components/Pagination'
 import { fetchClients as fetchClientsService } from '../../../services/client.service';
 import ClientDelete from "./client-delete";
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function ClientList() {
   const [clients, setClients] = useState([]);
@@ -14,6 +16,7 @@ export default function ClientList() {
   const [total, setTotal] = useState(0);
   const [key, setKey] = useState("");
   const limit = 10;
+
 
   const fetchClients = async () => {
     try {
@@ -30,6 +33,7 @@ export default function ClientList() {
       setTotalPage(1);
       setTotal(0);
     }
+
   };
 
   useEffect(() => {
@@ -125,7 +129,9 @@ export default function ClientList() {
           </div>
         </div>
 
+
         <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
+
       </div>
     </>
   );

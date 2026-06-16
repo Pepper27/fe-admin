@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { pathAdmin } from "../../../../config/api";
 import { useNavigate, useParams } from "react-router-dom";
+
 import { toast } from "react-toastify";
+
 
 export default function SettingAccountUpdate() {
   const navigate = useNavigate();
@@ -58,7 +60,9 @@ export default function SettingAccountUpdate() {
           password: "",
         }));
       } catch (error) {
+
         toast.error("Không tải được dữ liệu tài khoản!");
+
       } finally {
         setLoading(false);
       }
@@ -94,6 +98,7 @@ export default function SettingAccountUpdate() {
       if (!response.ok || data?.code === "error") {
         throw new Error(data?.message || "Cập nhật tài khoản thất bại!");
       }
+
       toast.success("Cập nhật tài khoản nội bộ thành công!");
       navigate("/admin/setting/account");
     } catch (error) {

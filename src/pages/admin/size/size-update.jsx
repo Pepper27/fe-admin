@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminEndpoints, apiCall } from '../../../config/api'
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
+
 export default function SizeUpdate() {
   const { id } = useParams()
   const [arrayCategory, setArrayCategory] = useState([]);  
@@ -33,7 +35,9 @@ export default function SizeUpdate() {
     })   
     .catch((err) => {
         console.error("Fetch parent categories failed", err);
+
         toast.error(err?.message || "Failed to fetch");
+
         setArrayCategory([]);
     })
   },[])
@@ -59,7 +63,9 @@ export default function SizeUpdate() {
         setCategoryId(res.data.category || "")
       } catch (err) {
         console.error('Fetch size failed', err)
+
         toast.error(err.message || 'Không thể tải kích thước')
+
       } finally {
         setLoading(false)
       }
@@ -83,11 +89,13 @@ export default function SizeUpdate() {
         body: JSON.stringify(form)
       })
       console.log(form)
+
       toast.success('Cập nhật kích thước thành công!')
       navigate('/admin/size')
     } catch (err) {
       console.error('Update failed', err)
       toast.error(err.message || 'Không thể cập nhật kích thước')
+
     }
   }
 

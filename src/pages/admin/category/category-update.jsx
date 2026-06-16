@@ -9,7 +9,9 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+
 import { toast } from "react-toastify";
+
 registerPlugin(FilePondPluginImagePreview);
 export default function CategoryUpdate() {
   const [files, setFiles] = useState([]);
@@ -45,6 +47,7 @@ export default function CategoryUpdate() {
       })
       .catch((err) => {
         console.error("Fetch parent categories failed", err);
+
         toast.error(err?.message || "Failed to fetch");
         setArrayCategory([]);
       });
@@ -135,11 +138,13 @@ export default function CategoryUpdate() {
         return data;
       })
       .then(() => {
+
         toast.success("Cập nhật danh mục thành công!");
         navigate("/admin/category");
       })
       .catch((err) => {
         toast.error(err?.message || "Cập nhật thất bại");
+
       });
   };
 

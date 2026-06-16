@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
+
 
 export default function BlogDelete({ blog, onDeleted }) {
   const [deleting, setDeleting] = useState(false);
@@ -27,6 +29,7 @@ export default function BlogDelete({ blog, onDeleted }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message || "Xoá thất bại!");
       onDeleted?.(blog._id);
+
       toast.success("Xoá bài viết thành công!");
     } catch (error) {
       toast.error(error?.message || "Xoá thất bại!");

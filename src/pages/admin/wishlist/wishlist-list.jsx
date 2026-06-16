@@ -2,9 +2,11 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { useEffect, useState } from "react";
+
 import Pagination from '../../../components/Pagination'
 import { pathAdmin } from "../../../config/api";
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 
 export default function WishlistList() {
   const [rows, setRows] = useState([]);
@@ -19,6 +21,7 @@ export default function WishlistList() {
     const token = localStorage.getItem("token");
     setLoading(true);
     fetch(
+
       `${pathAdmin}/admin/wishlists/products?page=1&limit=${ADMIN_LIST_LIMIT}&keyword=${encodeURIComponent(key)}`,
       {
         method: "GET",
@@ -32,10 +35,12 @@ export default function WishlistList() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.code === "error") throw new Error(data.message || "Unauthorized");
+
         const allRows = sortByCreatedDesc(data?.data || [], ["lastWishAt", "createdAt"]);
         setRows(paginateItems(allRows, page, limit));
         setTotalPage(Math.max(1, Math.ceil(allRows.length / limit)));
         setTotal(allRows.length);
+
       })
       .catch((err) => {
         console.error("Fetch wishlist stats failed", err);
@@ -157,7 +162,6 @@ export default function WishlistList() {
             </div>
           </div>
         </div>
-
         <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>
     </>

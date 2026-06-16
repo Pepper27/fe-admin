@@ -1,6 +1,7 @@
 import { FaFilter } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
+
 import { FaRegEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,8 +13,10 @@ import { fetchCategoryList, fetchCategoryTree } from '../../../services/category
 import CategoryDelete from "./category-delete";
 
 
+
 const renderCategoryOptions = (cats, level = 0) => {
   if (!Array.isArray(cats)) return null;
+
   return cats
     .slice()
     .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")))
@@ -29,10 +32,12 @@ const renderCategoryOptions = (cats, level = 0) => {
           {Array.isArray(children) && children.length
             ? renderCategoryOptions(children, level + 1)
             : null}
+
         </>
       );
     });
 };
+
 
 export default function CategoryList() {
   const [category, setCategory] = useState([]); 
@@ -158,6 +163,7 @@ export default function CategoryList() {
 
   // Gọi API lấy dữ liệu cây 1 lần duy nhất khi component mount
   useEffect(() => {
+
     const loadTreeData = async () => {
       const categoriesRes = await fetchCategoryTree();
       setTreeCategories(categoriesRes?.data || []);
@@ -220,6 +226,7 @@ export default function CategoryList() {
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
+
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
               placeholder="Tìm kiếm"
@@ -295,8 +302,10 @@ export default function CategoryList() {
             </div>
           </div>
         </div>
+
         <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
       </div>
     </>
   );
 }
+

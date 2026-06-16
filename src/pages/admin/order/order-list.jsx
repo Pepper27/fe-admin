@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import FilterBar from '../../../components/FilterBar'
 import useFilter from '../../../hooks/useFilter'
 import Pagination from '../../../components/Pagination'
@@ -8,6 +9,7 @@ import { CiSearch } from "react-icons/ci";
 import { fetchOrders } from '../../../services/order.service'
 import OrderModal from "./order-modal";
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+import { pathAdmin } from "../../../config/api";
 
 const STATUS_LABELS = {
   pending: "Chờ xác nhận",
@@ -34,6 +36,7 @@ const isPaidOrder = (order) => {
   if (String(order?.payment?.zpTransId || "").trim()) return true;
   return false;
 };
+
 
 const formatMoney = (n) => {
   const num = Number(n) || 0;
@@ -73,12 +76,13 @@ export default function OrderList() {
   const limit = 10;
 
   const [keyword, setKeyword] = useState("");
+
   const { values: filterValues, handleChange: onFilterChange, reset: resetFilterValues } = useFilter({
     defaultValues: { status: '', method: '', payStatus: '', dateRange: { start: '', end: '' } },
     onApply: () => setPage(1),
     debounce: 200,
   });
-
+  const [exportLoading, setExportLoading] = useState(false);
   const status = filterValues.status;
   const method = filterValues.method;
   const payStatus = filterValues.payStatus;
@@ -99,6 +103,7 @@ export default function OrderList() {
     const controller = new AbortController();
 
     setLoading(true);
+
     (async () => {
       try {
         const data = await fetchOrders({ keyword, status, method, payStatus, startDate, endDate, page: 1, limit: ADMIN_LIST_LIMIT, signal: controller.signal });
@@ -108,16 +113,19 @@ export default function OrderList() {
         setTotal(allRows.length);
         setTotalPage(Math.max(1, Math.ceil(allRows.length / limit)));
       } catch (err) {
+
         if (err?.name === "AbortError") return;
         console.error("Fetch orders failed", err);
         alert(err?.message || "Failed to fetch");
         setRows([]);
         setTotal(0);
         setTotalPage(1);
+
       } finally {
         setLoading(false);
       }
     })();
+
 
     return () => controller.abort();
   }, [keyword, status, method, payStatus, startDate, endDate, page]);
@@ -132,10 +140,52 @@ export default function OrderList() {
     setRows((prev) => prev.map((r) => (r._id === updated._id ? { ...r, ...updated } : r)));
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExportLoading(true);
+      const token = localStorage.getItem("token");
+      
+      const params = new URLSearchParams();
+      if (keyword) params.append("keyword", keyword);
+      if (status) params.append("status", status);
+      if (method) params.append("method", method);
+      if (payStatus) params.append("payStatus", payStatus);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+
+      const response = await fetch(`${pathAdmin}/admin/order/export?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể tải file excel từ server");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Danh_sach_don_hang_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+    
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export Excel failed", error);
+      alert(error.message || "Lỗi khi xuất file Excel");
+    } finally {
+      setExportLoading(false);
+    }
+  };
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
         <div className="sm:text-[30px] text-[20px] font-[700] mb-[30px]">Quản lý đơn hàng</div>
+
 
         <FilterBar
           fields={[
@@ -150,11 +200,13 @@ export default function OrderList() {
           card={true}
         />
 
+
         <div className="flex gap-[20px] items-center mt-[20px] flex-wrap">
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
             <input
               className="placeholder:text-[14px] text-[14px] outline-none w-[300px]"
+
               placeholder="Tìm mã đơn / SĐT / tên khách hàng"
               defaultValue={keyword}
               onKeyDown={(e) => {
@@ -165,6 +217,18 @@ export default function OrderList() {
               }}
             />
           </div>
+          <button
+            type="button"
+            disabled={exportLoading}
+            onClick={handleExportExcel}
+            className={`flex items-center gap-[8px] bg-[#1d6f42] hover:bg-[#155231] text-white font-[700] text-[14px] px-[20px] py-[15px] rounded-[10px] transition-colors shadow-sm ${
+              exportLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            <div className="text-[16px]"></div>
+            <span>{exportLoading ? "Đang xuất..." : "Xuất Excel"}</span>
+          </button>
+
         </div>
 
         <div className="mt-[20px]">
@@ -173,6 +237,7 @@ export default function OrderList() {
               <table className="xl:w-full w-[1200px]">
                 <thead className="bg-[#e5e1e1] ">
                   <tr>
+
                     <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px] w-[220px]">Đơn hàng</td>
                     <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[220px]">Khách hàng</td>
                     {/* <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[120px]">Số lượng</td> */}
@@ -202,6 +267,7 @@ export default function OrderList() {
                           <div className="text-[12px] text-gray-500">{o?.userId?.email || o?.email || ""}</div>
                           <div className="text-[12px] text-gray-500">{o?.userId?.phone || o?.phone || ""}</div>
                         </td>
+
                         {/* <td className="p-[15px] text-[14px]">{o.itemsCount ?? (o.cart || []).length}</td> */}
                         <td className="p-[15px] text-[14px] font-[800]">{formatMoney(o.totalPrice)}</td>
                         <td className="p-[15px] text-[14px]">
@@ -211,6 +277,7 @@ export default function OrderList() {
                         </td>
                         <td className="p-[15px] text-[14px]">
                           {(() => {
+
                             const inferred = isPaidOrder(o) ? "paid" : "unpaid";
                             return (
                               <span className={`px-2 py-1 rounded text-xs font-[700] ${badgeClass("pay", inferred)}`}>
@@ -236,6 +303,7 @@ export default function OrderList() {
                       <td colSpan="8">
                         <div className="flex items-center justify-center gap-[10px] py-[30px] text-[14px] text-gray-500">
                           <CiSearch className="md:text-[20px] text-[18px]" />
+
                           <span className="md:text-[16px] text-[14px]">Không tìm thấy đơn hàng</span>
                         </div>
                       </td>
@@ -246,6 +314,7 @@ export default function OrderList() {
             </div>
           </div>
         </div>
+
 
         <Pagination page={page} totalPage={totalPage} total={total} limit={limit} onChange={setPage} />
       </div>

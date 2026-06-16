@@ -3,17 +3,20 @@ import { MdDelete } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaRegEdit } from "react-icons/fa";
+
 import { useEffect, useState, useRef } from "react";
 import Pagination from '../../../components/Pagination'
 import { pathAdmin, adminEndpoints, apiCall } from "../../../config/api"
 import { toast } from "react-toastify";
 import { ADMIN_LIST_LIMIT, paginateItems, sortByCreatedDesc } from '../../../helpers/adminList';
+
 export default function MaterialList() {
   const [materials, setMaterials] = useState([])
   const [page, setPage] = useState(1)
   const [totalPage, setTotalPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [key, setKey] = useState("")
+
   const [searchInput, setSearchInput] = useState("")
   const fetchControllerRef = useRef(null)
   const fetchMaterials = (overrides = {}) => {
@@ -34,13 +37,16 @@ export default function MaterialList() {
         "ngrok-skip-browser-warning": "true",
       },
       credentials: "include",
+
       signal: controller.signal,
+
     })
       .then(res => res.json())
       .then(data => {
         if (data?.code === "error") {
           throw new Error(data.message || "Unauthorized");
         }
+
         const allMaterials = sortByCreatedDesc(data.data || [])
         const computedTotalPage = Math.max(1, Math.ceil(allMaterials.length / limit))
         setMaterials(paginateItems(allMaterials, usePage, limit))
@@ -55,18 +61,21 @@ export default function MaterialList() {
         if (err.name === 'AbortError') return
         console.error("Fetch materials failed", err);
         toast.error(err?.message || "Failed to fetch");
+
         setMaterials([]);
       })
   };
   useEffect(() => {
     fetchMaterials();
   }, [page, key])
+
   useEffect(() => {
     // cleanup on unmount
     return () => {
       try { fetchControllerRef.current?.abort() } catch (e) {}
     }
   }, [])
+
   return (
     <>
       <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
@@ -76,6 +85,7 @@ export default function MaterialList() {
           <div className="flex gap-[10px] items-center bg-[white] py-[20px] px-[20px] rounded-[10px] border border-gray-300">
             <CiSearch />
             <input className="placeholder:text-[14px] text-[14px] outline-none w-[300px]" placeholder="Tìm kiếm"
+
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -104,6 +114,7 @@ export default function MaterialList() {
             )}
             <a href="/admin/material/create" className="text-[white] text-[14px] hover:bg-second bg-pri py-[20px] px-[25px] rounded-[10px] border border-gray-300">+ Tạo mới</a>
           </div>
+
         </div>
         <div className="mt-[20px]">
           <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]" >
@@ -173,7 +184,9 @@ export default function MaterialList() {
             </div>
           </div>
         </div>
+
         <Pagination page={page} totalPage={totalPage} total={total} limit={10} onChange={setPage} />
+
       </div>
     </>
   )
@@ -183,6 +196,7 @@ async function handleDelete(id) {
   if (!window.confirm('Bạn có chắc chắn muốn xóa?')) return
   try {
     await apiCall(adminEndpoints.materials.delete(id), { method: 'DELETE' })
+
     toast.success('Xoá chất liệu thành công!')
     window.setTimeout(() => window.location.reload(), 800)
   } catch (err) {

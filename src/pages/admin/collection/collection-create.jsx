@@ -7,7 +7,9 @@ import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+
 import { toast } from "react-toastify";
+
 
 registerPlugin(FilePondPluginImagePreview);
 
@@ -60,11 +62,13 @@ export default function CollectionCreate() {
         return data;
       })
       .then(() => {
+
         toast.success("Tạo bộ sưu tập thành công!");
         navigate("/admin/collection");
       })
       .catch((err) => {
         toast.error(err?.message || "Tạo thất bại");
+
       });
   };
 

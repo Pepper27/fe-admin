@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
+
 
 export default function MaterialCreate() {
   const navigate = useNavigate();
@@ -43,6 +45,7 @@ export default function MaterialCreate() {
       const data = await response.json();
       
       if (data.code === 'success') {
+
         toast.success('Tạo chất liệu thành công!');
         navigate('/admin/material');
       } else {
@@ -125,4 +128,5 @@ export default function MaterialCreate() {
       </div>
     </div>
   );
+
 }

@@ -523,6 +523,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fetchAdminUser, pathAdmin } from "../../config/api";
+import * as XLSX from "xlsx";
 
 export default function DashboardNew() {
   const [dashboard, setDashboard] = useState({
@@ -540,11 +541,13 @@ export default function DashboardNew() {
   const [permissions, setPermissions] = useState([]);
   const [chartLoaded, setChartLoaded] = useState(false);
   const canViewStatistics = permissions.includes("statistics-view");
+  const [revenueChartData, setRevenueChartData] = useState(null);
 
   const [inventoryCategory, setInventoryCategory] = useState(() => {
     const url = new URL(window.location.href);
     return url.searchParams.get("category") || "";
   });
+
 
   // BỘ LỌC THỜI GIAN CHÍNH Ở ĐẦU TRANG
   const [dateFilterType, setDateFilterType] = useState("month"); // "range", "week", "month", "year"
@@ -554,6 +557,7 @@ export default function DashboardNew() {
   });
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split("T")[0]; // Hôm nay
+
   });
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -562,6 +566,9 @@ export default function DashboardNew() {
   const [selectedYear, setSelectedYear] = useState(() => {
     return String(new Date().getFullYear());
   });
+
+  const [productSearch, setProductSearch] = useState("");
+
 
   const revenueChartInstanceRef = useRef(null);
   const inventoryChartInstanceRef = useRef(null);
@@ -573,6 +580,18 @@ export default function DashboardNew() {
     if (status === "ship") return { label: "Đang giao", cls: "bg-[#DDEBFF] text-[#3B82F6]" };
     if (status === "done") return { label: "Đã giao", cls: "bg-[#DDFFEE] text-[#10B981]" };
     return { label: "Đã hủy", cls: "bg-[#FEE2E2] text-[#EF4444]" };
+  };
+
+
+  const exportToExcel = (data, fileName, sheetName = "Sheet1") => {
+    if (!data || data.length === 0) {
+      alert("Không có dữ liệu để xuất file!");
+      return;
+    }
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    XLSX.writeFile(workbook, `${fileName}_${new Date().getTime()}.xlsx`);
   };
 
   // 1. Lấy quyền User
@@ -595,12 +614,15 @@ export default function DashboardNew() {
     })();
   }, []);
 
+
   // 2. Fetch dữ liệu Dashboard Tổng quan (Tự động chạy lại khi thay đổi bộ lọc thời gian)
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
 
+
     // Xác định tham số gửi lên API tùy thuộc vào loại filter
+
     let startParam = "";
     if (dateFilterType === "range") startParam = startDate;
     else if (dateFilterType === "month") startParam = selectedMonth;
@@ -610,6 +632,7 @@ export default function DashboardNew() {
       filterType: dateFilterType,
       startDate: startParam,
       endDate: dateFilterType === "range" ? endDate : "",
+      productSearch: productSearch, 
     }).toString();
 
     fetch(`${pathAdmin}/admin/dashboard?${queryParams}`, {
@@ -625,13 +648,15 @@ export default function DashboardNew() {
         setDashboard({
           ...payload,
           topProduct: payload?.topProduct || [],
+          orderNew: payload?.orderNew || [],
+
         });
       })
       .catch(() => setDashboard({}))
       .finally(() => setLoading(false));
-  }, [dateFilterType, startDate, endDate, selectedMonth, selectedYear]);
+  }, [dateFilterType, startDate, endDate, selectedMonth, selectedYear, productSearch]);
 
-  // 3. Đảm bảo thư viện Chart.js được nạp vào hệ thống
+
   useEffect(() => {
     if (!canViewStatistics) return;
     const ensureChartJs = async () => {
@@ -661,126 +686,80 @@ export default function DashboardNew() {
     }
   }, [dashboard?.categoryList, inventoryCategory]);
 
-  // 4. Biểu đồ doanh thu (Tự động cập nhật theo bộ lọc chính)
-  // Biểu đồ doanh thu (Tự động cập nhật theo bộ lọc chính)
-useEffect(() => {
-  if (!canViewStatistics || !chartLoaded) return;
-  const revenueCanvas = document.getElementById("revenue-chart");
-  if (!revenueCanvas) return;
+  // 4. Biểu đồ doanh thu
+  useEffect(() => {
+    if (!canViewStatistics || !chartLoaded) return;
+    const revenueCanvas = document.getElementById("revenue-chart");
+    if (!revenueCanvas) return;
 
-  const token = localStorage.getItem("token");
-  let startParam = "";
-  if (dateFilterType === "range") startParam = startDate;
-  else if (dateFilterType === "month") startParam = selectedMonth;
-  else if (dateFilterType === "year") startParam = selectedYear;
+    const token = localStorage.getItem("token");
+    let startParam = "";
+    if (dateFilterType === "range") startParam = startDate;
+    else if (dateFilterType === "month") startParam = selectedMonth;
+    else if (dateFilterType === "year") startParam = selectedYear;
 
-  // Cập nhật lại đoạn fetch vẽ biểu đồ doanh thu trong useEffect
-  // fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
-  //   method: "POST",
-  //   headers: {
-  //     Authorization: `Bearer ${token}`,
-  //     "Content-Type": "application/json",
-  //     "ngrok-skip-browser-warning": "true",
-  //   },
-  //   body: JSON.stringify({
-  //     filterType: dateFilterType,
-  //     startDate: startParam,
-  //     endDate: dateFilterType === "range" ? endDate : "",
-  //   }),
-  // })
-  //   .then((res) => res.json())
-  //   .then((data) => {
-  //     if (revenueChartInstanceRef.current) {
-  //       revenueChartInstanceRef.current.destroy();
-  //     }
+    fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify({
+        filterType: dateFilterType,
+        startDate: startParam,
+        endDate: dateFilterType === "range" ? endDate : "",
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setRevenueChartData(data);
+        if (revenueChartInstanceRef.current) {
+          revenueChartInstanceRef.current.destroy();
+        }
 
-  //     const ctx = revenueCanvas.getContext("2d");
-  //     revenueChartInstanceRef.current = new window.Chart(ctx, {
-  //       type: "bar", // Đã chuyển sang dạng Cột (Bar chart) theo đúng ý bạn
-  //       data: {
-  //         labels: data.labels || [],
-  //         datasets: [
-  //           {
-  //             label: data.labelCurrent || "Doanh thu kỳ này",
-  //             data: data.dataMonthCurrent || [],
-  //             backgroundColor: "#4379EE", // Màu cột xanh chủ đạo
-  //             borderColor: "#4379EE",
-  //             borderWidth: 1,
-  //             borderRadius: 4, // Bo góc nhẹ cho cột trông hiện đại hơn
-  //           },
-  //           // Đã xóa hoàn toàn dataset kỳ trước ở đây
-  //         ],
-  //       },
-  //       options: {
-  //         plugins: { 
-  //           legend: { position: "bottom" } 
-  //         },
-  //         scales: {
-  //           x: { title: { display: true, text: "Thời gian thống kê" } },
-  //           y: { 
-  //             title: { display: true, text: "Doanh thu (VND)" }, 
-  //             beginAtZero: true 
-  //           },
-  //         },
-  //         maintainAspectRatio: false,
-  //       },
-  //     });
-  //   })
-  //   .catch((err) => console.error("Lỗi vẽ biểu đồ:", err));
-  // Cập nhật lại đoạn fetch vẽ biểu đồ doanh thu trong useEffect
-fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
-  },
-  body: JSON.stringify({
-    filterType: dateFilterType,
-    startDate: startParam,
-    endDate: dateFilterType === "range" ? endDate : "",
-  }),
-})
-  .then((res) => res.json())
-  .then((data) => {
-    if (revenueChartInstanceRef.current) {
-      revenueChartInstanceRef.current.destroy();
+        const ctx = revenueCanvas.getContext("2d");
+        revenueChartInstanceRef.current = new window.Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: data.labels || [],
+            datasets: [
+              {
+                label: data.labelCurrent || "Doanh thu kỳ này",
+                data: data.dataMonthCurrent || [],
+                backgroundColor: "#4379EE",
+                borderColor: "#4379EE",
+                borderWidth: 1,
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            plugins: { legend: { position: "bottom" } },
+            scales: {
+              x: { title: { display: true, text: "Thời gian thống kê" } },
+              y: { title: { display: true, text: "Doanh thu (VND)" }, beginAtZero: true },
+            },
+            maintainAspectRatio: false,
+          },
+        });
+      })
+      .catch((err) => console.error("Lỗi vẽ biểu đồ:", err));
+  }, [chartLoaded, dateFilterType, startDate, endDate, selectedMonth, selectedYear, canViewStatistics]);
+  const handleExportRevenue = () => {
+    if (!revenueChartData || !revenueChartData.labels || revenueChartData.labels.length === 0) {
+      alert("Không có dữ liệu doanh thu biểu đồ để xuất!");
+      return;
     }
 
-    const ctx = revenueCanvas.getContext("2d");
-    revenueChartInstanceRef.current = new window.Chart(ctx, {
-      type: "bar", // Đã chuyển sang dạng Cột (Bar chart) theo đúng ý bạn
-      data: {
-        labels: data.labels || [],
-        datasets: [
-          {
-            label: data.labelCurrent || "Doanh thu kỳ này",
-            data: data.dataMonthCurrent || [],
-            backgroundColor: "#4379EE", // Màu cột xanh chủ đạo
-            borderColor: "#4379EE",
-            borderWidth: 1,
-            borderRadius: 4, // Bo góc nhẹ cho cột trông hiện đại hơn
-          },
-          // Đã xóa hoàn toàn dataset kỳ trước ở đây
-        ],
-      },
-      options: {
-        plugins: { 
-          legend: { position: "bottom" } 
-        },
-        scales: {
-          x: { title: { display: true, text: "Thời gian thống kê" } },
-          y: { 
-            title: { display: true, text: "Doanh thu (VND)" }, 
-            beginAtZero: true 
-          },
-        },
-        maintainAspectRatio: false,
-      },
-    });
-  })
-  .catch((err) => console.error("Lỗi vẽ biểu đồ:", err));
-  }, [chartLoaded, dateFilterType, startDate, endDate, selectedMonth, selectedYear, canViewStatistics]);
+    // Khớp mảng labels (Trục X) với dữ liệu doanh thu (Trục Y) thành dạng dòng dữ liệu
+    const formattedData = revenueChartData.labels.map((label, idx) => ({
+      "Thời gian": label,
+      "Doanh thu (VND)": revenueChartData.dataMonthCurrent?.[idx] || 0
+    }));
+
+    exportToExcel(formattedData, "Bao_Cao_Doanh_Thu_Bieu_Do", "Doanh thu");
+  };
 
   // 5. Biểu đồ tồn kho
   useEffect(() => {
@@ -839,6 +818,32 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
       .catch(() => {});
   }, [chartLoaded, inventoryCategory, canViewStatistics]);
 
+  const handleExportTopProducts = () => {
+    const formattedData = dashboard.topProduct.map((item, idx) => ({
+      STT: idx + 1,
+      "Tên sản phẩm": item.name,
+      "Số lượng đã bán": item.sold,
+      "Doanh thu (VND)": item.profit,
+    }));
+    exportToExcel(formattedData, "Top_San_Pham_Ban_Chay", "Top Sản Phẩm");
+  };
+  const handleExportOrders = () => {
+    const formattedData = dashboard.orderNew.map((item) => ({
+      "Mã đơn hàng": item.orderCode,
+      "Khách hàng": item.fullName,
+      "Số điện thoại": item.phone,
+      "Địa chỉ/Ghi chú": item.note,
+      "Chi tiết sản phẩm mua": item.cart.map(c => `${c.name} (SL: ${c.quantity})`).join(", "),
+      "Tổng thanh toán (VND)": item.priceTotal,
+      "Phương thức": item.nameMethod,
+      "Trạng thái thanh toán": item.nameStatusPay,
+      "Trạng thái đơn": getStatusBadge(item.status).label,
+      "Thời gian đặt": `${item.formatTime} ${item.formatDay}`,
+    }));
+    exportToExcel(formattedData, "Danh_Sach_Don_Hang", "Đơn hàng");
+  };
+
+
   return (
     <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
       
@@ -850,6 +855,7 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
         </div>
         
         <div className="flex flex-wrap items-center gap-[10px]">
+
           {/* Lựa chọn loại filter */}
           <select 
             value={dateFilterType} 
@@ -862,7 +868,9 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
             <option value="year">Xem theo Năm</option>
           </select>
 
+
           {/* Render các ô nhập tùy biến dựa trên Tab đang được chọn */}
+
           {dateFilterType === "range" && (
             <div className="flex items-center gap-[5px]">
               <input
@@ -939,10 +947,18 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
 
       {canViewStatistics ? (
         <>
-          {/* Biểu đồ doanh thu */}
           <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
             <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-              <div className="text-[23px] font-[700] mb-[20px]">Biểu đồ phân tích doanh thu</div>
+              <div className="flex justify-between items-center mb-[20px] flex-wrap gap-[10px]">
+                <div className="text-[23px] font-[700]">Biểu đồ phân tích doanh thu</div>
+                <button 
+                  onClick={handleExportRevenue}
+                  className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
+                >
+                  Xuất Excel
+                </button>
+              </div>
+
               <div className="overflow-x-auto">
                 <canvas id="revenue-chart" style={{ height: "270px" }} />
               </div>
@@ -978,7 +994,16 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
           {/* Top sản phẩm */}
           <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
             <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-              <div className="text-[23px] font-[700] mb-[15px]">Top sản phẩm bán chạy (Kỳ báo cáo)</div>
+              <div className="flex justify-between items-center mb-[15px] flex-wrap gap-[10px]">
+                <div className="text-[23px] font-[700]">Top sản phẩm bán chạy (Kỳ báo cáo)</div>
+                <button 
+                  onClick={handleExportTopProducts}
+                  className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
+                >
+                  Xuất Excel
+                </button>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-[#e5e1e1]">
@@ -1011,11 +1036,30 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
           </div>
         </>
       ) : null}
-
-      {/* Đơn hàng mới */}
       <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
         <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-          <div className="mb-[20px] text-[23px] font-[700]">Đơn hàng phát sinh trong kỳ</div>
+          
+          <div className="mb-[20px] flex flex-wrap justify-between items-center gap-[15px]">
+            <div className="text-[23px] font-[700]">Đơn hàng phát sinh trong kỳ</div>
+            
+            <div className="flex items-center gap-[10px] flex-wrap">
+              <input
+                type="text"
+                placeholder="🔍 Lọc sản phẩm trong đơn..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                className="bg-[#F3F4F6] border border-gray-300 rounded-[10px] px-[15px] py-[8px] text-[14px] outline-none w-[240px] focus:border-blue-500 transition-all"
+              />
+
+              <button 
+                onClick={handleExportOrders}
+                className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
+              >
+                Xuất Excel
+              </button>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[#e5e1e1]">
@@ -1069,6 +1113,7 @@ fetch(`${pathAdmin}/admin/dashboard/revenueChart`, {
                 ) : (
                   <tr>
                     <td colSpan={6} className="p-[15px] text-center text-[14px]">
+
                       {loading ? "Đang tải dữ liệu kỳ báo cáo..." : "Không có đơn hàng nào trong khoảng thời gian đã chọn"}
                     </td>
                   </tr>

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { pathAdmin } from "../../../config/api";
+
 import { toast } from "react-toastify";
+
 
 export default function CollectionDelete({ collection, onDeleted }) {
   const [deleting, setDeleting] = useState(false);
@@ -27,9 +29,11 @@ export default function CollectionDelete({ collection, onDeleted }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message || "Xoá thất bại!");
       onDeleted?.(collection._id);
+
       toast.success("Xoá bộ sưu tập thành công!");
     } catch (error) {
       toast.error(error?.message || "Xoá thất bại!");
+
     } finally {
       setDeleting(false);
     }

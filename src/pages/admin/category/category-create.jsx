@@ -7,6 +7,7 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
 import { pathAdmin } from "../../../config/api";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+
 import { toast } from "react-toastify";
 registerPlugin(FilePondPluginImagePreview);
 export default function CategoryCreate() {
@@ -41,6 +42,7 @@ export default function CategoryCreate() {
       })
       .catch((err) => {
         console.error("Fetch parent categories failed", err);
+
         toast.error(err?.message || "Failed to fetch");
         setArrayCategory([]);
       });
@@ -110,6 +112,7 @@ export default function CategoryCreate() {
         return res.json();
       })
       .then((data) => {
+
         navigate("/admin/category", {
           state: {
             createdCategory: data?.data || data,
