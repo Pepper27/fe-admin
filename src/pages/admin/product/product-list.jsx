@@ -72,6 +72,46 @@ export default function ProductList() {
   };
 
   const getProductId = (item) => String(item?._id || item?.id || "");
+  const getEntityId = (value) => String(value?._id || value?.id || value || "");
+
+  const flattenCategories = (nodes) => {
+    if (!Array.isArray(nodes)) return [];
+    return nodes.flatMap((node) => [
+      node,
+      ...flattenCategories(Array.isArray(node?.children) ? node.children : []),
+    ]);
+  };
+
+  const getCategoryName = (categoryValue) => {
+    if (categoryValue?.name) return categoryValue.name;
+    const categoryId = getEntityId(categoryValue);
+    if (!categoryId) return "";
+
+    return (
+      flattenCategories(categories).find(
+        (category) => getEntityId(category) === categoryId,
+      )?.name || ""
+    );
+  };
+
+  const getCollectionNames = (product) => {
+    const rawCollections = Array.isArray(product?.collections)
+      ? product.collections
+      : [];
+
+    return rawCollections
+      .map((collection) => {
+        if (collection?.name) return collection.name;
+        const collectionId = getEntityId(collection);
+        if (!collectionId) return "";
+        return (
+          collections.find((item) => getEntityId(item) === collectionId)?.name ||
+          ""
+        );
+      })
+      .filter(Boolean)
+      .join(", ");
+  };
 
   const handleDeletedSuccess = (deletedId) => {
     setProducts((prev) => prev.filter((item) => item._id !== deletedId));
@@ -403,8 +443,32 @@ export default function ProductList() {
         const sortedProducts = sortByCreatedDesc(serverProducts);
         const createdProduct = location.state?.createdProduct;
         const createdProductId = getProductId(createdProduct);
+        const hydratedCreatedProduct = createdProductId
+          ? {
+              ...createdProduct,
+              category:
+                createdProduct?.category?.name || !createdProduct?.category
+                  ? createdProduct?.category
+                  : {
+                      ...(typeof createdProduct.category === "object"
+                        ? createdProduct.category
+                        : { _id: createdProduct.category }),
+                      name: getCategoryName(createdProduct.category),
+                    },
+              collections: Array.isArray(createdProduct?.collections)
+                ? createdProduct.collections.map((collection) => {
+                    if (collection?.name) return collection;
+                    const collectionId = getEntityId(collection);
+                    const matchedCollection = collections.find(
+                      (item) => getEntityId(item) === collectionId,
+                    );
+                    return matchedCollection || collection;
+                  })
+                : [],
+            }
+          : createdProduct;
         const mergedProducts = createdProductId
-          ? [createdProduct, ...sortedProducts.filter((item) => getProductId(item) !== createdProductId)]
+          ? [hydratedCreatedProduct, ...sortedProducts.filter((item) => getProductId(item) !== createdProductId)]
           : sortedProducts;
 
         setProducts(paginateItems(mergedProducts, page, limit));
@@ -506,9 +570,21 @@ export default function ProductList() {
                       className="font-semibold text-sm w-full outline-none bg-transparent cursor-pointer"
                     >
                       <option value="">Tất cả chất liệu</option>
-                      <option value="gold">Vàng</option>
-                      <option value="rose_gold">Vàng hồng</option>
-                      <option value="silver">Bạc</option>
+                      {(materials && materials.length
+                        ? materials
+                        : [{ name: 'Vàng' }, { name: 'Vàng hồng' }, { name: 'Bạc' }]
+                      )
+                        .slice()
+                        .sort((a, b) => String(a?.name || "").localeCompare(String(b?.name || "")))
+                        .map((material) => {
+                          const name = String(material?.name || "").trim();
+                          if (!name) return null;
+                          return (
+                            <option key={name} value={name}>
+                              {name}
+                            </option>
+                          );
+                        })}
                     </select>
                   )
                 },
@@ -634,13 +710,10 @@ export default function ProductList() {
                           )}
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          {item.category.name}
+                          {getCategoryName(item.category)}
                         </td>
                         <td className="p-[15px] text-[14px]">
-                          {(item.collections || [])
-                            .map((c) => c?.name)
-                            .filter(Boolean)
-                            .join(", ") || ""}
+                          {getCollectionNames(item)}
                         </td>
                         <td className="p-[15px] text-[14px]">
                           {getDisplayPrice(item, formatPrice)}

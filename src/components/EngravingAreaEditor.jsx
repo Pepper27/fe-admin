@@ -189,7 +189,6 @@ export default function EngravingAreaEditor({
               borderRadius: 2,
               cursor: "nwse-resize",
             }}
-            data-role="resize-handle"
           />
         </div>
       )}
