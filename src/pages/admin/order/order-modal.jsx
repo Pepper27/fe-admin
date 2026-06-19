@@ -35,7 +35,8 @@ const METHOD_LABELS = {
 const RETURN_LABELS = {
   none: "Chưa có yêu cầu",
   requested: "Chờ admin duyệt",
-  approved: "Đã duyệt hoàn hàng",
+  approved: "Đã duyệt, chờ nhận hàng hoàn",
+  completed: "Đã nhận hàng hoàn thành công",
   rejected: "Đã từ chối hoàn hàng",
 };
 
@@ -154,7 +155,9 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
       alert(
         action === "approve"
           ? "Đã duyệt hoàn hàng"
-          : "Đã từ chối yêu cầu hoàn hàng",
+          : action === "complete"
+            ? "Đã xác nhận nhận hàng hoàn thành công"
+            : "Đã từ chối yêu cầu hoàn hàng",
       );
     } catch (e) {
       alert(e?.message || "Cập nhật yêu cầu hoàn hàng thất bại");
@@ -356,10 +359,12 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                       order?.returnRequest?.status === "requested"
                         ? "bg-orange-100 text-orange-800"
                         : order?.returnRequest?.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : order?.returnRequest?.status === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-700"
+                          ? "bg-blue-100 text-blue-800"
+                          : order?.returnRequest?.status === "completed"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : order?.returnRequest?.status === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {RETURN_LABELS[order?.returnRequest?.status || "none"] ||
@@ -408,10 +413,11 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                         value={adminNote}
                         onChange={(e) => setAdminNote(e.target.value)}
                         className="mt-[6px] w-full min-h-[112px] border border-gray-300 rounded-[10px] px-[12px] py-[10px] outline-none text-[14px]"
-                        placeholder="Nhập ghi chú khi duyệt hoặc từ chối"
+                        placeholder="Nhập ghi chú khi duyệt, từ chối hoặc xác nhận đã nhận hàng"
                         disabled={
-                          order?.returnRequest?.status !== "requested" ||
-                          returnSubmitting
+                          !["requested", "approved"].includes(
+                            order?.returnRequest?.status,
+                          ) || returnSubmitting
                         }
                       />
                       {order?.returnRequest?.requestedAt ? (
@@ -449,6 +455,20 @@ export default function OrderModal({ open, orderId, onClose, onUpdated }) {
                             {returnSubmitting
                               ? "Đang xử lý..."
                               : "Duyệt hoàn hàng"}
+                          </button>
+                        </div>
+                      ) : null}
+                      {order?.returnRequest?.status === "approved" ? (
+                        <div className="mt-[12px] flex flex-wrap gap-[10px]">
+                          <button
+                            type="button"
+                            disabled={returnSubmitting}
+                            onClick={() => handleReturnReview("complete")}
+                            className="px-[14px] py-[10px] rounded-[12px] bg-emerald-600 hover:bg-emerald-700 text-white text-[14px] disabled:opacity-60"
+                          >
+                            {returnSubmitting
+                              ? "Đang xử lý..."
+                              : "Xác nhận đã nhận hàng hoàn"}
                           </button>
                         </div>
                       ) : null}

@@ -33,7 +33,8 @@ const METHOD_LABELS = {
 
 const RETURN_LABELS = {
   requested: "Chờ duyệt hoàn",
-  approved: "Đã duyệt hoàn",
+  approved: "Chờ nhận hàng hoàn",
+  completed: "Đã hoàn thành",
   rejected: "Từ chối hoàn",
 };
 
@@ -96,6 +97,7 @@ export default function OrderList() {
   } = useFilter({
     defaultValues: {
       status: "",
+      returnStatus: "",
       method: "",
       payStatus: "",
       dateRange: { start: "", end: "" },
@@ -105,6 +107,7 @@ export default function OrderList() {
   });
   const [exportLoading, setExportLoading] = useState(false);
   const status = filterValues.status;
+  const returnStatus = filterValues.returnStatus;
   const method = filterValues.method;
   const payStatus = filterValues.payStatus;
   const startDate = filterValues.dateRange?.start || "";
@@ -140,9 +143,16 @@ export default function OrderList() {
         if (data?.code === "error")
           throw new Error(data.message || "Unauthorized");
         const allRows = sortByCreatedDesc(data?.data || []);
-        setRows(paginateItems(allRows, page, limit));
-        setTotal(allRows.length);
-        setTotalPage(Math.max(1, Math.ceil(allRows.length / limit)));
+        const filteredRows = allRows.filter((item) => {
+          if (!returnStatus) return true;
+          const itemReturnStatus = String(
+            item?.returnRequest?.status || "none",
+          );
+          return itemReturnStatus === returnStatus;
+        });
+        setRows(paginateItems(filteredRows, page, limit));
+        setTotal(filteredRows.length);
+        setTotalPage(Math.max(1, Math.ceil(filteredRows.length / limit)));
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Fetch orders failed", err);
@@ -156,7 +166,16 @@ export default function OrderList() {
     })();
 
     return () => controller.abort();
-  }, [keyword, status, method, payStatus, startDate, endDate, page]);
+  }, [
+    keyword,
+    status,
+    returnStatus,
+    method,
+    payStatus,
+    startDate,
+    endDate,
+    page,
+  ]);
 
   const openDetail = (id) => {
     setActiveId(id);
@@ -241,6 +260,18 @@ export default function OrderList() {
                 { label: "Tất cả thanh toán", value: "" },
                 ...Object.keys(PAY_LABELS).map((k) => ({
                   label: PAY_LABELS[k],
+                  value: k,
+                })),
+              ],
+            },
+            {
+              name: "returnStatus",
+              type: "select",
+              options: [
+                { label: "Tất cả hoàn hàng", value: "" },
+                { label: "Chưa có yêu cầu", value: "none" },
+                ...Object.keys(RETURN_LABELS).map((k) => ({
+                  label: RETURN_LABELS[k],
                   value: k,
                 })),
               ],
@@ -380,6 +411,10 @@ export default function OrderList() {
                           ) : o?.returnRequest?.status === "approved" ? (
                             <span className="px-2 py-1 rounded text-xs font-[700] bg-green-100 text-green-800">
                               {RETURN_LABELS.approved}
+                            </span>
+                          ) : o?.returnRequest?.status === "completed" ? (
+                            <span className="px-2 py-1 rounded text-xs font-[700] bg-emerald-100 text-emerald-800">
+                              {RETURN_LABELS.completed}
                             </span>
                           ) : o?.returnRequest?.status === "rejected" ? (
                             <span className="px-2 py-1 rounded text-xs font-[700] bg-red-100 text-red-800">
