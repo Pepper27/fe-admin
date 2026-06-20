@@ -146,7 +146,7 @@
 //     const token = localStorage.getItem("token");
 //     const [yearStr, monthStr] = String(revenueMonth).split("-");
 //     const currentYear = Number(yearStr);
-//     const currentMonth = Number(monthStr); 
+//     const currentMonth = Number(monthStr);
 //     if (!currentYear || !currentMonth) return;
 
 //     const previousDate = new Date(currentYear, currentMonth - 2, 1);
@@ -530,6 +530,13 @@ export default function DashboardNew() {
     totalClient: 0,
     totalProduct: 0,
     dashboard: { order: 0, priceTotal: 0 },
+    reportSummary: {
+      orderStats: {},
+      paymentStats: {},
+      methodStats: {},
+      returnStats: {},
+      summaryRates: {},
+    },
     categoryList: [],
     almostOver: 0,
     soldOut: 0,
@@ -548,16 +555,16 @@ export default function DashboardNew() {
     return url.searchParams.get("category") || "";
   });
 
-
   // BỘ LỌC THỜI GIAN CHÍNH Ở ĐẦU TRANG
   const [dateFilterType, setDateFilterType] = useState("month"); // "range", "week", "month", "year"
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0]; // Đầu tháng
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .split("T")[0]; // Đầu tháng
   });
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split("T")[0]; // Hôm nay
-
   });
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -569,19 +576,21 @@ export default function DashboardNew() {
 
   const [productSearch, setProductSearch] = useState("");
 
-
   const revenueChartInstanceRef = useRef(null);
   const inventoryChartInstanceRef = useRef(null);
 
-  const formatPrice = (value) => Number(value || 0).toLocaleString("vi-VN") + "đ";
+  const formatPrice = (value) =>
+    Number(value || 0).toLocaleString("vi-VN") + "đ";
 
   const getStatusBadge = (status) => {
-    if (status === "initial") return { label: "Khởi tạo", cls: "bg-[#FFEEDD] text-[#FFA956]" };
-    if (status === "ship") return { label: "Đang giao", cls: "bg-[#DDEBFF] text-[#3B82F6]" };
-    if (status === "done") return { label: "Đã giao", cls: "bg-[#DDFFEE] text-[#10B981]" };
+    if (status === "initial")
+      return { label: "Khởi tạo", cls: "bg-[#FFEEDD] text-[#FFA956]" };
+    if (status === "ship")
+      return { label: "Đang giao", cls: "bg-[#DDEBFF] text-[#3B82F6]" };
+    if (status === "done")
+      return { label: "Đã giao", cls: "bg-[#DDFFEE] text-[#10B981]" };
     return { label: "Đã hủy", cls: "bg-[#FEE2E2] text-[#EF4444]" };
   };
-
 
   const exportToExcel = (data, fileName, sheetName = "Sheet1") => {
     if (!data || data.length === 0) {
@@ -600,26 +609,34 @@ export default function DashboardNew() {
     if (cacheRaw) {
       try {
         const parsed = JSON.parse(cacheRaw);
-        if (Array.isArray(parsed?.permissions)) setPermissions(parsed.permissions);
-      } catch { /* noop */ }
+        if (Array.isArray(parsed?.permissions))
+          setPermissions(parsed.permissions);
+      } catch {
+        /* noop */
+      }
     }
 
     (async () => {
       try {
         const resp = await fetchAdminUser();
-        const nextPermissions = Array.isArray(resp?.data?.data?.permissions) ? resp.data.data.permissions : [];
+        const nextPermissions = Array.isArray(resp?.data?.data?.permissions)
+          ? resp.data.data.permissions
+          : [];
         setPermissions(nextPermissions);
-        sessionStorage.setItem("admin_profile_cache", JSON.stringify({ permissions: nextPermissions }));
-      } catch (err) { /* noop */ }
+        sessionStorage.setItem(
+          "admin_profile_cache",
+          JSON.stringify({ permissions: nextPermissions }),
+        );
+      } catch (err) {
+        /* noop */
+      }
     })();
   }, []);
-
 
   // 2. Fetch dữ liệu Dashboard Tổng quan (Tự động chạy lại khi thay đổi bộ lọc thời gian)
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
-
 
     // Xác định tham số gửi lên API tùy thuộc vào loại filter
 
@@ -632,7 +649,7 @@ export default function DashboardNew() {
       filterType: dateFilterType,
       startDate: startParam,
       endDate: dateFilterType === "range" ? endDate : "",
-      productSearch: productSearch, 
+      productSearch: productSearch,
     }).toString();
 
     fetch(`${pathAdmin}/admin/dashboard?${queryParams}`, {
@@ -649,13 +666,18 @@ export default function DashboardNew() {
           ...payload,
           topProduct: payload?.topProduct || [],
           orderNew: payload?.orderNew || [],
-
         });
       })
       .catch(() => setDashboard({}))
       .finally(() => setLoading(false));
-  }, [dateFilterType, startDate, endDate, selectedMonth, selectedYear, productSearch]);
-
+  }, [
+    dateFilterType,
+    startDate,
+    endDate,
+    selectedMonth,
+    selectedYear,
+    productSearch,
+  ]);
 
   useEffect(() => {
     if (!canViewStatistics) return;
@@ -738,16 +760,31 @@ export default function DashboardNew() {
             plugins: { legend: { position: "bottom" } },
             scales: {
               x: { title: { display: true, text: "Thời gian thống kê" } },
-              y: { title: { display: true, text: "Doanh thu (VND)" }, beginAtZero: true },
+              y: {
+                title: { display: true, text: "Doanh thu (VND)" },
+                beginAtZero: true,
+              },
             },
             maintainAspectRatio: false,
           },
         });
       })
       .catch((err) => console.error("Lỗi vẽ biểu đồ:", err));
-  }, [chartLoaded, dateFilterType, startDate, endDate, selectedMonth, selectedYear, canViewStatistics]);
+  }, [
+    chartLoaded,
+    dateFilterType,
+    startDate,
+    endDate,
+    selectedMonth,
+    selectedYear,
+    canViewStatistics,
+  ]);
   const handleExportRevenue = () => {
-    if (!revenueChartData || !revenueChartData.labels || revenueChartData.labels.length === 0) {
+    if (
+      !revenueChartData ||
+      !revenueChartData.labels ||
+      revenueChartData.labels.length === 0
+    ) {
       alert("Không có dữ liệu doanh thu biểu đồ để xuất!");
       return;
     }
@@ -755,7 +792,7 @@ export default function DashboardNew() {
     // Khớp mảng labels (Trục X) với dữ liệu doanh thu (Trục Y) thành dạng dòng dữ liệu
     const formattedData = revenueChartData.labels.map((label, idx) => ({
       "Thời gian": label,
-      "Doanh thu (VND)": revenueChartData.dataMonthCurrent?.[idx] || 0
+      "Doanh thu (VND)": revenueChartData.dataMonthCurrent?.[idx] || 0,
     }));
 
     exportToExcel(formattedData, "Bao_Cao_Doanh_Thu_Bieu_Do", "Doanh thu");
@@ -769,13 +806,16 @@ export default function DashboardNew() {
 
     const token = localStorage.getItem("token");
 
-    fetch(`${pathAdmin}/admin/dashboard/inventory?category=${encodeURIComponent(inventoryCategory || "")}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
+    fetch(
+      `${pathAdmin}/admin/dashboard/inventory?category=${encodeURIComponent(inventoryCategory || "")}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       },
-    })
+    )
       .then((res) => res.json())
       .then((data) => {
         const result = data?.result || [];
@@ -785,7 +825,10 @@ export default function DashboardNew() {
         inventoryCanvas.width = Math.max(700, labels.length * 130);
         inventoryCanvas.height = 270;
 
-        const colors = labels.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`);
+        const colors = labels.map(
+          () =>
+            `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`,
+        );
 
         if (inventoryChartInstanceRef.current) {
           inventoryChartInstanceRef.current.destroy();
@@ -796,20 +839,28 @@ export default function DashboardNew() {
           type: "bar",
           data: {
             labels,
-            datasets: [{
-              label: "Số lượng tồn kho",
-              data: dataCounts,
-              backgroundColor: colors,
-              borderColor: colors.map((c) => c.replace("0.6", "1")),
-              borderWidth: 1,
-            }],
+            datasets: [
+              {
+                label: "Số lượng tồn kho",
+                data: dataCounts,
+                backgroundColor: colors,
+                borderColor: colors.map((c) => c.replace("0.6", "1")),
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: true,
             plugins: { legend: { position: "bottom" } },
             scales: {
-              x: { title: { display: true, text: "Thể loại" }, ticks: { autoSkip: false } },
-              y: { title: { display: true, text: "Số lượng" }, beginAtZero: true },
+              x: {
+                title: { display: true, text: "Thể loại" },
+                ticks: { autoSkip: false },
+              },
+              y: {
+                title: { display: true, text: "Số lượng" },
+                beginAtZero: true,
+              },
             },
             maintainAspectRatio: false,
           },
@@ -827,38 +878,188 @@ export default function DashboardNew() {
     }));
     exportToExcel(formattedData, "Top_San_Pham_Ban_Chay", "Top Sản Phẩm");
   };
-  const handleExportOrders = () => {
-    const formattedData = dashboard.orderNew.map((item) => ({
-      "Mã đơn hàng": item.orderCode,
-      "Khách hàng": item.fullName,
-      "Số điện thoại": item.phone,
-      "Địa chỉ/Ghi chú": item.note,
-      "Chi tiết sản phẩm mua": item.cart.map(c => `${c.name} (SL: ${c.quantity})`).join(", "),
-      "Tổng thanh toán (VND)": item.priceTotal,
-      "Phương thức": item.nameMethod,
-      "Trạng thái thanh toán": item.nameStatusPay,
-      "Trạng thái đơn": getStatusBadge(item.status).label,
-      "Thời gian đặt": `${item.formatTime} ${item.formatDay}`,
-    }));
-    exportToExcel(formattedData, "Danh_Sach_Don_Hang", "Đơn hàng");
+  const handleExportSummary = () => {
+    const orderStats = dashboard.reportSummary?.orderStats || {};
+    const paymentStats = dashboard.reportSummary?.paymentStats || {};
+    const methodStats = dashboard.reportSummary?.methodStats || {};
+    const returnStats = dashboard.reportSummary?.returnStats || {};
+    const summaryRates = dashboard.reportSummary?.summaryRates || {};
+
+    exportToExcel(
+      [
+        { "Chỉ số": "Tổng khách hàng", "Giá trị": dashboard.totalClient ?? 0 },
+        {
+          "Chỉ số": "Tổng đơn hàng trong kỳ",
+          "Giá trị": dashboard.dashboard?.order ?? 0,
+        },
+        {
+          "Chỉ số": "Doanh thu thực nhận trong kỳ (VND)",
+          "Giá trị": dashboard.dashboard?.priceTotal ?? 0,
+        },
+        {
+          "Chỉ số": "Tổng tồn kho sản phẩm",
+          "Giá trị": dashboard.totalProduct ?? 0,
+        },
+        { "Chỉ số": "Đơn chờ xác nhận", "Giá trị": orderStats.pending ?? 0 },
+        { "Chỉ số": "Đơn đang chuẩn bị", "Giá trị": orderStats.confirmed ?? 0 },
+        { "Chỉ số": "Đơn đang giao", "Giá trị": orderStats.shipping ?? 0 },
+        { "Chỉ số": "Đơn đã giao", "Giá trị": orderStats.delivered ?? 0 },
+        { "Chỉ số": "Đơn đã hủy", "Giá trị": orderStats.cancelled ?? 0 },
+        { "Chỉ số": "Đơn đã thanh toán", "Giá trị": paymentStats.paid ?? 0 },
+        {
+          "Chỉ số": "Đơn chưa thanh toán",
+          "Giá trị": paymentStats.unpaid ?? 0,
+        },
+        { "Chỉ số": "Thanh toán tiền mặt", "Giá trị": methodStats.cash ?? 0 },
+        { "Chỉ số": "Thanh toán ZaloPay", "Giá trị": methodStats.zalopay ?? 0 },
+        {
+          "Chỉ số": "Yêu cầu hoàn hàng chờ duyệt",
+          "Giá trị": returnStats.requested ?? 0,
+        },
+        {
+          "Chỉ số": "Yêu cầu hoàn hàng chờ nhận lại",
+          "Giá trị": returnStats.approved ?? 0,
+        },
+        {
+          "Chỉ số": "Hoàn hàng đã hoàn tất",
+          "Giá trị": returnStats.completed ?? 0,
+        },
+        {
+          "Chỉ số": "Yêu cầu hoàn hàng bị từ chối",
+          "Giá trị": returnStats.rejected ?? 0,
+        },
+        {
+          "Chỉ số": "Doanh thu bị ảnh hưởng bởi hoàn hàng (VND)",
+          "Giá trị": returnStats.affectedRevenue ?? 0,
+        },
+        {
+          "Chỉ số": "Tỷ lệ thanh toán thành công (%)",
+          "Giá trị": summaryRates.paidRate ?? 0,
+        },
+        {
+          "Chỉ số": "Tỷ lệ hủy đơn (%)",
+          "Giá trị": summaryRates.cancelRate ?? 0,
+        },
+        {
+          "Chỉ số": "Tỷ lệ hoàn hàng trên đơn đã giao (%)",
+          "Giá trị": summaryRates.returnRate ?? 0,
+        },
+      ],
+      "Bao_Cao_Tong_Quan_KPI",
+      "Tổng quan",
+    );
   };
 
+  const handleExportOperations = () => {
+    const orderStats = dashboard.reportSummary?.orderStats || {};
+    const paymentStats = dashboard.reportSummary?.paymentStats || {};
+    const methodStats = dashboard.reportSummary?.methodStats || {};
+
+    exportToExcel(
+      [
+        {
+          Nhóm: "Trạng thái đơn",
+          "Chỉ số": "Chờ xác nhận",
+          "Giá trị": orderStats.pending ?? 0,
+        },
+        {
+          Nhóm: "Trạng thái đơn",
+          "Chỉ số": "Đang chuẩn bị",
+          "Giá trị": orderStats.confirmed ?? 0,
+        },
+        {
+          Nhóm: "Trạng thái đơn",
+          "Chỉ số": "Đang giao",
+          "Giá trị": orderStats.shipping ?? 0,
+        },
+        {
+          Nhóm: "Trạng thái đơn",
+          "Chỉ số": "Đã giao",
+          "Giá trị": orderStats.delivered ?? 0,
+        },
+        {
+          Nhóm: "Trạng thái đơn",
+          "Chỉ số": "Đã hủy",
+          "Giá trị": orderStats.cancelled ?? 0,
+        },
+        {
+          Nhóm: "Thanh toán",
+          "Chỉ số": "Đã thanh toán",
+          "Giá trị": paymentStats.paid ?? 0,
+        },
+        {
+          Nhóm: "Thanh toán",
+          "Chỉ số": "Chưa thanh toán",
+          "Giá trị": paymentStats.unpaid ?? 0,
+        },
+        {
+          Nhóm: "Phương thức",
+          "Chỉ số": "Tiền mặt",
+          "Giá trị": methodStats.cash ?? 0,
+        },
+        {
+          Nhóm: "Phương thức",
+          "Chỉ số": "ZaloPay",
+          "Giá trị": methodStats.zalopay ?? 0,
+        },
+        {
+          Nhóm: "Phương thức",
+          "Chỉ số": "Khác",
+          "Giá trị": methodStats.other ?? 0,
+        },
+      ],
+      "Bao_Cao_Van_Hanh_Don_Hang",
+      "Vận hành đơn hàng",
+    );
+  };
+
+  const handleExportReturns = () => {
+    const returnStats = dashboard.reportSummary?.returnStats || {};
+    const summaryRates = dashboard.reportSummary?.summaryRates || {};
+    exportToExcel(
+      [
+        {
+          "Chỉ số": "Chưa có yêu cầu hoàn hàng",
+          "Giá trị": returnStats.none ?? 0,
+        },
+        { "Chỉ số": "Chờ duyệt hoàn", "Giá trị": returnStats.requested ?? 0 },
+        {
+          "Chỉ số": "Đã duyệt, chờ nhận hàng hoàn",
+          "Giá trị": returnStats.approved ?? 0,
+        },
+        { "Chỉ số": "Đã hoàn thành", "Giá trị": returnStats.completed ?? 0 },
+        { "Chỉ số": "Từ chối hoàn", "Giá trị": returnStats.rejected ?? 0 },
+        {
+          "Chỉ số": "Doanh thu bị ảnh hưởng (VND)",
+          "Giá trị": returnStats.affectedRevenue ?? 0,
+        },
+        {
+          "Chỉ số": "Tỷ lệ hoàn hàng trên đơn đã giao (%)",
+          "Giá trị": summaryRates.returnRate ?? 0,
+        },
+      ],
+      "Bao_Cao_Hoan_Hang",
+      "Hoàn hàng",
+    );
+  };
 
   return (
     <div className="xl:w-[calc(100%-220px)] lg:w-[calc(100%-220px)] w-full pt-[100px] xl:ml-[240px] lg:ml-[260px] left-0 flex flex-col xl:px-[40px] mx-[16px] pr-[55px] md:pr-[30px]">
-      
       {/* SECTION THANH CHỌN THỜI GIAN ĐẦU TRANG WEBSITE */}
       <div className="w-full bg-[white] p-[20px] rounded-[20px] mb-[20px] md:mx-[30px] mx-[16px] flex flex-wrap items-center justify-between gap-[15px] shadow-sm">
         <div className="flex flex-col">
-          <span className="text-[18px] font-[700] text-gray-800">Bộ lọc báo cáo tổng quan</span>
-          <span className="text-[12px] text-gray-400">Chọn thời gian để xem thống kê dữ liệu</span>
+          {/* <span className="text-[18px] font-[700] text-gray-800">
+            Bộ lọc báo cáo tổng quan
+          </span>
+          <span className="text-[12px] text-gray-400">
+            Chọn thời gian để xem thống kê dữ liệu
+          </span> */}
         </div>
-        
-        <div className="flex flex-wrap items-center gap-[10px]">
 
+        <div className="flex flex-wrap items-center gap-[10px]">
           {/* Lựa chọn loại filter */}
-          <select 
-            value={dateFilterType} 
+          <select
+            value={dateFilterType}
             onChange={(e) => setDateFilterType(e.target.value)}
             className="bg-[#F3F4F6] px-[14px] py-[8px] rounded-[10px] text-[14px] font-[600] border-none outline-none cursor-pointer"
           >
@@ -867,7 +1068,6 @@ export default function DashboardNew() {
             <option value="month">Xem theo Tháng</option>
             <option value="year">Xem theo Năm</option>
           </select>
-
 
           {/* Render các ô nhập tùy biến dựa trên Tab đang được chọn */}
 
@@ -906,7 +1106,11 @@ export default function DashboardNew() {
             >
               {[0, 1, 2, 3].map((offset) => {
                 const year = new Date().getFullYear() - offset;
-                return <option key={year} value={year}>Năm {year}</option>;
+                return (
+                  <option key={year} value={year}>
+                    Năm {year}
+                  </option>
+                );
               })}
             </select>
           )}
@@ -919,39 +1123,123 @@ export default function DashboardNew() {
           <img src="/image/user.png" className="w-[70px]" alt="" />
           <div className="flex flex-col">
             <span className="text-[14px] font-[500]">Khách hàng</span>
-            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">{dashboard.totalClient ?? 0}</span>
+            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">
+              {dashboard.totalClient ?? 0}
+            </span>
           </div>
         </div>
         <div className="bg-[white] flex items-center gap-[20px] justify-center py-[20px] rounded-[20px]">
           <img src="/image/order.png" className="w-[70px]" alt="" />
           <div className="flex flex-col">
             <span className="text-[14px] font-[500]">Đơn hàng (kỳ này)</span>
-            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">{dashboard.dashboard?.order ?? 0}</span>
+            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">
+              {dashboard.dashboard?.order ?? 0}
+            </span>
           </div>
         </div>
         <div className="bg-[white] flex items-center gap-[20px] justify-center py-[20px] rounded-[20px]">
           <img src="/image/revenue.png" className="w-[70px]" alt="" />
           <div className="flex flex-col">
             <span className="text-[14px] font-[500]">Doanh thu (kỳ này)</span>
-            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">{formatPrice(dashboard.dashboard?.priceTotal ?? 0)}</span>
+            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">
+              {formatPrice(dashboard.dashboard?.priceTotal ?? 0)}
+            </span>
           </div>
         </div>
         <div className="bg-[white] flex items-center gap-[20px] justify-center py-[20px] rounded-[20px]">
           <img src="/image/revenue.png" className="w-[70px]" alt="" />
           <div className="flex flex-col">
             <span className="text-[14px] font-[500]">Tổng kho sản phẩm</span>
-            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">{dashboard.totalProduct ?? 0}</span>
+            <span className="md:text-[26px] text-[20px] text-[var(--pri)] font-[700]">
+              {dashboard.totalProduct ?? 0}
+            </span>
           </div>
         </div>
       </div>
+
+      {canViewStatistics ? (
+        <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
+          <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
+            <div className="flex justify-between items-center mb-[18px] flex-wrap gap-[10px]">
+              <div>
+                <div className="text-[23px] font-[700]">
+                  Báo cáo thống kê tổng hợp
+                </div>
+                <div className="text-[13px] text-gray-400">
+                  Xuất các báo cáo KPI, vận hành đơn hàng và hoàn hàng theo bộ
+                  lọc đang chọn
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-[10px]">
+                <button
+                  onClick={handleExportSummary}
+                  className="bg-[#2563EB] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#1D4ED8] transition-all shadow-sm"
+                >
+                  Xuất KPI tổng quan
+                </button>
+                <button
+                  onClick={handleExportOperations}
+                  className="bg-[#7C3AED] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#6D28D9] transition-all shadow-sm"
+                >
+                  Xuất vận hành đơn hàng
+                </button>
+                <button
+                  onClick={handleExportReturns}
+                  className="bg-[#EA580C] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#C2410C] transition-all shadow-sm"
+                >
+                  Xuất báo cáo hoàn hàng
+                </button>
+              </div>
+            </div>
+            <div className="grid xl:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-[14px]">
+              <div className="rounded-[14px] bg-[#F8FAFC] border border-gray-100 p-[14px]">
+                <div className="text-[13px] text-gray-500">
+                  Đơn chờ duyệt hoàn
+                </div>
+                <div className="text-[24px] font-[800] text-[#F97316]">
+                  {dashboard.reportSummary?.returnStats?.requested ?? 0}
+                </div>
+              </div>
+              <div className="rounded-[14px] bg-[#F8FAFC] border border-gray-100 p-[14px]">
+                <div className="text-[13px] text-gray-500">
+                  Chờ nhận hàng hoàn
+                </div>
+                <div className="text-[24px] font-[800] text-[#2563EB]">
+                  {dashboard.reportSummary?.returnStats?.approved ?? 0}
+                </div>
+              </div>
+              <div className="rounded-[14px] bg-[#F8FAFC] border border-gray-100 p-[14px]">
+                <div className="text-[13px] text-gray-500">
+                  Hoàn hàng đã hoàn tất
+                </div>
+                <div className="text-[24px] font-[800] text-[#059669]">
+                  {dashboard.reportSummary?.returnStats?.completed ?? 0}
+                </div>
+              </div>
+              <div className="rounded-[14px] bg-[#F8FAFC] border border-gray-100 p-[14px]">
+                <div className="text-[13px] text-gray-500">
+                  Doanh thu bị ảnh hưởng
+                </div>
+                <div className="text-[24px] font-[800] text-[#DC2626]">
+                  {formatPrice(
+                    dashboard.reportSummary?.returnStats?.affectedRevenue ?? 0,
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {canViewStatistics ? (
         <>
           <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
             <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
               <div className="flex justify-between items-center mb-[20px] flex-wrap gap-[10px]">
-                <div className="text-[23px] font-[700]">Biểu đồ phân tích doanh thu</div>
-                <button 
+                <div className="text-[23px] font-[700]">
+                  Biểu đồ phân tích doanh thu
+                </div>
+                <button
                   onClick={handleExportRevenue}
                   className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
                 >
@@ -968,7 +1256,9 @@ export default function DashboardNew() {
           {/* Thống kê tồn kho */}
           <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
             <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-              <div className="text-[23px] font-[700] mb-[15px]">Thống kê tồn kho</div>
+              <div className="text-[23px] font-[700] mb-[15px]">
+                Thống kê tồn kho
+              </div>
               <div className="flex flex-wrap gap-[10px] mb-[15px]">
                 {(dashboard.categoryList || []).map((item) => (
                   <span
@@ -986,7 +1276,10 @@ export default function DashboardNew() {
                 ))}
               </div>
               <div className="overflow-x-auto">
-                <canvas id="inventoryChart" style={{ height: "300px", width: "auto" }} />
+                <canvas
+                  id="inventoryChart"
+                  style={{ height: "300px", width: "auto" }}
+                />
               </div>
             </div>
           </div>
@@ -995,8 +1288,10 @@ export default function DashboardNew() {
           <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
             <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
               <div className="flex justify-between items-center mb-[15px] flex-wrap gap-[10px]">
-                <div className="text-[23px] font-[700]">Top sản phẩm bán chạy (Kỳ báo cáo)</div>
-                <button 
+                <div className="text-[23px] font-[700]">
+                  Top sản phẩm bán chạy (Kỳ báo cáo)
+                </div>
+                <button
                   onClick={handleExportTopProducts}
                   className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
                 >
@@ -1008,25 +1303,42 @@ export default function DashboardNew() {
                 <table className="w-full">
                   <thead className="bg-[#e5e1e1]">
                     <tr>
-                      <td className="p-[15px] text-[14px] font-[600] w-[60px] rounded-l-[10px]">STT</td>
-                      <td className="p-[15px] text-[14px] font-[600] w-[170px]">Tên sản phẩm</td>
-                      <td className="p-[15px] text-[14px] font-[600] w-[100px]">Đã bán</td>
-                      <td className="p-[15px] text-[14px] font-[600] w-[170px] rounded-r-[10px]">Doanh thu tương đương</td>
+                      <td className="p-[15px] text-[14px] font-[600] w-[60px] rounded-l-[10px]">
+                        STT
+                      </td>
+                      <td className="p-[15px] text-[14px] font-[600] w-[170px]">
+                        Tên sản phẩm
+                      </td>
+                      <td className="p-[15px] text-[14px] font-[600] w-[100px]">
+                        Đã bán
+                      </td>
+                      <td className="p-[15px] text-[14px] font-[600] w-[170px] rounded-r-[10px]">
+                        Doanh thu tương đương
+                      </td>
                     </tr>
                   </thead>
                   <tbody>
                     {(dashboard.topProduct || []).length ? (
                       dashboard.topProduct.map((item, index) => (
                         <tr key={index} className="border-b border-gray-300">
-                          <td className="p-[15px] text-[14px] font-[700] text-[var(--pri)]">{index + 1}</td>
+                          <td className="p-[15px] text-[14px] font-[700] text-[var(--pri)]">
+                            {index + 1}
+                          </td>
                           <td className="p-[15px] text-[14px]">{item.name}</td>
                           <td className="p-[15px] text-[14px]">{item.sold}</td>
-                          <td className="p-[15px] text-[14px]">{formatPrice(item.profit)}</td>
+                          <td className="p-[15px] text-[14px]">
+                            {formatPrice(item.profit)}
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="p-[15px] text-[14px] text-center text-gray-400">Không tìm thấy dữ liệu trong kỳ này</td>
+                        <td
+                          colSpan={4}
+                          className="p-[15px] text-[14px] text-center text-gray-400"
+                        >
+                          Không tìm thấy dữ liệu trong kỳ này
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -1038,10 +1350,11 @@ export default function DashboardNew() {
       ) : null}
       <div className="md:px-[30px] px-[16px] mt-[20px] py-[20px]">
         <div className="flex flex-col px-[30px] bg-[white] py-[30px] rounded-[20px]">
-          
           <div className="mb-[20px] flex flex-wrap justify-between items-center gap-[15px]">
-            <div className="text-[23px] font-[700]">Đơn hàng phát sinh trong kỳ</div>
-            
+            <div className="text-[23px] font-[700]">
+              Đơn hàng phát sinh trong kỳ
+            </div>
+
             <div className="flex items-center gap-[10px] flex-wrap">
               <input
                 type="text"
@@ -1050,13 +1363,6 @@ export default function DashboardNew() {
                 onChange={(e) => setProductSearch(e.target.value)}
                 className="bg-[#F3F4F6] border border-gray-300 rounded-[10px] px-[15px] py-[8px] text-[14px] outline-none w-[240px] focus:border-blue-500 transition-all"
               />
-
-              <button 
-                onClick={handleExportOrders}
-                className="bg-[#10B981] text-white font-[600] text-[14px] px-[15px] py-[8px] rounded-[10px] hover:bg-[#0dd492] transition-all shadow-sm"
-              >
-                Xuất Excel
-              </button>
             </div>
           </div>
 
@@ -1064,12 +1370,24 @@ export default function DashboardNew() {
             <table className="w-full">
               <thead className="bg-[#e5e1e1]">
                 <tr>
-                  <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px]">Mã</td>
-                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">Thông tin khách</td>
-                  <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[400px]">Danh sách sản phẩm</td>
-                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">Thanh toán</td>
-                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">Trạng thái</td>
-                  <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px]">Ngày đặt</td>
+                  <td className="p-[15px] text-[14px] font-[600] rounded-l-[10px]">
+                    Mã
+                  </td>
+                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">
+                    Thông tin khách
+                  </td>
+                  <td className="p-[15px] text-[14px] font-[600] py-[10px] w-[400px]">
+                    Danh sách sản phẩm
+                  </td>
+                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">
+                    Thanh toán
+                  </td>
+                  <td className="p-[15px] text-[14px] font-[600] py-[10px]">
+                    Trạng thái
+                  </td>
+                  <td className="p-[15px] text-[14px] font-[600] rounded-r-[10px] py-[10px]">
+                    Ngày đặt
+                  </td>
                 </tr>
               </thead>
               <tbody>
@@ -1078,7 +1396,9 @@ export default function DashboardNew() {
                     const badge = getStatusBadge(item.status);
                     return (
                       <tr key={index} className="border-b border-gray-300">
-                        <td className="font-[700] text-[var(--pri)] p-[15px] text-[14px] w-[100px]">{item.orderCode}</td>
+                        <td className="font-[700] text-[var(--pri)] p-[15px] text-[14px] w-[100px]">
+                          {item.orderCode}
+                        </td>
                         <td className="p-[15px] text-[14px]">
                           <div className="w-[150px]">{item.fullName}</div>
                           <div>SĐT: {item.phone}</div>
@@ -1086,11 +1406,21 @@ export default function DashboardNew() {
                         </td>
                         <td className="p-[15px] flex flex-col gap-y-[10px] w-[300px]">
                           {(item.cart || []).map((it, i2) => (
-                            <div key={i2} className="flex items-center gap-[10px]">
-                              <img className="rounded-[10px] w-[120px] h-[80px] object-cover bg-gray-100" src={it.avatar || ""} alt="" />
+                            <div
+                              key={i2}
+                              className="flex items-center gap-[10px]"
+                            >
+                              <img
+                                className="rounded-[10px] w-[120px] h-[80px] object-cover bg-gray-100"
+                                src={it.avatar || ""}
+                                alt=""
+                              />
                               <div className="flex flex-col">
                                 <div className="text-[14px]">{it.name}</div>
-                                <div className="text-[12px]">Số lượng: {it.quantity} x {formatPrice(it.priceLast)}</div>
+                                <div className="text-[12px]">
+                                  Số lượng: {it.quantity} x{" "}
+                                  {formatPrice(it.priceLast)}
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -1101,7 +1431,11 @@ export default function DashboardNew() {
                           <div>TTTT: {item.nameStatusPay}</div>
                         </td>
                         <td className="p-[15px] w-[170px] pr-[25px]">
-                          <div className={`w-[120px] ${badge.cls} text-[14px] font-[700] text-center py-[10px] rounded-[10px]`}>{badge.label}</div>
+                          <div
+                            className={`w-[120px] ${badge.cls} text-[14px] font-[700] text-center py-[10px] rounded-[10px]`}
+                          >
+                            {badge.label}
+                          </div>
                         </td>
                         <td className="p-[15px]">
                           <div className="text-[14px]">{item.formatTime}</div>
@@ -1112,9 +1446,13 @@ export default function DashboardNew() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-[15px] text-center text-[14px]">
-
-                      {loading ? "Đang tải dữ liệu kỳ báo cáo..." : "Không có đơn hàng nào trong khoảng thời gian đã chọn"}
+                    <td
+                      colSpan={6}
+                      className="p-[15px] text-center text-[14px]"
+                    >
+                      {loading
+                        ? "Đang tải dữ liệu kỳ báo cáo..."
+                        : "Không có đơn hàng nào trong khoảng thời gian đã chọn"}
                     </td>
                   </tr>
                 )}
